@@ -28,3 +28,16 @@ def test_checksum_and_failed_migration(db, tmp_path):
     with pytest.raises(psycopg.Error):
         apply_migrations(db, tmp_path)
     assert db.execute('SELECT count(*) AS n FROM geoattend.schema_migrations').fetchone()['n'] == 1
+import os
+import subprocess
+import sys
+
+
+def test_migration_cli_unicode_output(test_dsn):
+    env = os.environ.copy()
+    env['GEOATTEND_MIGRATION_DATABASE_URL'] = test_dsn
+    env['PYTHONIOENCODING'] = 'cp1252'
+    env.pop('GEOATTEND_DATABASE_URL', None)
+    result = subprocess.run([sys.executable,'-m','scripts.migrate'],env=env,capture_output=True,encoding='utf-8')
+    assert result.returncode == 0, result.stderr
+    assert 'Migration hoàn tất' in result.stdout

@@ -4,9 +4,11 @@ from psycopg.rows import dict_row
 from psycopg.conninfo import conninfo_to_dict
 from app.config import Settings
 from app.db.migrations import apply_migrations, grant_runtime
+from scripts.console import configure_console
 
 
 def main():
+    configure_console()
     settings = Settings.from_env()
     if not settings.migration_database_url:
         raise SystemExit('Thiếu GEOATTEND_MIGRATION_DATABASE_URL.')
