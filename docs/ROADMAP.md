@@ -1,4 +1,4 @@
-﻿# GeoAttend — Lộ trình phát triển MVP
+# GeoAttend — Lộ trình phát triển MVP
 
 ## 1. Mục đích và hiện trạng
 
@@ -84,13 +84,13 @@ Thứ tự thực hiện: **0 → 1 → 2 → 3 → 4 → 5 → 6**.
 
 **Yêu cầu BRD:** FR-03, FR-08 (Remote), FR-09, FR-10 (cá nhân); BR-02, BR-05.
 
-- [ ] Xây dựng cơ chế tạo/đóng phiên và ghi sự kiện nhất quán trong transaction.
-- [ ] Triển khai Check-in Remote có lý do và Check-out Remote; hỗ trợ tạo phiên mới sau Check-out trước 20:00, giữ nguyên phiên cũ theo AC-12.
-- [ ] Triển khai cơ chế tự đóng phiên lúc 20:00 giờ Việt Nam và chặn bắt đầu/tiếp tục Office/Remote từ 20:00 đến hết ngày, phân biệt với Check-out thủ công; chạy lặp không tạo sự kiện trùng. Kiểm thử mốc trước/đúng/sau 20:00 và cơ chế xử lý bù khi tác vụ chạy trễ theo thiết kế được chốt.
-- [ ] Tính trạng thái hiện tại theo bảng chuyển trạng thái đã chốt.
-- [ ] Xây dựng màn hình trạng thái, thao tác Remote và lịch sử cá nhân.
-- [ ] Ngăn thao tác không hợp lệ, phiên mở trùng và ghi nhận trùng khi gửi lại yêu cầu.
-- [ ] Kiểm thử truy cập chéo lịch sử giữa hai nhân viên.
+- [x] Xây dựng cơ chế tạo/đóng phiên và ghi sự kiện nhất quán trong transaction.
+- [x] Triển khai Check-in Remote có lý do và Check-out Remote; hỗ trợ tạo phiên mới sau Check-out trước 20:00, giữ nguyên phiên cũ theo AC-12.
+- [x] Triển khai cơ chế tự đóng phiên lúc 20:00 giờ Việt Nam và chặn bắt đầu/tiếp tục Office/Remote từ 20:00 đến hết ngày, phân biệt với Check-out thủ công; chạy lặp không tạo sự kiện trùng. Kiểm thử mốc trước/đúng/sau 20:00 và cơ chế xử lý bù khi tác vụ chạy trễ theo thiết kế được chốt.
+- [x] Tính trạng thái hiện tại theo bảng chuyển trạng thái đã chốt.
+- [x] Xây dựng màn hình trạng thái, thao tác Remote và lịch sử cá nhân.
+- [x] Ngăn thao tác không hợp lệ, phiên mở trùng và ghi nhận trùng khi gửi lại yêu cầu.
+- [x] Kiểm thử truy cập chéo lịch sử giữa hai nhân viên.
 
 **Đầu ra:** đăng nhập → Remote → Check-out → xem lịch sử, dữ liệu tồn tại sau tải lại trang.
 

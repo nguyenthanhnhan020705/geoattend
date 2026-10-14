@@ -95,3 +95,19 @@ def test_inactive_while_waiting_cannot_start(employee,test_dsn,monkeypatch):
             assert reached.wait(10)
             blocker.execute('UPDATE geoattend.profiles SET is_active=false WHERE id=%s',(uid,)); blocker.commit()
             assert future.result(10)==401
+
+
+def test_password_reset_while_action_waits_revokes_request(employee,test_dsn,monkeypatch):
+    from app.attendance import service
+    client,headers,uid=employee
+    reached=Event(); original=service.lock_user
+    def marked(conn,user_id): reached.set(); return original(conn,user_id)
+    monkeypatch.setattr(service,'lock_user',marked)
+    with psycopg.connect(test_dsn) as blocker:
+        blocker.execute('SELECT id FROM geoattend.profiles WHERE id=%s FOR UPDATE',(uid,))
+        with ThreadPoolExecutor(max_workers=1) as executor:
+            future=executor.submit(action,client,headers)
+            assert reached.wait(10)
+            blocker.execute('UPDATE geoattend.auth_sessions SET revoked_at=now() WHERE user_id=%s',(uid,))
+            blocker.commit()
+            assert future.result(10).status_code==401

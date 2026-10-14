@@ -21,6 +21,11 @@ def lock_user(conn, user_id):
         raise ApiError(403, 'FORBIDDEN', 'Chức năng chấm công dành cho User.')
 
 
+def validate_session(conn,user_id,session_id,now):
+    if session_id is not None and not conn.execute('SELECT id FROM geoattend.auth_sessions WHERE id=%s AND user_id=%s AND revoked_at IS NULL AND expires_at>%s',(session_id,user_id,now)).fetchone():
+        raise ApiError(401,'AUTH_REQUIRED','Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.')
+
+
 def event(conn, day_id, session_id, kind, moment, recorded, source, reason=None):
     return conn.execute('INSERT INTO geoattend.attendance_events(day_id,session_id,event_type,event_time,recorded_at,source,reason) VALUES(%s,%s,%s,%s,%s,%s,%s) RETURNING id', (day_id,session_id,kind,moment,recorded,source,reason)).fetchone()['id']
 
@@ -64,10 +69,11 @@ def snapshot(conn, user_id, now):
     return dict(work_date=work_date,status=state,revision=day['revision'] if day else 0,open_session=opened,server_time=now,allowed_actions=allowed)
 
 
-def status(conn, user_id):
+def status(conn, user_id, session_id=None):
     with conn.transaction():
         lock_user(conn,user_id)
         now = clock.utc_now()
+        validate_session(conn,user_id,session_id,now)
         reconcile_locked(conn,user_id,now)
         return snapshot(conn,user_id,now)
 
@@ -76,7 +82,7 @@ def result(row):
     return dict(event_ids=[str(i) for i in row['result_event_ids']], session_id=str(row['result_session_id']) if row['result_session_id'] else None, work_date=row['result_work_date'],status=row['result_status'],revision=row['result_revision'])
 
 
-def act(conn, user_id, body):
+def act(conn, user_id, body, session_id=None):
     payload = body.model_dump(mode='json', exclude={'request_id'})
     digest = hashlib.sha256(json.dumps(payload,sort_keys=True,separators=(',',':'),ensure_ascii=False).encode()).hexdigest()
     failure = None
@@ -86,6 +92,7 @@ def act(conn, user_id, body):
     with conn.transaction():
         lock_user(conn,user_id)
         now = clock.utc_now()
+        validate_session(conn,user_id,session_id,now)
         reconcile_locked(conn,user_id,now)
         previous = conn.execute('SELECT * FROM geoattend.attendance_requests WHERE user_id=%s AND request_id=%s', (user_id,body.request_id)).fetchone()
         if previous:
@@ -95,6 +102,7 @@ def act(conn, user_id, body):
                 answer = result(previous)
         else:
             now = clock.utc_now()  # Recheck after lock/queries immediately before writes.
+            validate_session(conn,user_id,session_id,now)
             reconcile_locked(conn,user_id,now)
             today = now.astimezone(VIETNAM).date()
             day = current_day(conn,user_id,today)
@@ -128,10 +136,11 @@ def act(conn, user_id, body):
     return answer
 
 
-def history(conn, user_id, start, end, page, page_size):
+def history(conn, user_id, start, end, page, page_size, session_id=None):
     with conn.transaction():
         lock_user(conn,user_id)
         now = clock.utc_now()
+        validate_session(conn,user_id,session_id,now)
         reconcile_locked(conn,user_id,now)
         end = end or now.astimezone(VIETNAM).date()
         start = start or end-timedelta(days=6)

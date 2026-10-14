@@ -11,13 +11,13 @@ router = APIRouter(prefix='/api/attendance',dependencies=[Depends(require_user)]
 @router.get('/status')
 def status(request: Request):
     with request.app.state.pool.connection() as conn:
-        return service.status(conn,request.state.auth.account.id)
+        return service.status(conn,request.state.auth.account.id,request.state.auth.session_id)
 
 
 @router.post('/actions')
 def act(body: ActionInput, request: Request):
     with request.app.state.pool.connection() as conn:
-        return service.act(conn,request.state.auth.account.id,body)
+        return service.act(conn,request.state.auth.account.id,body,request.state.auth.session_id)
 
 
 @router.get('/history')
@@ -25,4 +25,4 @@ def history(request: Request, start: date | None = Query(None,alias='from'), end
     if set(request.query_params)-{'from','to','page','page_size'}:
         raise ApiError(422,'INVALID_INPUT','Tham số lịch sử không hợp lệ.')
     with request.app.state.pool.connection() as conn:
-        return service.history(conn,request.state.auth.account.id,start,end,page,page_size)
+        return service.history(conn,request.state.auth.account.id,start,end,page,page_size,request.state.auth.session_id)

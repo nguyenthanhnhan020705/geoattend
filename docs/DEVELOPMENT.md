@@ -4,6 +4,32 @@ Phase 1 cung cấp đăng nhập, tài khoản cá nhân và Admin cấp/đặt 
 
 ## 1. Chuẩn bị
 
+### Chạy local với Supabase đã cấu hình
+
+Trong worktree `.worktrees/phase-1`, file `.env` có `SUPABASE_DB_HOST/PORT/NAME/USER/PASSWORD/SSLMODE` và `GEOATTEND_RUNTIME_DB_USER/PASSWORD`. User qua session pooler có dạng `role.projectref`, port 5432. Không gửi mật khẩu vào chat hay commit `.env`.
+
+Không cần nạp biến môi trường thủ công mỗi lần mở Terminal. Launcher local đọc `.env`, escape mật khẩu qua Psycopg và chỉ truyền DSN phù hợp cho tiến trình con:
+
+```powershell
+# Migration bằng tài khoản quản trị; không tạo lại Admin/User.
+.\.venv\Scripts\python.exe -m scripts.local_run migrate
+
+# Terminal 1: web/API.
+.\.venv\Scripts\python.exe -m scripts.local_run serve
+
+# Terminal 2: maintenance độc lập, mỗi phút.
+.\.venv\Scripts\python.exe -m scripts.local_run maintenance
+
+# Maintenance một lần.
+.\.venv\Scripts\python.exe -m scripts.local_run maintenance --once
+```
+
+Mở `http://127.0.0.1:8000/login`. Khi tắt máy, hai tiến trình dừng; lần sau chạy lại hai lệnh serve/maintenance. Không chạy lại SQL CREATE ROLE hoặc bootstrap Admin. Database mới khởi tạo Admin bằng `local_run bootstrap-admin`.
+
+Phase 2: User bắt đầu Remote có lý do, Check-out, bắt đầu lại trước 20:00, xem lịch sử theo ngày. Client giữ mã thao tác và payload trong sessionStorage của tab để gửi lại an toàn khi mất phản hồi; không gửi GPS. API chỉ trả lịch sử của chính User; Admin không chấm công.
+
+Maintenance đóng phiên còn mở tại 20:00 giờ Việt Nam. Nếu máy/tác vụ tắt lúc đó, lần chạy lại hoặc đọc/thao tác API xử lý bù, vẫn ghi mốc nghiệp vụ 20:00 và thời điểm thực thi riêng. Muốn tác vụ chạy đúng phút khi không ai mở web cần máy chạy maintenance liên tục; production cần worker độc lập. Nghỉ trưa được đối soát nhưng thao tác nghỉ/Office sẽ có ở Phase 3–4.
+
 - Python 3.13; PostgreSQL có PostGIS và tài khoản migration có quyền tạo schema/extension.
 - Một tài khoản database runtime riêng, không phải superuser hoặc owner schema; database thử nghiệm khác database dùng ứng dụng.
 - Giao diện và API chạy cùng nguồn. Local dùng HTTP loopback; môi trường triển khai dùng HTTPS.
