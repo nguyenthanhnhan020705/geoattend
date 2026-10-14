@@ -10,6 +10,7 @@ from starlette.exceptions import HTTPException
 from app.config import Settings
 from app.errors import ApiError
 from app.db.pool import make_pool
+from app.auth.routes import router as auth_router
 
 STATIC = Path(__file__).parent / 'static'
 
@@ -29,6 +30,14 @@ def create_app(settings=None, pool=None):
 
     app = FastAPI(lifespan=lifespan)
     app.state.settings = settings
+    app.include_router(auth_router)
+
+    @app.middleware('http')
+    async def auth_cache(request, call_next):
+        response = await call_next(request)
+        if request.url.path.startswith(('/api/auth','/api/admin')):
+            response.headers['Cache-Control'] = 'no-store'
+        return response
 
     @app.exception_handler(ApiError)
     async def api_error(request, error):
