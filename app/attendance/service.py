@@ -143,3 +143,18 @@ def history(conn, user_id, start, end, page, page_size):
             day['sessions'] = conn.execute('SELECT id,work_mode,start_time,end_time,start_reason,end_reason,end_source FROM geoattend.work_sessions WHERE day_id=%s ORDER BY start_time,id', (day['id'],)).fetchall()
             day['events'] = conn.execute('SELECT id,session_id,event_type,event_time,recorded_at,source,reason,location_verified FROM geoattend.attendance_events WHERE day_id=%s ORDER BY event_time,recorded_at,id', (day['id'],)).fetchall()
         return dict(items=days,total=total,page=page,page_size=page_size)
+
+
+def maintain(conn):
+    with conn.transaction():
+        now = clock.utc_now()
+        # SQL narrows candidates; authoritative clock/cutoff is rechecked
+        # under the same profile lock as actions. Includes overdue old days.
+        users = conn.execute("SELECT DISTINCT user_id FROM geoattend.attendance_days WHERE status IN ('WORKING_REMOTE','WORKING_OFFICE','LUNCH_BREAK') AND (work_date + time '20:00') AT TIME ZONE 'Asia/Ho_Chi_Minh' <= %s ORDER BY user_id", (now,)).fetchall()
+    closed = 0
+    for row in users:
+        with conn.transaction():
+            # Inactive users still need their existing days closed.
+            conn.execute('SELECT id FROM geoattend.profiles WHERE id=%s FOR UPDATE', (row['user_id'],)).fetchone()
+            closed += reconcile_locked(conn,row['user_id'],clock.utc_now())
+    return closed
