@@ -5,7 +5,7 @@ def test_health_ready(client):
 
 
 def test_health_unavailable_does_not_leak_dsn():
-    from conftest import HealthPool
+    from tests.conftest import HealthPool
     from app.main import create_app
     from app.config import Settings
     from fastapi.testclient import TestClient
