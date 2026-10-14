@@ -11,6 +11,7 @@ from app.config import Settings
 from app.errors import ApiError
 from app.db.pool import make_pool
 from app.auth.routes import router as auth_router
+from app.accounts.routes import router as accounts_router
 
 STATIC = Path(__file__).parent / 'static'
 
@@ -31,6 +32,7 @@ def create_app(settings=None, pool=None):
     app = FastAPI(lifespan=lifespan)
     app.state.settings = settings
     app.include_router(auth_router)
+    app.include_router(accounts_router)
 
     @app.middleware('http')
     async def auth_cache(request, call_next):

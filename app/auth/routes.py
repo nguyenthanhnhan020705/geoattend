@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, Request, Response
 from app.auth.dependencies import get_auth_context, validate_origin
-from app.auth.schemas import LoginInput
+from app.auth.schemas import LoginInput, PasswordChangeInput
+from app.accounts.service import change_password
 from app.auth.service import login, SESSION_TTL_SECONDS
 from app.auth.repository import revoke_session
 from app.clock import utc_now
@@ -36,6 +37,15 @@ def me(context=Depends(get_auth_context)):
 def logout(request: Request, context=Depends(get_auth_context)):
     with request.app.state.pool.connection() as conn:
         revoke_session(conn,context.session_id,utc_now())
+    response = Response(status_code=204)
+    response.delete_cookie('geoattend_session',path='/')
+    return response
+
+
+@router.post('/change-password',status_code=204)
+def password_change(body: PasswordChangeInput, request: Request, context=Depends(get_auth_context)):
+    with request.app.state.pool.connection() as conn:
+        change_password(conn,context.account.id,body.current_password,body.new_password,utc_now())
     response = Response(status_code=204)
     response.delete_cookie('geoattend_session',path='/')
     return response
