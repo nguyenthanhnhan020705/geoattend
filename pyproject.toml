@@ -1,4 +1,4 @@
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["."]
-markers = ["integration: requires an isolated PostgreSQL/PostGIS database"]
+markers = ["integration: requires an isolated PostgreSQL/PostGIS database", "browser: live browser verification (Edge or Playwright Chromium)"]

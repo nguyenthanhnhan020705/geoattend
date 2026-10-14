@@ -2,9 +2,9 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 import psycopg
 from psycopg_pool import PoolTimeout
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi.responses import FileResponse, JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from starlette.exceptions import HTTPException
 from app.config import Settings
@@ -12,6 +12,7 @@ from app.errors import ApiError
 from app.db.pool import make_pool
 from app.auth.routes import router as auth_router
 from app.accounts.routes import router as accounts_router
+from app.auth.dependencies import get_auth_context
 
 STATIC = Path(__file__).parent / 'static'
 
@@ -39,6 +40,9 @@ def create_app(settings=None, pool=None):
         response = await call_next(request)
         if request.url.path.startswith(('/api/auth','/api/admin')):
             response.headers['Cache-Control'] = 'no-store'
+        response.headers['X-Content-Type-Options'] = 'nosniff'
+        response.headers['Referrer-Policy'] = 'same-origin'
+        response.headers['Content-Security-Policy'] = "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; frame-ancestors 'none'; form-action 'self'; base-uri 'self'"
         return response
 
     @app.exception_handler(ApiError)
@@ -70,6 +74,33 @@ def create_app(settings=None, pool=None):
     @app.get('/login', include_in_schema=False)
     def login_page():
         return FileResponse(STATIC / 'login.html', media_type='text/html')
+
+    def protected_page(request, filename, role=None):
+        try:
+            context = get_auth_context(request)
+        except ApiError as error:
+            if error.status_code == 401:
+                return RedirectResponse('/login',status_code=303)
+            raise
+        if role and context.account.role != role:
+            raise ApiError(403,'FORBIDDEN','Bạn không có quyền truy cập trang này.')
+        return FileResponse(STATIC/filename, media_type='text/html',headers={'Cache-Control':'no-store'})
+
+    @app.get('/',include_in_schema=False)
+    def index():
+        return RedirectResponse('/login',status_code=303)
+
+    @app.get('/user',include_in_schema=False)
+    def user_page(request: Request):
+        return protected_page(request,'user.html','USER')
+
+    @app.get('/admin/users',include_in_schema=False)
+    def admin_users_page(request: Request):
+        return protected_page(request,'admin-users.html','ADMIN')
+
+    @app.get('/account',include_in_schema=False)
+    def account_page(request: Request):
+        return protected_page(request,'account.html')
 
     app.mount('/static', StaticFiles(directory=STATIC), name='static')
     return app
