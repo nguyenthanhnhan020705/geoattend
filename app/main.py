@@ -1,0 +1,67 @@
+from contextlib import asynccontextmanager
+from pathlib import Path
+import psycopg
+from psycopg_pool import PoolTimeout
+from fastapi import FastAPI
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import FileResponse, JSONResponse
+from fastapi.staticfiles import StaticFiles
+from starlette.exceptions import HTTPException
+from app.config import Settings
+from app.errors import ApiError
+from app.db.pool import make_pool
+
+STATIC = Path(__file__).parent / 'static'
+
+
+def create_app(settings=None, pool=None):
+    settings = settings or Settings.from_env()
+
+    @asynccontextmanager
+    async def lifespan(app):
+        owned = pool is None and bool(settings.database_url)
+        app.state.pool = pool or (make_pool(settings.database_url) if owned else None)
+        if owned:
+            app.state.pool.open()
+        yield
+        if owned:
+            app.state.pool.close()
+
+    app = FastAPI(lifespan=lifespan)
+    app.state.settings = settings
+
+    @app.exception_handler(ApiError)
+    async def api_error(request, error):
+        return JSONResponse({'code': error.code, 'message': error.message}, status_code=error.status_code)
+
+    @app.exception_handler(RequestValidationError)
+    async def validation_error(request, error):
+        return JSONResponse({'code': 'INVALID_INPUT', 'message': 'Thông tin nhập không hợp lệ.'}, status_code=422)
+
+    @app.exception_handler(HTTPException)
+    async def http_error(request, error):
+        return JSONResponse({'code': 'HTTP_ERROR', 'message': 'Không tìm thấy hoặc không thể truy cập.'}, status_code=error.status_code)
+
+    async def database_error(request, error):
+        return JSONResponse({'code': 'DATABASE_UNAVAILABLE', 'message': 'Cơ sở dữ liệu chưa sẵn sàng.'}, status_code=503)
+
+    app.add_exception_handler(psycopg.OperationalError, database_error)
+    app.add_exception_handler(PoolTimeout, database_error)
+
+    @app.get('/api/health')
+    def health():
+        if app.state.pool is None:
+            raise ApiError(503, 'DATABASE_UNAVAILABLE', 'Cơ sở dữ liệu chưa sẵn sàng.')
+        with app.state.pool.connection() as conn:
+            conn.execute('SELECT 1').fetchone()
+        return {'status': 'ok', 'database': 'ok'}
+
+    @app.get('/login', include_in_schema=False)
+    def login_page():
+        return FileResponse(STATIC / 'login.html', media_type='text/html')
+
+    app.mount('/static', StaticFiles(directory=STATIC), name='static')
+    return app
+
+
+app = create_app()
