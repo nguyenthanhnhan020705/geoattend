@@ -12,6 +12,7 @@ from app.errors import ApiError
 from app.db.pool import make_pool
 from app.auth.routes import router as auth_router
 from app.accounts.routes import router as accounts_router
+from app.attendance.routes import router as attendance_router
 from app.auth.dependencies import get_auth_context
 
 STATIC = Path(__file__).parent / 'static'
@@ -34,11 +35,12 @@ def create_app(settings=None, pool=None):
     app.state.settings = settings
     app.include_router(auth_router)
     app.include_router(accounts_router)
+    app.include_router(attendance_router)
 
     @app.middleware('http')
     async def auth_cache(request, call_next):
         response = await call_next(request)
-        if request.url.path.startswith(('/api/auth','/api/admin')):
+        if request.url.path.startswith(('/api/auth','/api/admin','/api/attendance')):
             response.headers['Cache-Control'] = 'no-store'
         response.headers['X-Content-Type-Options'] = 'nosniff'
         response.headers['Referrer-Policy'] = 'same-origin'

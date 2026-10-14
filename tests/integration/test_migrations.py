@@ -6,7 +6,7 @@ pytestmark = pytest.mark.integration
 
 def test_migrate_all_tables_and_repeat_preserves_data(db):
     from app.db.migrations import apply_migrations
-    assert apply_migrations(db, Path('migrations')) == ['001_identity.sql', '002_attendance.sql']
+    assert apply_migrations(db, Path('migrations')) == ['001_identity.sql', '002_attendance.sql', '003_attendance_replay.sql']
     db.execute("INSERT INTO geoattend.profiles(username,full_name,password_hash,role) VALUES('nhan','Nhân','fixture','USER')")
     db.commit()
     assert apply_migrations(db, Path('migrations')) == []
