@@ -1,6 +1,6 @@
-# GeoAttend — Chạy và kiểm tra Phase 1
+# GeoAttend — Chạy và kiểm tra Phase 1–2
 
-Phase 1 cung cấp đăng nhập, tài khoản cá nhân và Admin cấp/đặt lại tài khoản User. Luồng Office/Remote, lịch sử nghiệp vụ, Dashboard và bản đồ được triển khai ở các phase sau; migration đã chuẩn bị mô hình dữ liệu của MVP.
+Phase 1 cung cấp đăng nhập và quản lý tài khoản. Phase 2 bổ sung Remote, Check-out, lịch sử cá nhân và tự đóng phiên lúc 20:00. Office, nghỉ, Dashboard và bản đồ thuộc các phase tiếp theo. Người kiểm thử giao diện xem [checklist thủ công Phase 2](MANUAL_TEST_PHASE_2.md).
 
 ## 1. Chuẩn bị
 
@@ -91,7 +91,7 @@ Xác nhận tên Admin, nhập mật khẩu mới; mọi phiên đăng nhập c�
 
 ## 4. Chạy ứng dụng
 
-Dữ liệu xác thực hết hạn có thể dọn bằng `.\.venv\Scripts\python.exe -m scripts.prune_auth`, dùng runtime DSN trong giao dịch riêng. Login chỉ dọn các lần thử sai của tên tài khoản đang đăng nhập, không khóa/xóa phiên của tài khoản khác; session hết hạn/revoked bị từ chối ngay dù chưa được dọn vật lý. Maintenance định kỳ ở Phase 2 sẽ dùng cùng chức năng dọn này.
+Dữ liệu xác thực hết hạn có thể dọn bằng `.\.venv\Scripts\python.exe -m scripts.prune_auth`, dùng runtime DSN trong giao dịch riêng. Login chỉ dọn các lần thử sai của tên tài khoản đang đăng nhập, không khóa/xóa phiên của tài khoản khác; session hết hạn/revoked bị từ chối ngay dù chưa được dọn vật lý. Maintenance định kỳ ở Phase 2 đã dùng cùng chức năng dọn này.
 
 ```powershell
 .\.venv\Scripts\python.exe -m uvicorn app.main:app --host 127.0.0.1 --port 8000
@@ -146,4 +146,4 @@ git diff --check
 
 ## 6. Phạm vi bàn giao
 
-Xem [roadmap](ROADMAP.md) và [kế hoạch Phase 1](superpowers/plans/2026-10-14-phase-1-foundation-auth.md). Các thao tác chấm công và các tác vụ 20:00/GPS 30 ngày thuộc phase kế tiếp; không phải chức năng đã triển khai trong Phase 1. Hạ tầng Supabase/production chưa được tạo hoặc cấu hình tự động bằng lần thực hiện này.
+Xem [roadmap](ROADMAP.md), [kế hoạch Phase 1](superpowers/plans/2026-10-14-phase-1-foundation-auth.md) và [báo cáo Phase 2](PHASE_2_VERIFICATION.md). Remote, lịch sử cá nhân và tác vụ 20:00 đã triển khai trong Phase 2. Office/GPS 30 ngày thuộc Phase 3; nghỉ và luồng hỗn hợp thuộc Phase 4. Supabase đã được cấu hình cho ứng dụng local; triển khai production và pilot thuộc Phase 6.

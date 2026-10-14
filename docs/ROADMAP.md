@@ -4,7 +4,7 @@
 
 Chia phạm vi trong [BRD](../README.md) thành các phase có thứ tự phụ thuộc, công việc và điều kiện hoàn thành rõ ràng.
 
-Tại thời điểm lập roadmap (14/10/2026), các file dự án được tìm thấy trong workspace chỉ gồm `README.md`. Chưa có mã nguồn Backend, Frontend, migration hoặc bộ kiểm thử để xác nhận tiến độ được mô tả trong BRD. Hiện **Phase 0 hoàn thành về phân tích/thiết kế**, **Phase 1 hoàn thành trên nhánh `feat/phase-1-foundation-auth`**, các phase 2–6 **chưa thực hiện**; nếu có mã nguồn ở nơi khác, cần đối chiếu trước khi dựng mới.
+Tại thời điểm bắt đầu dự án (14/10/2026), workspace chỉ có `README.md`. Hiện **Phase 0, Phase 1 và Phase 2 đã hoàn thành** trong worktree `.worktrees/phase-1`, nhánh `feat/phase-1-foundation-auth`. Phase 2 đã được kiểm chứng bằng 85 kiểm thử và chạy với Supabase; các phase 3–6 **chưa triển khai**. Xem [báo cáo Phase 2](PHASE_2_VERIFICATION.md) và [hướng dẫn kiểm thử thủ công](MANUAL_TEST_PHASE_2.md).
 
 Đây là roadmap cấp dự án. Thiết kế và kế hoạch triển khai chi tiết sẽ được lập theo từng phase, sau khi các quyết định nghiệp vụ liên quan đã được chốt. Roadmap không tự quyết định thay các câu hỏi mở trong BRD.
 
@@ -172,4 +172,4 @@ Thứ tự thực hiện: **0 → 1 → 2 → 3 → 4 → 5 → 6**.
 - Chưa gán lịch theo tuần vì chưa biết số người phát triển và thời gian dành cho dự án. Ước lượng sau khi chia task và xác nhận nguồn lực.
 - PWA, notification, xuất báo cáo, Audit Log, Correction Request, QR, nhiều văn phòng/phòng ban, mobile và AI/RAG thuộc giai đoạn sau MVP.
 
-**Bước tiếp theo:** chọn cách tích hợp nhánh Phase 1; sau đó lập kế hoạch Phase 2 theo thiết kế đã duyệt. Xem [hướng dẫn chạy](DEVELOPMENT.md). Các tài khoản và database được tạo trong kiểm thử là dữ liệu riêng, chưa triển khai Supabase/production.
+**Bước tiếp theo:** Phase 3 — Geofence và Office theo thiết kế đã duyệt. Xem [hướng dẫn chạy](DEVELOPMENT.md). Ứng dụng local đang dùng Supabase; bộ kiểm thử tự động dùng database riêng. Chưa triển khai production hoặc chạy pilot.
