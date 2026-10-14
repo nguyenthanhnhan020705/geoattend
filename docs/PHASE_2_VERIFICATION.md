@@ -46,3 +46,4 @@ Review độc lập: agent `phase2_final_review`, GPT-6-astra, chỉ đọc; kh�
 - Khởi động nền Windows bằng Start-Process bị công cụ từ chối `blocked by policy`; đã chạy thành công bằng các phiên Terminal được quản lý, không cần người dùng làm bước thay thế.
 - Máy phải bật để worker chạy mỗi phút. Khi tắt máy, lần chạy lại/API đọc xử lý bù với mốc nghiệp vụ 20:00. Production cần worker liên tục.
 - Không tuyên bố pilot, HTTPS/GPS hay ngưỡng 95% API ≤2s đã đạt: thuộc các phase sau.
+- PostgreSQL thử nghiệm đã dừng sau kiểm chứng. Xóa workspace ghi chú `.superpowers/sdd/2026-10-14-phase-2-remote-attendance` bị kiểm soát tự động từ chối `blocked by policy`; giữ lại thư mục đã được Git ignore, không thử vượt kiểm soát. Branch và worktree được giữ để tiếp tục phát triển.
