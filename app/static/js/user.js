@@ -54,7 +54,7 @@ async function sendPending() {
 
 function submit(action, reason) {
   if (!current || pending || busy) return;
-  pending = {accountId,body:{request_id:crypto.randomUUID(),expected_revision:current.revision,action,...(reason !== undefined ? {reason} : {})}};
+  pending = {accountId,body:{request_id:crypto.randomUUID(),expected_revision:current.revision,expected_work_date:current.work_date,action,...(reason !== undefined ? {reason} : {})}};
   savePending(); sendPending();
 }
 

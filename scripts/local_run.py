@@ -37,6 +37,9 @@ def local_environment(path, mode, inherited=None):
     env[target] = dsn
     env['GEOATTEND_ORIGIN'] = values.get('GEOATTEND_ORIGIN','http://127.0.0.1:8000')
     env['GEOATTEND_SECURE_COOKIES'] = values.get('GEOATTEND_SECURE_COOKIES','false')
+    if mode=='migrate':
+        # Only migration receives both credentials to grant runtime access.
+        env['GEOATTEND_DATABASE_URL'] = local_environment(path,'serve',{})['GEOATTEND_DATABASE_URL']
     return env
 
 

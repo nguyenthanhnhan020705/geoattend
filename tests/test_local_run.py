@@ -40,3 +40,12 @@ def test_serve_does_not_inherit_admin_secret(tmp_path):
     result=local_environment(envfile,'serve',{'GEOATTEND_MIGRATION_DATABASE_URL':'postgresql://admin:secret@localhost/postgres','SUPABASE_DB_PASSWORD':'secret'})
     assert 'GEOATTEND_MIGRATION_DATABASE_URL' not in result
     assert 'SUPABASE_DB_PASSWORD' not in result
+
+
+def test_migration_environment_contains_runtime_for_grants(tmp_path):
+    from scripts.local_run import local_environment
+    envfile=tmp_path/'.env'
+    envfile.write_text('GEOATTEND_MIGRATION_DATABASE_URL=host=localhost user=postgres\nGEOATTEND_DATABASE_URL=host=localhost user=worker\n',encoding='utf-8')
+    result=local_environment(envfile,'migrate',{})
+    assert conninfo_to_dict(result['GEOATTEND_DATABASE_URL'])['user']=='worker'
+    assert conninfo_to_dict(result['GEOATTEND_MIGRATION_DATABASE_URL'])['user']=='postgres'

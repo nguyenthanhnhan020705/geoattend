@@ -1,4 +1,5 @@
 from typing import Literal
+from datetime import date
 from uuid import UUID
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
@@ -7,6 +8,7 @@ class ActionInput(BaseModel):
     model_config = ConfigDict(extra='forbid')
     request_id: UUID
     expected_revision: int = Field(ge=0, strict=True)
+    expected_work_date: date
     action: Literal['START_REMOTE', 'CHECK_OUT']
     reason: str | None = None
 

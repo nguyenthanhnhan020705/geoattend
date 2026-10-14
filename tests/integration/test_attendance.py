@@ -18,7 +18,8 @@ def employee(api_client, monkeypatch):
 
 
 def action(client, headers, revision=0, kind='START_REMOTE', reason='Làm việc tại nhà', request_id=None, **extra):
-    body = dict(request_id=request_id or str(uuid4()), expected_revision=revision, action=kind, **extra)
+    expected_date=extra.pop('expected_work_date','2026-10-14')
+    body = dict(request_id=request_id or str(uuid4()), expected_revision=revision, expected_work_date=expected_date, action=kind, **extra)
     if reason is not None:
         body['reason'] = reason
     return client.post('/api/attendance/actions', headers=headers, json=body)
@@ -52,7 +53,7 @@ def test_remote_reason_required(employee,reason):
 @pytest.mark.parametrize('extra',[{'latitude':10},{'user_id':str(uuid4())},{'expected_revision':-1}])
 def test_reject_extra_and_invalid_input(employee,extra):
     client,headers,_=employee
-    body={'request_id':str(uuid4()),'expected_revision':0,'action':'START_REMOTE','reason':'Home'}
+    body={'request_id':str(uuid4()),'expected_revision':0,'expected_work_date':'2026-10-14','action':'START_REMOTE','reason':'Home'}
     body.update(extra)
     assert client.post('/api/attendance/actions',headers=headers,json=body).status_code==422
 

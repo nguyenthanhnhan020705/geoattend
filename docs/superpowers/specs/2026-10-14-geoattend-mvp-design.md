@@ -1,4 +1,4 @@
-﻿# GeoAttend — Thiết kế MVP, Phase 0
+# GeoAttend — Thiết kế MVP, Phase 0
 
 **Ngày:** 14/10/2026. **Trạng thái:** đã được người dùng duyệt qua yêu cầu “tiếp tục” sau bàn giao bản thiết kế. Phase 0 hoàn thành về phân tích và thiết kế; chưa triển khai mã nguồn.
 
@@ -137,7 +137,7 @@ Mọi timestamp dùng ISO 8601 có múi giờ; `work_date` dạng YYYY-MM-DD. Ng
 | `POST /api/auth/logout` | Đã đăng nhập | Thu hồi phiên hiện tại và xóa cookie. |
 | `POST /api/auth/change-password` | Đã đăng nhập | `{current_password, new_password}` → thu hồi các phiên, đăng nhập lại. |
 | `GET /api/attendance/status` | User | Trạng thái ngày hiện tại, revision, phiên mở, giờ Backend và các thao tác hợp lệ. |
-| `POST /api/attendance/actions` | User | `request_id`, `expected_revision`, `action`, dữ liệu theo thao tác → trạng thái mới, revision, ID phiên/sự kiện. |
+| `POST /api/attendance/actions` | User | `request_id`, `expected_work_date`, `expected_revision`, `action`, dữ liệu theo thao tác → trạng thái mới, revision, ID phiên/sự kiện. |
 | `GET /api/attendance/history` | User | `from`, `to`, `page`, `page_size` → Timeline bản thân; mặc định 7 ngày, page_size=20, tối đa 100. |
 | `GET /api/admin/users` | Admin | Danh sách User gồm id, username, full_name; không có mật khẩu. |
 | `POST /api/admin/users` | Admin | `{username, full_name, password}` → tạo User; không nhận role từ client. |

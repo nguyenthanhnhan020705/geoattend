@@ -40,7 +40,7 @@ def test_next_day_closes_previous_before_new_session(employee,migrated_db,monkey
     client,headers,_=employee
     assert action(client,headers).status_code==200
     set_time(monkeypatch,2,day=15)
-    new=action(client,headers)
+    new=action(client,headers,expected_work_date='2026-10-15')
     assert new.status_code==200
     rows=migrated_db.execute('SELECT work_date,status FROM geoattend.attendance_days ORDER BY work_date').fetchall()
     assert [r['status'] for r in rows]==['CHECKED_OUT','WORKING_REMOTE']
@@ -84,3 +84,36 @@ def test_maintenance_once_cli(employee,test_dsn):
     completed=subprocess.run([sys.executable,'-m','scripts.maintenance','--once'],env=env,capture_output=True,encoding='utf-8')
     assert completed.returncode==0,completed.stderr
     assert 'Maintenance' in completed.stdout
+
+
+def test_never_committed_start_cannot_roll_into_next_day(employee,monkeypatch):
+    client,headers,_=employee
+    old={'request_id':str(uuid4()),'expected_revision':0,'expected_work_date':'2026-10-14','action':'START_REMOTE','reason':'Yesterday'}
+    set_time(monkeypatch,2,day=15)
+    response=client.post('/api/attendance/actions',headers=headers,json=old)
+    assert response.status_code==409 and response.json()['code']=='STALE_DATE'
+    assert client.get('/api/attendance/status').json()['status']=='NOT_STARTED'
+
+
+def test_stale_checkout_cannot_close_next_days_session(employee,monkeypatch):
+    client,headers,_=employee
+    assert action(client,headers).status_code==200
+    set_time(monkeypatch,2,day=15)
+    fresh={'request_id':str(uuid4()),'expected_revision':0,'expected_work_date':'2026-10-15','action':'START_REMOTE','reason':'Today'}
+    assert client.post('/api/attendance/actions',headers=headers,json=fresh).status_code==200
+    old={'request_id':str(uuid4()),'expected_revision':1,'expected_work_date':'2026-10-14','action':'CHECK_OUT'}
+    response=client.post('/api/attendance/actions',headers=headers,json=old)
+    assert response.status_code==409 and response.json()['code']=='STALE_DATE'
+    assert client.get('/api/attendance/status').json()['status']=='WORKING_REMOTE'
+
+
+def test_committed_action_replay_across_midnight_keeps_original_day(employee,monkeypatch):
+    client,headers,_=employee
+    key=str(uuid4())
+    first=action(client,headers,request_id=key)
+    assert first.status_code==200
+    set_time(monkeypatch,2,day=15)
+    replay=action(client,headers,request_id=key)
+    assert replay.status_code==200 and replay.json()==first.json()
+    today=client.get('/api/attendance/status').json()
+    assert today['work_date']=='2026-10-15' and today['status']=='NOT_STARTED'
