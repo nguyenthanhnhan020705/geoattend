@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 from app.accounts.repository import get_account_by_username
 from app.auth.models import Account, AuthContext
 from app.auth.passwords import normalize_username, hasher, verify_password
-from app.auth.repository import prune_auth_data
+from app.auth.repository import prune_login_attempts
 from app.errors import ApiError
 
 SESSION_TTL_SECONDS = 43200
@@ -31,7 +31,9 @@ def login(conn, username, password, now):
     with conn.transaction():
         lock = int.from_bytes(hashlib.sha256(('login:'+username).encode()).digest()[:8], 'big', signed=True)
         conn.execute('SELECT pg_advisory_xact_lock(%s)',(lock,))
-        prune_auth_data(conn,now)
+        # Never acquire session-cleanup locks before acquiring a profile lock.
+        # Global session cleanup belongs in its own maintenance transaction.
+        prune_login_attempts(conn,username,now)
         n = conn.execute('SELECT count(*) AS n FROM geoattend.auth_attempts WHERE username=%s AND attempted_at>%s',(username,now-timedelta(minutes=5))).fetchone()['n']
         if n >= 5:
             error = ApiError(429,'TOO_MANY_ATTEMPTS','Đã thử sai nhiều lần. Vui lòng thử lại sau 5 phút.')

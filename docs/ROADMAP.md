@@ -4,7 +4,7 @@
 
 Chia phạm vi trong [BRD](../README.md) thành các phase có thứ tự phụ thuộc, công việc và điều kiện hoàn thành rõ ràng.
 
-Tại thời điểm lập roadmap (14/10/2026), các file dự án được tìm thấy trong workspace chỉ gồm `README.md`. Chưa có mã nguồn Backend, Frontend, migration hoặc bộ kiểm thử để xác nhận tiến độ được mô tả trong BRD. Hiện **Phase 0 hoàn thành về phân tích/thiết kế**, **Phase 1 đã có kế hoạch chờ duyệt**, các phase triển khai **chưa thực hiện**; nếu có mã nguồn ở nơi khác, cần đối chiếu trước khi dựng mới.
+Tại thời điểm lập roadmap (14/10/2026), các file dự án được tìm thấy trong workspace chỉ gồm `README.md`. Chưa có mã nguồn Backend, Frontend, migration hoặc bộ kiểm thử để xác nhận tiến độ được mô tả trong BRD. Hiện **Phase 0 hoàn thành về phân tích/thiết kế**, **Phase 1 hoàn thành trên nhánh `feat/phase-1-foundation-auth`**, các phase 2–6 **chưa thực hiện**; nếu có mã nguồn ở nơi khác, cần đối chiếu trước khi dựng mới.
 
 Đây là roadmap cấp dự án. Thiết kế và kế hoạch triển khai chi tiết sẽ được lập theo từng phase, sau khi các quyết định nghiệp vụ liên quan đã được chốt. Roadmap không tự quyết định thay các câu hỏi mở trong BRD.
 
@@ -62,19 +62,19 @@ Thứ tự thực hiện: **0 → 1 → 2 → 3 → 4 → 5 → 6**.
 
 ### Phase 1 — Nền tảng, database và đăng nhập
 
-**Kế hoạch chi tiết:** [Phase 1 — nền tảng và tài khoản](superpowers/plans/2026-10-14-phase-1-foundation-auth.md), chờ duyệt trước triển khai.
+**Kế hoạch chi tiết:** [Phase 1 — nền tảng và tài khoản](superpowers/plans/2026-10-14-phase-1-foundation-auth.md), đã được người dùng duyệt bằng việc chọn `superpowers:executing-plans`; đã thực hiện 6 task, qua review độc lập và lượt sửa cuối. [Kết quả kiểm chứng](PHASE_1_VERIFICATION.md): 46 kiểm thử đạt.
 
 **Yêu cầu BRD:** FR-01, FR-16, FR-17, FR-18; nền tảng NFR-01, NFR-03.
 
-- [ ] Dựng Backend FastAPI, Frontend cơ bản và cấu hình môi trường mẫu không chứa bí mật.
-- [ ] Thiết lập PostgreSQL/PostGIS và migration cho 9 bảng ứng dụng theo thiết kế Phase 0; tách dữ liệu xác thực, trạng thái ngày và GPS khỏi phiên/sự kiện.
-- [ ] Thiết lập quy trình khởi tạo một Admin khi cài đặt; chạy lại không tạo thêm Admin, không đưa mật khẩu vào mã nguồn/Git. Chuẩn bị dữ liệu thử nghiệm User và văn phòng.
-- [ ] Triển khai đăng nhập bằng tên tài khoản/mật khẩu, đăng xuất và xác thực phía Backend theo AC-01.
-- [ ] Triển khai đổi mật khẩu cá nhân tùy chọn, không chặn lần đăng nhập đầu tiên; kiểm thử mật khẩu cũ/mới sau khi đổi theo AC-18.
-- [ ] Triển khai giao diện/API Admin tạo và cấp tài khoản User; kiểm tra tên tài khoản duy nhất, quyền tạo tài khoản và vai trò mặc định `USER` theo AC-17.
-- [ ] Triển khai Admin đặt lại mật khẩu User theo AC-19; kiểm thử quyền truy cập, mật khẩu cũ/mới và bảo toàn lịch sử.
-- [ ] Áp dụng phân quyền cho API và điều hướng giao diện theo vai trò.
-- [ ] Có kiểm tra tình trạng dịch vụ/database, hướng dẫn chạy local và nền tảng chạy kiểm thử.
+- [x] Dựng Backend FastAPI, Frontend cơ bản và cấu hình môi trường mẫu không chứa bí mật.
+- [x] Thiết lập PostgreSQL/PostGIS và migration cho 9 bảng ứng dụng theo thiết kế Phase 0; tách dữ liệu xác thực, trạng thái ngày và GPS khỏi phiên/sự kiện.
+- [x] Thiết lập quy trình khởi tạo một Admin khi cài đặt; chạy lại không tạo thêm Admin, không đưa mật khẩu vào mã nguồn/Git. Dữ liệu User/văn phòng được tạo trong database kiểm thử riêng, không cấp tài khoản thực tế tự động.
+- [x] Triển khai đăng nhập bằng tên tài khoản/mật khẩu, đăng xuất và xác thực phía Backend theo AC-01.
+- [x] Triển khai đổi mật khẩu cá nhân tùy chọn, không chặn lần đăng nhập đầu tiên; kiểm thử mật khẩu cũ/mới sau khi đổi theo AC-18.
+- [x] Triển khai giao diện/API Admin tạo và cấp tài khoản User; kiểm tra tên tài khoản duy nhất, quyền tạo tài khoản và vai trò mặc định `USER` theo AC-17.
+- [x] Triển khai Admin đặt lại mật khẩu User theo AC-19; kiểm thử quyền truy cập, mật khẩu cũ/mới và bảo toàn lịch sử.
+- [x] Áp dụng phân quyền cho API và điều hướng giao diện theo vai trò.
+- [x] Có kiểm tra tình trạng dịch vụ/database, hướng dẫn chạy local và nền tảng chạy kiểm thử.
 
 **Đầu ra:** ứng dụng chạy local, người dùng đăng nhập và truy cập đúng chức năng theo vai trò.
 
@@ -172,4 +172,4 @@ Thứ tự thực hiện: **0 → 1 → 2 → 3 → 4 → 5 → 6**.
 - Chưa gán lịch theo tuần vì chưa biết số người phát triển và thời gian dành cho dự án. Ước lượng sau khi chia task và xác nhận nguồn lực.
 - PWA, notification, xuất báo cáo, Audit Log, Correction Request, QR, nhiều văn phòng/phòng ban, mobile và AI/RAG thuộc giai đoạn sau MVP.
 
-**Bước tiếp theo:** duyệt [kế hoạch Phase 1](superpowers/plans/2026-10-14-phase-1-foundation-auth.md) và chọn cách thực hiện. Phase 0 đã duyệt; chưa chạy migration, tạo tài khoản thật hoặc triển khai mã nguồn.
+**Bước tiếp theo:** chọn cách tích hợp nhánh Phase 1; sau đó lập kế hoạch Phase 2 theo thiết kế đã duyệt. Xem [hướng dẫn chạy](DEVELOPMENT.md). Các tài khoản và database được tạo trong kiểm thử là dữ liệu riêng, chưa triển khai Supabase/production.

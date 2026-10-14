@@ -16,7 +16,7 @@ def validate_origin(request, origin):
 def validate_csrf(request, context):
     validate_origin(request,request.app.state.settings.origin)
     token = request.headers.get('x-csrf-token','')
-    if not secrets.compare_digest(token,context.csrf_token):
+    if not token.isascii() or not secrets.compare_digest(token,context.csrf_token):
         raise ApiError(403,'INVALID_CSRF','Yêu cầu không hợp lệ. Vui lòng tải lại trang.')
 
 

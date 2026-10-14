@@ -1,6 +1,10 @@
 from datetime import timedelta
 
 
+def prune_login_attempts(conn, username, now):
+    return conn.execute('DELETE FROM geoattend.auth_attempts WHERE username=%s AND attempted_at<=%s', (username,now-timedelta(minutes=5))).rowcount
+
+
 def prune_auth_data(conn, now):
     attempts = conn.execute('DELETE FROM geoattend.auth_attempts WHERE attempted_at<=%s',(now-timedelta(minutes=5),)).rowcount
     sessions = conn.execute('DELETE FROM geoattend.auth_sessions WHERE revoked_at IS NOT NULL OR expires_at<=%s',(now,)).rowcount

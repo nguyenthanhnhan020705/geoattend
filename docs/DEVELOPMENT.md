@@ -65,6 +65,8 @@ Xác nhận tên Admin, nhập mật khẩu mới; mọi phiên đăng nhập c�
 
 ## 4. Chạy ứng dụng
 
+Dữ liệu xác thực hết hạn có thể dọn bằng `.\.venv\Scripts\python.exe -m scripts.prune_auth`, dùng runtime DSN trong giao dịch riêng. Login chỉ dọn các lần thử sai của tên tài khoản đang đăng nhập, không khóa/xóa phiên của tài khoản khác; session hết hạn/revoked bị từ chối ngay dù chưa được dọn vật lý. Maintenance định kỳ ở Phase 2 sẽ dùng cùng chức năng dọn này.
+
 ```powershell
 .\.venv\Scripts\python.exe -m uvicorn app.main:app --host 127.0.0.1 --port 8000
 ```

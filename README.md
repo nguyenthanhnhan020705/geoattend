@@ -4,6 +4,8 @@
 
 Lộ trình triển khai: [Các phase phát triển MVP](docs/ROADMAP.md).
 
+Chạy nền tảng và tài khoản: [Hướng dẫn phát triển](docs/DEVELOPMENT.md).
+
 Thiết kế Phase 0 đã duyệt: [Kiến trúc, dữ liệu, API và màn hình MVP](docs/superpowers/specs/2026-10-14-geoattend-mvp-design.md).
 
 | Thuộc tính | Nội dung |
@@ -329,7 +331,7 @@ Kết quả mong đợi là nhân viên thực hiện được luồng từ đă
 
 ## Phụ lục A. Định hướng kỹ thuật
 
-Phụ lục tóm tắt thiết kế Phase 0 đã duyệt. FastAPI phục vụ giao diện HTML/CSS/JavaScript và API trên cùng một địa chỉ; mô hình dữ liệu và hợp đồng chi tiết nằm trong bản thiết kế liên kết ở đầu README. Đây là thiết kế, chưa phải mã nguồn đã triển khai.
+Phụ lục tóm tắt thiết kế Phase 0 đã duyệt. FastAPI phục vụ giao diện HTML/CSS/JavaScript và API trên cùng một địa chỉ; mô hình dữ liệu và hợp đồng chi tiết nằm trong bản thiết kế liên kết ở đầu README. Đây là thiết kế MVP; Phase 1 đã có mã nguồn nền tảng và tài khoản, các chức năng chấm công/bản đồ còn ở các phase sau. Trạng thái cập nhật nằm trong roadmap.
 
 ### A.1. Kiến trúc và công nghệ
 

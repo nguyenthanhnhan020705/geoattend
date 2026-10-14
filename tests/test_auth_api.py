@@ -65,3 +65,10 @@ def test_inactive_account_session_denied(api_client, migrated_db):
     migrated_db.execute("UPDATE geoattend.profiles SET is_active=false WHERE username='admin'")
     migrated_db.commit()
     assert api_client.get('/api/auth/me').status_code == 401
+
+
+def test_non_ascii_csrf_is_rejected_not_server_error(api_client):
+    signin(api_client)
+    response = api_client.post('/api/auth/logout',headers=[(b'x-csrf-token',b'\xff')])
+    assert response.status_code == 403
+    assert response.json()['code'] == 'INVALID_CSRF'

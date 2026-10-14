@@ -1,6 +1,6 @@
 ﻿# GeoAttend Phase 1 Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking. Phương thức thực hiện chờ người dùng chọn; chưa phân công agent hoặc viết mã sản phẩm.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking. Phương thức đã chọn: trực tiếp trong phiên, một reviewer độc lập ở cuối. Tiến độ được ghi trong báo cáo kiểm chứng; checklist gốc giữ làm hợp đồng thực hiện.
 
 **Goal:** Chạy được ứng dụng cùng nguồn, database PostGIS, một Admin và luồng cấp/đăng nhập/đổi/đặt lại mật khẩu User.
 
@@ -10,7 +10,7 @@
 
 **Spec:** [Thiết kế MVP đã duyệt](../specs/2026-10-14-geoattend-mvp-design.md), nhất là mục 2–4, 8–11. [BRD](../../../README.md): FR-01, FR-16–18; AC-01 phần xác thực, AC-17–19. Phần lịch sử trong AC-01 thuộc phase sau.
 
-**Trạng thái:** kế hoạch đã lập, chờ duyệt và chọn cách thực hiện. Không coi các bước kiểm thử trong tài liệu là đã chạy.
+**Trạng thái:** người dùng đã duyệt và chọn thực hiện trực tiếp bằng `superpowers:executing-plans`. Các bước Task 1–6 đã thực hiện và qua review độc lập cùng một lượt sửa cuối; [báo cáo kiểm chứng](../../PHASE_1_VERIFICATION.md) ghi kết quả 46 kiểm thử đạt và các sai khác. Không coi các phase nghiệp vụ sau là đã triển khai.
 
 ## Global Constraints
 
