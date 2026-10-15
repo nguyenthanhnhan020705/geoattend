@@ -1,5 +1,7 @@
 # GeoAttend — Bàn giao Phase 0–4
 
+**Điều chỉnh User theo ca:** trước nghỉ trưa chỉ Nghỉ trưa/Check-out sớm; nghỉ trưa chỉ Tiếp tục Office/Remote; sau tiếp tục chỉ Check-out. Người dùng đã chọn khóa sau Check-out cuối ngày đến ngày hôm sau, được kiểm tra tại Backend bằng sự kiện nghỉ trưa trong ngày. Không migration; cần restart web và Ctrl+F5. Chi tiết tại [USER_MOBILE_UI](../docs/USER_MOBILE_UI.md), quy tắc bổ sung tại [STATE_TRANSITIONS mục 6](../docs/STATE_TRANSITIONS.md#6-điều-chỉnh-luồng-user-theo-ca-15102026). Các mô tả bắt đầu lại/chuyển chế độ cũ bên dưới là mốc lịch sử.
+
 **Giao diện User sau bàn giao:** thông tin nhân viên đầu trang; ba lựa chọn Office/Remote/Xin nghỉ; form lý do mở khi bấm, lịch sử thu gọn cuối trang và tải theo yêu cầu. Chỉ thay HTML/CSS/JS, không migration; xem [USER_MOBILE_UI](../docs/USER_MOBILE_UI.md).
 
 **Bổ sung sau Phase 4 (15/10/2026):** theo yêu cầu mới, Admin được xem/xóa vĩnh viễn lịch sử từng ngày nhân viên, có xác nhận và chặn ngày đang làm việc/nghỉ trưa. Cần migration 004 và runtime grants tương ứng; xem [ADMIN_HISTORY](../docs/ADMIN_HISTORY.md). Các kết quả Phase 0–4 bên dưới là mốc lịch sử; Dashboard/Onsite vẫn chưa triển khai.

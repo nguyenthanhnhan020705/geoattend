@@ -55,7 +55,7 @@ def test_admin_map_and_user_gps_flow(office_site,migrated_db):
         expect(user.locator('#attendance-status')).to_have_text('Đang làm tại văn phòng')
         open_history(user)
         expect(user.locator('#history-list')).to_contain_text('GPS đã xác minh')
-        user.get_by_role('button',name='Check-out',exact=True).click()
+        user.locator('#check-out').click()
         expect(user.locator('#attendance-status')).to_have_text('Đã Check-out')
         assert user.evaluate('gpsCalls')==0
         user.evaluate("window.gpsMode='denied'")

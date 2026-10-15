@@ -8,7 +8,7 @@ def open_history(page):
 
 
 def open_remote(page):
-    page.get_by_role('button',name='CHECK-IN REMOTE',exact=True).click()
+    page.locator('#choose-remote').click()
 
 
 def open_leave(page):

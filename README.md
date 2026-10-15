@@ -4,6 +4,8 @@
 
 Bàn giao agent tiếp theo: [README Phase 0–4 — kết quả và kế hoạch triển khai](handoff/README.md).
 
+Điều chỉnh theo yêu cầu người dùng 15/10/2026: giao diện chấm công đi theo ca trước nghỉ trưa → nghỉ trưa → ca sau nghỉ; CHECK-OUT cuối ngày sau khi đã tiếp tục làm việc sẽ khóa chấm công đến ngày hôm sau. CHECK-OUT SỚM trước nghỉ trưa vẫn cho bắt đầu lại trước 20:00. Quy tắc này bổ sung/ưu tiên hơn mô tả bắt đầu lại chung bên dưới; xem [STATE_TRANSITIONS mục 6](docs/STATE_TRANSITIONS.md#6-điều-chỉnh-luồng-user-theo-ca-15102026).
+
 Bổ sung được người dùng xác nhận 15/10/2026: [Admin xem và xóa vĩnh viễn lịch sử từng ngày của nhân viên](docs/ADMIN_HISTORY.md), có xác nhận tên tài khoản và chặn ngày đang làm việc/nghỉ trưa. Quyền này thay thế giới hạn không xóa lịch sử trong thiết kế ban đầu; không cấp quyền xóa cho User.
 
 Lộ trình triển khai: [Các phase phát triển MVP](docs/ROADMAP.md).

@@ -7,6 +7,7 @@ Chỉ thực hiện trên môi trường test riêng với User/Admin test, Geof
 - Dựng ứng dụng/maintenance với database test riêng theo [DEVELOPMENT](DEVELOPMENT.md); Admin cấu hình vùng test, cấp User test.
 - Đăng nhập User, mở `/user`; kiểm tra trên màn hình 360px và desktop.
 - Thông tin nhân viên ở đầu trang. Chọn **CHECK-IN REMOTE** hoặc **XIN NGHỈ** để mở form lý do; mở **Lịch sử cá nhân** cuối trang khi cần kiểm tra timeline. Form và lịch sử mặc định thu gọn để dùng trên điện thoại.
+- Theo điều chỉnh mới: đang làm trước nghỉ trưa chỉ hiện **NGHỈ TRƯA / CHECK-OUT SỚM**; nghỉ trưa chỉ **TIẾP TỤC OFFICE / TIẾP TỤC REMOTE**; sau tiếp tục chỉ **CHECK-OUT**. Sau CHECK-OUT cuối ngày, reload hoặc mở tab khác vẫn khóa đến ngày mai. Các mục kiểm thử chuyển trực tiếp dưới đây thuộc API tương thích cũ, không còn là nút của UI mới.
 - Chỉ Office xin GPS một lần; Remote/nghỉ/Check-out không xin GPS. Các nút thay đổi theo trạng thái server, bị khóa trong khi gửi hoặc đang chờ xác nhận.
 
 ## Tám kịch bản

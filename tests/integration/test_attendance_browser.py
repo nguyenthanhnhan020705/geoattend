@@ -51,7 +51,7 @@ def test_remote_browser_reload_history_and_retry(remote_site,migrated_db):
         open_history(page)
         expect(page.locator('#history-list')).to_contain_text(reason)
         assert page.locator('#history-list img').count()==0
-        page.get_by_role('button',name='Check-out',exact=True).click()
+        page.locator('#check-out').click()
         expect(page.locator('#attendance-status')).to_have_text('Đã Check-out')
         open_remote(page)
         page.get_by_label('Lý do làm Remote').fill('Buổi chiều')

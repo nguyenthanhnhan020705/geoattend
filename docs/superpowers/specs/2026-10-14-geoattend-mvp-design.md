@@ -125,6 +125,7 @@ Các sự kiện: `WORK_START`, `WORK_END`, `LUNCH_START`, `MORNING_LEAVE`, `FUL
 - Sau lấy khóa và ngay trước ghi thay đổi, dùng thời gian thực hiện tại để kiểm tra mốc 20:00. Yêu cầu chờ khóa qua mốc bị từ chối; frontend không có quyền vượt giới hạn.
 - Tác vụ và Check-out đồng thời sử dụng cùng khóa và kiểm tra trạng thái nên chỉ có một lần đóng hợp lệ. Không tạo hai sự kiện tự kết thúc ngày.
 - Lưu trữ lâu dài lịch sử phiên/sự kiện, ngoại trừ thao tác xóa vĩnh viễn từng ngày của Admin được người dùng yêu cầu và xác nhận bổ sung 15/10/2026. User không tự xóa lịch sử; xem [ADMIN_HISTORY](../../ADMIN_HISTORY.md).
+- Bổ sung theo xác nhận người dùng 15/10/2026: CHECK-OUT cuối ngày sau nghỉ trưa khóa chấm công đến ngày hôm sau; Check-out sớm trước nghỉ trưa vẫn cho bắt đầu lại trước 20:00. UI chỉ có nghỉ trưa/Check-out sớm ở ca đầu, hai lựa chọn tiếp tục khi nghỉ trưa, và Check-out sau tiếp tục. Backend suy ra từ sự kiện nghỉ trưa đã lưu; xem [STATE_TRANSITIONS mục 6](../../STATE_TRANSITIONS.md#6-điều-chỉnh-luồng-user-theo-ca-15102026).
 
 ## 8. Hợp đồng API mức thiết kế
 

@@ -15,7 +15,13 @@ const available = actions => actions.find(action => current?.allowed_actions.inc
 
 function controls() {
   const allowed = current?.allowed_actions || [];
-  const remote = available(remoteActions), office = available(officeActions);
+  const working = ['WORKING_OFFICE','WORKING_REMOTE'].includes(current?.status);
+  const resuming = current?.status==='LUNCH_BREAK';
+  const remote = working ? undefined : available(remoteActions), office = working ? undefined : available(officeActions);
+  el('attendance-choices').hidden = working || !!current?.day_finished;
+  el('attendance-choices').classList.toggle('is-resuming',resuming);
+  el('choose-remote').textContent = resuming?'TIẾP TỤC REMOTE':'CHECK-IN REMOTE';
+  el('choose-leave').hidden = resuming;
   const leave = allowed.some(action=>['MORNING_LEAVE','FULL_DAY_LEAVE'].includes(action));
   if ((reasonPanel==='remote' && !remote) || (reasonPanel==='leave' && !leave)) reasonPanel=null;
   el('reason-panel').hidden = !reasonPanel;
@@ -28,9 +34,11 @@ function controls() {
   el('choose-leave').setAttribute('aria-expanded',String(reasonPanel==='leave'));
   el('remote-form').querySelector('button').textContent = remote==='CANCEL_LEAVE_START_REMOTE'?'Hủy nghỉ và bắt đầu Remote':remote==='SWITCH_REMOTE'?'Chuyển sang Remote':current?.status==='LUNCH_BREAK'?'Tiếp tục Remote':'Bắt đầu Remote';
   el('check-out').hidden = !allowed.includes('CHECK_OUT');
-  el('start-office').textContent = office==='CANCEL_LEAVE_START_OFFICE'?'Hủy nghỉ và bắt đầu Office':office==='SWITCH_OFFICE'?'Chuyển sang Office':current?.status==='LUNCH_BREAK'?'Tiếp tục Office':'CHECK-IN OFFICE';
+  el('check-out').textContent = current?.lunch_taken?'CHECK-OUT':'CHECK-OUT SỚM';
+  el('start-office').textContent = office==='CANCEL_LEAVE_START_OFFICE'?'Hủy nghỉ và bắt đầu Office':resuming?'TIẾP TỤC OFFICE':'CHECK-IN OFFICE';
   el('gps-note').hidden = !office;
-  el('start-lunch').hidden = !allowed.includes('START_LUNCH');
+  el('start-lunch').hidden = !allowed.includes('START_LUNCH') || !!current?.lunch_taken;
+  el('start-lunch').textContent = 'NGHỈ TRƯA';
   el('leave-form').hidden = reasonPanel!=='leave';
   el('morning-leave').hidden = !allowed.includes('MORNING_LEAVE');
   el('full-day-leave').hidden = !allowed.includes('FULL_DAY_LEAVE');
@@ -48,7 +56,7 @@ async function refreshStatus() {
   el('work-date').textContent = data.work_date + ' · Giờ Việt Nam';
   el('attendance-status').textContent = labels[data.status] || data.status;
   el('session-info').textContent = data.open_session ? `Bắt đầu lúc ${clock(data.open_session.start_time)} · ${data.open_session.start_reason || ''}` : 'Hiện không có phiên đang mở.';
-  el('day-notice').textContent = data.allowed_actions.length ? '' : 'Hiện chưa có thao tác khả dụng. Ngày làm việc kết thúc lúc 20:00.';
+  el('day-notice').textContent = data.day_finished ? 'Ngày làm việc đã kết thúc. Có thể bắt đầu lại vào ngày mai.' : data.allowed_actions.length ? '' : 'Hiện chưa có thao tác khả dụng. Ngày làm việc kết thúc lúc 20:00.';
   controls();
 }
 

@@ -53,7 +53,7 @@ def test_account_first_reason_panels_and_lazy_history(office_site,migrated_db,wi
         assert len(history_calls)==1
         page.locator('#personal-history > summary').click()
         expect(page.locator('#history-form')).to_be_hidden()
-        page.get_by_role('button',name='Check-out',exact=True).click()
+        page.locator('#check-out').click()
         expect(page.locator('#attendance-status')).to_have_text('Đã Check-out')
         assert len(history_calls)==1
         page.locator('#personal-history > summary').click()
