@@ -3,6 +3,7 @@ from pathlib import Path
 import pytest
 from playwright.sync_api import sync_playwright,expect
 from tests.integration.test_browser import live_site,login
+from tests.browser_attendance import open_remote,open_history
 
 pytestmark=[pytest.mark.integration,pytest.mark.browser]
 
@@ -27,6 +28,7 @@ def test_remote_browser_reload_history_and_retry(remote_site,migrated_db):
         login(page,remote_site,'worker','Worker1234')
         expect(page.locator('#attendance-status')).to_have_text('Chưa bắt đầu')
         reason='<img src=x onerror=alert(1)>'
+        open_remote(page)
         page.get_by_label('Lý do làm Remote').fill(reason)
         # Server commits, but the browser loses its response. Retry must
         # reuse the UUID, even after status refresh shows WORKING_REMOTE.
@@ -46,10 +48,12 @@ def test_remote_browser_reload_history_and_retry(remote_site,migrated_db):
         assert migrated_db.execute('SELECT count(*) AS n FROM geoattend.work_sessions').fetchone()['n']==1
         page.reload()
         expect(page.locator('#attendance-status')).to_have_text('Đang làm Remote')
+        open_history(page)
         expect(page.locator('#history-list')).to_contain_text(reason)
         assert page.locator('#history-list img').count()==0
         page.get_by_role('button',name='Check-out',exact=True).click()
         expect(page.locator('#attendance-status')).to_have_text('Đã Check-out')
+        open_remote(page)
         page.get_by_label('Lý do làm Remote').fill('Buổi chiều')
         page.get_by_role('button',name='Bắt đầu Remote',exact=True).click()
         expect(page.locator('#attendance-status')).to_have_text('Đang làm Remote')

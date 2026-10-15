@@ -5,6 +5,8 @@ const labels = {NOT_STARTED:'Chưa bắt đầu', WORKING_REMOTE:'Đang làm Rem
 const eventLabels = {WORK_START:'Bắt đầu làm việc', WORK_END:'Kết thúc phiên', DAY_END:'Kết thúc ngày', LUNCH_START:'Nghỉ trưa', MORNING_LEAVE:'Nghỉ buổi sáng', FULL_DAY_LEAVE:'Nghỉ cả ngày', LEAVE_CANCELLED:'Hủy nghỉ'};
 const clock = value => new Intl.DateTimeFormat('vi-VN',{timeZone:'Asia/Ho_Chi_Minh',hour:'2-digit',minute:'2-digit',second:'2-digit'}).format(new Date(value));
 let current = null, pending = null, busy = false, historyPage = 1, historyQuery = null, accountId = null;
+let reasonPanel = null;
+let historyGeneration = 0;
 const pendingKey = 'geoattend.pendingAttendance';
 const officeActions = ['START_OFFICE','CANCEL_LEAVE_START_OFFICE','SWITCH_OFFICE'];
 const remoteActions = ['START_REMOTE','CANCEL_LEAVE_START_REMOTE','SWITCH_REMOTE'];
@@ -14,18 +16,26 @@ const available = actions => actions.find(action => current?.allowed_actions.inc
 function controls() {
   const allowed = current?.allowed_actions || [];
   const remote = available(remoteActions), office = available(officeActions);
-  el('remote-form').hidden = !remote;
+  const leave = allowed.some(action=>['MORNING_LEAVE','FULL_DAY_LEAVE'].includes(action));
+  if ((reasonPanel==='remote' && !remote) || (reasonPanel==='leave' && !leave)) reasonPanel=null;
+  el('reason-panel').hidden = !reasonPanel;
+  el('reason-heading').textContent = reasonPanel==='leave'?'Xin nghỉ':'Check-in Remote';
+  el('remote-form').hidden = reasonPanel!=='remote';
+  el('choose-remote').disabled = busy || !!pending || !remote;
+  el('choose-leave').disabled = busy || !!pending || !leave;
+  el('close-reason').disabled = busy || !!pending;
+  el('choose-remote').setAttribute('aria-expanded',String(reasonPanel==='remote'));
+  el('choose-leave').setAttribute('aria-expanded',String(reasonPanel==='leave'));
   el('remote-form').querySelector('button').textContent = remote==='CANCEL_LEAVE_START_REMOTE'?'Hủy nghỉ và bắt đầu Remote':remote==='SWITCH_REMOTE'?'Chuyển sang Remote':current?.status==='LUNCH_BREAK'?'Tiếp tục Remote':'Bắt đầu Remote';
   el('check-out').hidden = !allowed.includes('CHECK_OUT');
-  el('start-office').hidden = !office;
-  el('start-office').textContent = office==='CANCEL_LEAVE_START_OFFICE'?'Hủy nghỉ và bắt đầu Office':office==='SWITCH_OFFICE'?'Chuyển sang Office':current?.status==='LUNCH_BREAK'?'Tiếp tục Office':'Check-in Office';
+  el('start-office').textContent = office==='CANCEL_LEAVE_START_OFFICE'?'Hủy nghỉ và bắt đầu Office':office==='SWITCH_OFFICE'?'Chuyển sang Office':current?.status==='LUNCH_BREAK'?'Tiếp tục Office':'CHECK-IN OFFICE';
   el('gps-note').hidden = !office;
   el('start-lunch').hidden = !allowed.includes('START_LUNCH');
-  el('leave-form').hidden = !allowed.some(action=>['MORNING_LEAVE','FULL_DAY_LEAVE'].includes(action));
+  el('leave-form').hidden = reasonPanel!=='leave';
   el('morning-leave').hidden = !allowed.includes('MORNING_LEAVE');
   el('full-day-leave').hidden = !allowed.includes('FULL_DAY_LEAVE');
   for (const id of ['start-lunch','morning-leave','full-day-leave','leave-reason']) el(id).disabled = busy || !!pending;
-  el('start-office').disabled = busy || !!pending;
+  el('start-office').disabled = busy || !!pending || !office;
   el('retry-action').hidden = !pending;
   el('remote-form').querySelector('button').disabled = busy || !!pending;
   el('remote-reason').disabled = busy || !!pending;
@@ -55,6 +65,7 @@ async function sendPending() {
   try {
     await apiFetch('/api/attendance/actions',{method:'POST',body:JSON.stringify(pending.body)});
     pending = null; savePending();
+    reasonPanel = null;
     el('remote-reason').value = '';
     el('leave-reason').value = '';
     message('message','Đã ghi nhận thao tác.',true);
@@ -80,11 +91,17 @@ function line(tag, text, parent, className='') {
 }
 
 async function loadHistory(query, page=1) {
-  if (!query) return;
+  if (!query || !el('personal-history').open) return;
+  const generation=++historyGeneration;
   if (query.from > query.to) throw new Error('Ngày bắt đầu phải trước hoặc bằng ngày kết thúc.');
+  historyQuery = query; historyPage = page;
   const params = new URLSearchParams({...query,page:String(page),page_size:'20'});
-  const data = await apiFetch('/api/attendance/history?'+params);
-  historyQuery = query; historyPage = page; el('history-list').replaceChildren();
+  message('history-message','Đang tải…');
+  let data;
+  try { data = await apiFetch('/api/attendance/history?'+params); }
+  catch (error) { if (generation===historyGeneration && el('personal-history').open) throw error; return; }
+  if (generation!==historyGeneration || !el('personal-history').open) return;
+  el('history-list').replaceChildren();
   if (!data.items.length) line('p','Chưa có lịch sử trong khoảng ngày này.',el('history-list'),'muted');
   for (const day of data.items) {
     const section = document.createElement('section'); section.className = 'history-day';
@@ -109,6 +126,14 @@ async function loadHistory(query, page=1) {
   message('history-message','');
 }
 
+function openReason(panel) {
+  if (!current || busy || pending) return;
+  reasonPanel=panel;controls();
+  el(panel==='remote'?'remote-reason':'leave-reason').focus();
+}
+el('choose-remote').addEventListener('click',()=>openReason('remote'));
+el('choose-leave').addEventListener('click',()=>openReason('leave'));
+el('close-reason').addEventListener('click',()=>{const previous=reasonPanel;reasonPanel=null;controls();el(previous==='remote'?'choose-remote':'choose-leave').focus();});
 el('remote-form').addEventListener('submit', event => { event.preventDefault(); const action=available(remoteActions); if(action)submit(action,el('remote-reason').value.trim()); });
 el('leave-form').addEventListener('submit', event => { event.preventDefault(); const action=event.submitter?.value; if(current?.allowed_actions.includes(action))submit(action,el('leave-reason').value.trim()); });
 el('start-lunch').addEventListener('click',()=>submit('START_LUNCH'));
@@ -133,6 +158,10 @@ el('refresh-status').addEventListener('click',()=>refreshAll().catch(error=>mess
 el('history-form').addEventListener('submit',event=>{event.preventDefault(); loadHistory({from:el('history-from').value,to:el('history-to').value}).catch(error=>message('history-message',error.message));});
 el('history-prev').addEventListener('click',()=>loadHistory(historyQuery,historyPage-1).catch(error=>message('history-message',error.message)));
 el('history-next').addEventListener('click',()=>loadHistory(historyQuery,historyPage+1).catch(error=>message('history-message',error.message)));
+el('personal-history').addEventListener('toggle',()=>{
+  if (el('personal-history').open) loadHistory(historyQuery,historyPage).catch(error=>message('history-message',error.message));
+  else historyGeneration++;
+});
 try {
   const account = await loadAccount(); accountId=account.id;
   el('full-name').textContent = account.full_name; el('account-username').textContent = account.username;
@@ -146,7 +175,8 @@ try {
   el('history-to').value = current.work_date;
   const start = new Date(current.work_date+'T00:00:00Z'); start.setUTCDate(start.getUTCDate()-6);
   el('history-from').value = start.toISOString().slice(0,10);
-  await loadHistory({from:el('history-from').value,to:current.work_date});
+  historyQuery={from:el('history-from').value,to:current.work_date};
+  await loadHistory(historyQuery);
 } catch (error) { message('message',error.message); }
 setInterval(()=>{if(!document.hidden && !busy) refreshAll().catch(error=>message('message',error.message));},60000);
 window.addEventListener('focus',()=>{if(!busy) refreshAll().catch(error=>message('message',error.message));});

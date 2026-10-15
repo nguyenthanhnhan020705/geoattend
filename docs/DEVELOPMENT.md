@@ -1,5 +1,7 @@
 # GeoAttend — Chạy và kiểm tra Phase 1–4
 
+Giao diện User đã tối ưu cho điện thoại: thông tin nhân viên ở đầu; chọn **CHECK-IN REMOTE** hoặc **XIN NGHỈ** mới hiện form lý do; **Lịch sử cá nhân** thu gọn cuối trang và chỉ tải khi mở. Xem [USER_MOBILE_UI](USER_MOBILE_UI.md). Sau cập nhật chỉ cần Ctrl+F5, không cần migration cho thay đổi giao diện này.
+
 Phase 1 cung cấp đăng nhập và quản lý tài khoản. Phase 2 bổ sung Remote, Check-out, lịch sử cá nhân và tự đóng phiên lúc 20:00. Phase 3 bổ sung bản đồ cấu hình Geofence, Office và GPS hết hạn sau 30 ngày. Phase 4 bổ sung nghỉ trưa, nghỉ sáng/cả ngày, hủy nghỉ kết hợp bắt đầu và chuyển trực tiếp Office/Remote. Dashboard thuộc Phase 5. Xem checklist [Phase 2](MANUAL_TEST_PHASE_2.md), [Phase 3](MANUAL_TEST_PHASE_3.md) và [Phase 4](MANUAL_TEST_PHASE_4.md).
 
 ## 1. Chuẩn bị

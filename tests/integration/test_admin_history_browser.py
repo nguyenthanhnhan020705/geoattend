@@ -4,6 +4,7 @@ import pytest
 from playwright.sync_api import sync_playwright, expect
 from tests.integration.test_browser import live_site, login
 from tests.integration.test_office_browser import office_site
+from tests.browser_attendance import open_remote
 
 pytestmark = [pytest.mark.integration,pytest.mark.browser]
 
@@ -18,6 +19,7 @@ def test_admin_history_confirm_delete_retry_and_user_visibility(office_site,migr
         errors=[]; page.on('pageerror',lambda error:errors.append(str(error)))
         login(page,office_site,'worker','Worker1234')
         reason='<img src=x onerror=alert(1)>'
+        open_remote(page)
         page.get_by_label('Lý do làm Remote').fill(reason)
         page.get_by_role('button',name='Bắt đầu Remote',exact=True).click()
         expect(page.locator('#attendance-status')).to_have_text('Đang làm Remote')

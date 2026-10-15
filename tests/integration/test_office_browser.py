@@ -5,6 +5,7 @@ import pytest
 from playwright.sync_api import sync_playwright,expect
 from tests.integration.test_browser import live_site,login
 from tests.integration.test_office import POLYGON
+from tests.browser_attendance import open_history
 
 pytestmark=[pytest.mark.integration,pytest.mark.browser]
 
@@ -46,27 +47,28 @@ def test_admin_map_and_user_gps_flow(office_site,migrated_db):
         user=context.new_page();user.on('pageerror',lambda error:errors.append(str(error)))
         user.add_init_script("""window.gpsCalls=0; window.gpsMode='inside'; navigator.geolocation.getCurrentPosition=(ok,fail)=>{window.gpsCalls++;if(window.gpsMode==='denied')return fail({code:1});ok({coords:{latitude:window.gpsMode==='outside'?12:10.5,longitude:106.5,accuracy:50000}})};navigator.geolocation.watchPosition=()=>{throw Error('Continuous GPS forbidden')};""")
         login(user,office_site,'worker','Worker1234')
-        user.get_by_role('button',name='Check-in Office',exact=True).click()
+        user.get_by_role('button',name='CHECK-IN OFFICE',exact=True).click()
         expect(user.locator('#attendance-status')).to_have_text('Đang làm tại văn phòng')
         assert user.evaluate('gpsCalls')==1
         assert user.evaluate('sessionStorage.getItem("geoattend.pendingAttendance")') is None
         user.reload()
         expect(user.locator('#attendance-status')).to_have_text('Đang làm tại văn phòng')
+        open_history(user)
         expect(user.locator('#history-list')).to_contain_text('GPS đã xác minh')
         user.get_by_role('button',name='Check-out',exact=True).click()
         expect(user.locator('#attendance-status')).to_have_text('Đã Check-out')
         assert user.evaluate('gpsCalls')==0
         user.evaluate("window.gpsMode='denied'")
-        user.get_by_role('button',name='Check-in Office',exact=True).click()
+        user.get_by_role('button',name='CHECK-IN OFFICE',exact=True).click()
         expect(user.locator('#message')).to_contain_text('quyền vị trí')
         expect(user.locator('#attendance-status')).to_have_text('Đã Check-out')
-        expect(user.get_by_role('button',name='Bắt đầu Remote',exact=True)).to_be_enabled()
+        expect(user.get_by_role('button',name='CHECK-IN REMOTE',exact=True)).to_be_enabled()
         user.evaluate("window.gpsMode='outside'")
-        user.get_by_role('button',name='Check-in Office',exact=True).click()
+        user.get_by_role('button',name='CHECK-IN OFFICE',exact=True).click()
         expect(user.locator('#message')).to_contain_text('ngoài vùng')
         assert migrated_db.execute('SELECT count(*) AS n FROM geoattend.work_sessions').fetchone()['n']==1
         user.evaluate("window.gpsMode='inside'")
-        user.get_by_role('button',name='Check-in Office',exact=True).click()
+        user.get_by_role('button',name='CHECK-IN OFFICE',exact=True).click()
         expect(user.locator('#attendance-status')).to_have_text('Đang làm tại văn phòng')
         assert migrated_db.execute('SELECT count(*) AS n FROM geoattend.work_sessions').fetchone()['n']==2
         assert user.evaluate('document.documentElement.scrollWidth<=innerWidth')
@@ -100,7 +102,7 @@ def test_office_ambiguous_retry_no_persistent_gps(office_site,migrated_db):
             if len(calls)==1: route.fetch();route.abort('failed')
             else:route.continue_()
         page.route('**/api/attendance/actions',lose_first)
-        page.get_by_role('button',name='Check-in Office',exact=True).click()
+        page.get_by_role('button',name='CHECK-IN OFFICE',exact=True).click()
         expect(page.get_by_role('button',name='Gửi lại thao tác')).to_be_visible()
         assert page.evaluate('sessionStorage.getItem("geoattend.pendingAttendance")') is None
         assert page.evaluate('JSON.stringify(localStorage)')=='{}'

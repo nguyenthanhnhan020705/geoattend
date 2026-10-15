@@ -7,6 +7,7 @@ from playwright.sync_api import sync_playwright, expect
 from tests.integration.test_browser import live_site, login
 from tests.integration.test_office_browser import office_site
 from tests.integration.test_office import POLYGON
+from tests.browser_attendance import open_remote,open_leave,open_history
 
 pytestmark = [pytest.mark.integration, pytest.mark.browser]
 
@@ -32,6 +33,7 @@ def phase4_page(office_site,migrated_db):
 
 
 def remote(page, button, reason='Làm ở nhà'):
+    open_remote(page)
     page.get_by_label('Lý do làm Remote').fill(reason)
     page.get_by_role('button',name=button,exact=True).click()
     expect(page.locator('#attendance-status')).to_have_text('Đang làm Remote')
@@ -42,6 +44,7 @@ def test_lunch_resume_and_switch_timeline(phase4_page,migrated_db):
     remote(page,'Bắt đầu Remote')
     page.get_by_role('button',name='Nghỉ trưa',exact=True).click()
     expect(page.locator('#attendance-status')).to_have_text('Đang nghỉ trưa')
+    open_history(page)
     expect(page.locator('#history-list')).to_contain_text('Nghỉ trưa')
     page.get_by_role('button',name='Tiếp tục Office',exact=True).click()
     expect(page.locator('#attendance-status')).to_have_text('Đang làm tại văn phòng')
@@ -64,13 +67,16 @@ def test_lunch_resume_and_switch_timeline(phase4_page,migrated_db):
 def test_leave_reason_and_cancel_history(phase4_page,leave,label,next_button):
     page = phase4_page
     reason = '<img src=x onerror=alert(1)>'
+    open_leave(page)
     page.get_by_label('Lý do nghỉ').fill(reason)
     page.get_by_role('button',name=label,exact=True).click()
     expect(page.locator('#attendance-status')).to_have_text(label)
+    open_history(page)
     expect(page.locator('#history-list')).to_contain_text(reason)
     remote(page,next_button)
     page.reload()
     expect(page.locator('#attendance-status')).to_have_text('Đang làm Remote')
+    open_history(page)
     expect(page.locator('#history-list')).to_contain_text(reason)
     assert page.locator('#history-list img').count() == 0 and page.evaluate('gpsCalls') == 0
     if leave == 'FULL_DAY_LEAVE':
@@ -81,6 +87,7 @@ def test_leave_reason_and_cancel_history(phase4_page,leave,label,next_button):
 def test_new_office_actions_retry_without_persisting_gps(phase4_page,migrated_db,office_action):
     page = phase4_page
     if office_action == 'cancel':
+        open_leave(page)
         page.get_by_label('Lý do nghỉ').fill('Nghỉ')
         page.get_by_role('button',name='Nghỉ cả ngày',exact=True).click()
         expect(page.locator('#attendance-status')).to_have_text('Nghỉ cả ngày')
@@ -119,6 +126,7 @@ def test_leave_timeout_reload_retry_same_uuid(phase4_page,migrated_db):
     page = phase4_page
     page.add_init_script("const native=window.setTimeout;window.setTimeout=(fn,ms,...args)=>native(fn,ms===15000?300:ms,...args)")
     page.reload()
+    open_leave(page)
     expect(page.get_by_label('Lý do nghỉ')).to_be_visible()
     calls = []; held = []
     def hold_first(route):
@@ -153,4 +161,5 @@ def test_lunch_day_end_system_label(phase4_page,monkeypatch):
     monkeypatch.setattr('app.clock.utc_now',lambda:datetime(2026,10,14,13,tzinfo=timezone.utc))
     page.get_by_role('button',name='Làm mới',exact=True).click()
     expect(page.locator('#attendance-status')).to_have_text('Đã Check-out')
+    open_history(page)
     expect(page.locator('#history-list')).to_contain_text('Hệ thống kết thúc ngày lúc 20:00')
