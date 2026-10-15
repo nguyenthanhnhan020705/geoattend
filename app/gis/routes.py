@@ -10,7 +10,8 @@ router=APIRouter(prefix='/api/admin/office',dependencies=[Depends(require_admin)
 def get(request: Request):
     with request.app.state.pool.connection() as conn:
         result=get_office(conn)
-        result['map']={'tile_url':request.app.state.settings.map_tile_url,'attribution':request.app.state.settings.map_attribution}
+        settings=request.app.state.settings
+        result['map']={'mode':settings.map_kind,'tile_url':settings.map_tile_url,'attribution':settings.map_attribution,'style_url':settings.map_style_url}
         return result
 
 

@@ -58,3 +58,7 @@ def test_launcher_preserves_public_map_config(tmp_path):
     env=local_environment(path,'serve',{})
     assert env['GEOATTEND_MAP_TILE_URL']=='https://tiles.example/{z}/{x}/{y}.png'
     assert env['GEOATTEND_MAP_ATTRIBUTION']=='Example'
+    path.write_text(path.read_text(encoding='utf-8')+'GEOATTEND_MAP_BACKGROUND=vector\nGEOATTEND_MAP_STYLE_URL=https://tiles.openfreemap.org/styles/liberty\n',encoding='utf-8')
+    env=local_environment(path,'serve',{})
+    assert env['GEOATTEND_MAP_BACKGROUND']=='vector'
+    assert env['GEOATTEND_MAP_STYLE_URL']=='https://tiles.openfreemap.org/styles/liberty'

@@ -37,7 +37,7 @@ def local_environment(path, mode, inherited=None):
     env[target] = dsn
     env['GEOATTEND_ORIGIN'] = values.get('GEOATTEND_ORIGIN','http://127.0.0.1:8000')
     env['GEOATTEND_SECURE_COOKIES'] = values.get('GEOATTEND_SECURE_COOKIES','false')
-    for key in ('GEOATTEND_MAP_TILE_URL','GEOATTEND_MAP_ATTRIBUTION'):
+    for key in ('GEOATTEND_MAP_TILE_URL','GEOATTEND_MAP_ATTRIBUTION','GEOATTEND_MAP_BACKGROUND','GEOATTEND_MAP_STYLE_URL'):
         if key in values:
             env[key]=values[key]
     if mode=='migrate':

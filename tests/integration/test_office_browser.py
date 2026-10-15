@@ -25,6 +25,7 @@ def test_admin_map_and_user_gps_flow(office_site,migrated_db):
         admin=browser.new_page(viewport={'width':1280,'height':900})
         errors=[]; admin.on('pageerror',lambda error:errors.append(str(error)))
         admin.route('https://tile.openstreetmap.org/**',lambda route:route.abort())
+        admin.route('https://tiles.openfreemap.org/**',lambda route:route.abort())
         login(admin,office_site,'admin','Admin1234')
         admin.get_by_role('link',name='Văn phòng').click()
         expect(admin.locator('#office-revision')).to_contain_text('0')
@@ -116,6 +117,7 @@ def test_office_loading_blocks_edits_until_response(office_site):
         browser=p.chromium.launch(channel=None if channel=='chromium' else channel,headless=True)
         page=browser.new_page()
         page.route('https://tile.openstreetmap.org/**',lambda route:route.abort())
+        page.route('https://tiles.openfreemap.org/**',lambda route:route.abort())
         login(page,office_site,'admin','Admin1234')
         held=[];get_count=[0]
         def delay_get(route):

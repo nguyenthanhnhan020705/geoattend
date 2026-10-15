@@ -1,12 +1,16 @@
 import {loadAccount,apiFetch,bindLogout,message} from './api.js';
+import {attachBackground} from './office-map-background.js';
 bindLogout();
 const el=id=>document.getElementById(id);
 let revision=0,rings=[[]],active=0,map=null,polygon=null,markers=[],dirty=false,previewed=false,busy=false;
+let backgroundConfig=null,detachBackground=null;
 
 function setBusy(value) {
   busy=value;el('office-form').setAttribute('aria-busy',String(value));
   for(const node of el('office-form').elements)node.disabled=value;
   el('reload-office').disabled=value;
+  el('draw-office').disabled=value || !map;
+  el('retry-map').disabled=value || !map;
   for(const marker of markers){if(value)marker.dragging.disable();else marker.dragging.enable();}
   el('save-office').disabled=value || !previewed;
 }
@@ -61,9 +65,7 @@ async function loadOffice() {
   el('draft-state').textContent=data.geom?'Đang hiển thị vùng đã lưu.':'Chưa cấu hình. Thêm ít nhất 3 đỉnh để tạo vùng.';
   if(!map) {
     map=L.map('office-map').setView([10.7769,106.7009],15);
-    const text=document.createElement('span');text.textContent=data.map.attribution;
-    const attribution=text.innerHTML+' · <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">Bản quyền bản đồ</a>';
-    L.tileLayer(data.map.tile_url,{attribution,maxZoom:19}).on('tileerror',()=>{el('tile-message').textContent='Không tải được bản đồ nền. Bạn vẫn có thể nhập đỉnh, xem trước và lưu vùng.';}).addTo(map);
+    backgroundConfig=data.map;detachBackground=attachBackground(map,backgroundConfig,el('tile-message'));
     map.on('click',event=>{if(busy)return;rings[active].push([event.latlng.lng,event.latlng.lat]);markChanged();render();});
   }
   render();if(rings[0].length>=3)map.fitBounds(L.latLngBounds(rings[0].map(([lon,lat])=>[lat,lon])),{padding:[30,30],maxZoom:18});
@@ -76,11 +78,17 @@ el('remove-hole').addEventListener('click',()=>{if(active===0)return;rings.splic
 el('add-vertex').addEventListener('click',()=>{
   const lat=Number(el('new-latitude').value),lon=Number(el('new-longitude').value);
   if(!el('new-latitude').value || !el('new-longitude').value || !Number.isFinite(lat) || !Number.isFinite(lon) || lat< -90 || lat>90 || lon< -180 || lon>180){message('message','Nhập vĩ độ và kinh độ hợp lệ.');return;}
-  rings[active].push([lon,lat]);markChanged();render();message('message','');
+  rings[active].push([lon,lat]);markChanged();render();if(rings[active].length===1 && map)map.setView([lat,lon],17);message('message','');
 });
+el('draw-office').addEventListener('click',()=>{
+  if(busy || !map)return;
+  if(rings.some(r=>r.length) && !confirm('Vẽ vùng mới sẽ bỏ vùng đang chỉnh sửa. Tiếp tục?'))return;
+  rings=[[]];active=0;markChanged();render();message('message','Bấm ít nhất 3 đỉnh quanh văn phòng trên bản đồ, sau đó chọn “Xem trước”.',true);
+});
+el('retry-map').addEventListener('click',()=>{if(busy || !map || !backgroundConfig)return;if(detachBackground)detachBackground();detachBackground=attachBackground(map,backgroundConfig,el('tile-message'));});
 el('office-name').addEventListener('input',markChanged);el('office-address').addEventListener('input',markChanged);
 el('preview-office').addEventListener('click',()=>{try{geometry();draw();if(polygon)map.fitBounds(polygon.getBounds(),{padding:[30,30],maxZoom:18});previewed=true;el('save-office').disabled=false;message('message','Đang xem trước. Bấm lưu để Backend kiểm tra và áp dụng.',true);}catch(error){message('message',error.message);}});
-el('reload-office').addEventListener('click',async()=>{if(busy)return;if(dirty && !confirm('Bỏ thay đổi chưa lưu và tải lại vùng mới nhất?'))return;try{await loadOffice();message('message','Đã tải bản đã lưu.',true);}catch(error){message('message',error.message);}});
+el('reload-office').addEventListener('click',async()=>{if(busy)return;if(dirty && !confirm('Bỏ thay đổi chưa lưu và tải lại vùng mới nhất?'))return;try{await loadOffice();message('message','Đã tải bản đã lưu.',true);}catch(error){el('office-revision').textContent='Chưa tải được';message('message',error.message);}});
 el('office-form').addEventListener('submit',async event=>{
   event.preventDefault();if(busy || !previewed)return;setBusy(true);
   try{
@@ -90,4 +98,4 @@ el('office-form').addEventListener('submit',async event=>{
   finally{setBusy(false);}
 });
 setBusy(true);
-try{await loadAccount();await loadOffice();}catch(error){message('message',error.message);}finally{setBusy(false);}
+try{await loadAccount();await loadOffice();}catch(error){el('office-revision').textContent='Chưa tải được';message('message',error.message);}finally{setBusy(false);}

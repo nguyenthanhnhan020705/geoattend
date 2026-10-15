@@ -30,7 +30,7 @@ User bắt đầu Remote có lý do hoặc Office có GPS, Check-out và bắt �
 
 Maintenance đóng phiên còn mở tại 20:00 giờ Việt Nam và xóa tọa độ/accuracy hết hạn 30 ngày. Nếu máy/tác vụ tắt lúc đó, lần chạy lại xử lý bù; API luôn che GPS hết hạn dù worker chưa chạy. Muốn tác vụ chạy đúng phút khi không ai mở web cần máy chạy maintenance liên tục; production cần worker độc lập. Thao tác nghỉ thuộc Phase 4.
 
-Bản đồ nền mặc định OpenStreetMap, Leaflet JS/CSS được phục vụ local. Có thể cấu hình `GEOATTEND_MAP_TILE_URL` (HTTPS, có `{z}/{x}/{y}`) và `GEOATTEND_MAP_ATTRIBUTION`. Lỗi tải tile không ngăn chỉnh/sửa vùng. GPS chỉ lấy khi User bấm Office; Check-out/Remote không lấy vị trí. Sau khôi phục backup, chạy `local_run maintenance --once` trước khi mở dịch vụ để dọn GPS hết hạn.
+Bản đồ nền mặc định OpenFreeMap (vector), không cần API key; Leaflet, MapLibre và thư viện kết nối được phục vụ local. `GEOATTEND_MAP_BACKGROUND=auto` chọn nền vector mặc định, hoặc raster nếu đã cấu hình URL tile khác. Có thể chọn rõ `vector`/`raster`; nền raster dùng `GEOATTEND_MAP_TILE_URL` (HTTPS, có `{z}/{x}/{y}`) và `GEOATTEND_MAP_ATTRIBUTION`. `GEOATTEND_MAP_STYLE_URL` cấu hình style vector HTTPS; các tài nguyên của style cần cùng origin để phù hợp CSP. Lỗi tải nền không ngăn chỉnh/sửa vùng. GPS chỉ lấy khi User bấm Office; Check-out/Remote không lấy vị trí. Sau khôi phục backup, chạy `local_run maintenance --once` trước khi mở dịch vụ để dọn GPS hết hạn.
 
 - Python 3.13; PostgreSQL có PostGIS và tài khoản migration có quyền tạo schema/extension.
 - Một tài khoản database runtime riêng, không phải superuser hoặc owner schema; database thử nghiệm khác database dùng ứng dụng.

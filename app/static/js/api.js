@@ -5,10 +5,18 @@ export async function apiFetch(path, options = {}) {
   const headers = {...options.headers};
   if (options.body) headers['Content-Type'] = 'application/json';
   if (method !== 'GET' && csrf) headers['X-CSRF-Token'] = csrf;
-  let response;
-  try { response = await fetch(path, {...options, headers, credentials: 'same-origin'}); }
-  catch { throw new Error('Không thể kết nối. Kiểm tra mạng và thử lại.'); }
-  const data = response.status === 204 ? null : await response.json();
+  let response, data;
+  const controller = new AbortController();
+  const timer = setTimeout(()=>controller.abort(),15000);
+  const signal = options.signal ? AbortSignal.any([options.signal,controller.signal]) : controller.signal;
+  try {
+    response = await fetch(path, {...options, headers, credentials: 'same-origin',signal});
+    data = response.status === 204 ? null : await response.json();
+  } catch {
+    // Keep network/timeout errors without a definitive API code: attendance
+    // retries must preserve the UUID when a server may have committed.
+    throw new Error(controller.signal.aborted ? 'Yêu cầu quá thời gian chờ. Kiểm tra kết nối và thử tải lại; thao tác vừa lưu có thể đã được ghi nhận.' : 'Không thể kết nối. Kiểm tra mạng và thử lại.');
+  } finally {clearTimeout(timer);}
   if (!response.ok) {
     if (response.status === 401 && data.code === 'AUTH_REQUIRED') window.location.assign('/login');
     const error = new Error(data.message || 'Không thể thực hiện thao tác.');

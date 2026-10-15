@@ -6,12 +6,12 @@ Mở `http://127.0.0.1:8000/login` trên máy chạy ứng dụng. Dùng cửa s
 
 1. Đăng nhập Admin, chọn **Văn phòng** hoặc mở `/admin/office`.
 2. Nhập tên và địa chỉ văn phòng.
-3. Di chuyển bản đồ đến văn phòng; bấm để thêm ít nhất ba đỉnh bao quanh khu vực. Có thể dùng ô vĩ độ/kinh độ để thêm hoặc sửa đỉnh, kéo đỉnh trên bản đồ hoặc xóa đỉnh trong danh sách.
+3. Di chuyển bản đồ đến văn phòng, chọn **Vẽ vùng**; bấm để thêm ít nhất ba đỉnh bao quanh khu vực. Có thể dùng ô vĩ độ/kinh độ để thêm hoặc sửa đỉnh, kéo đỉnh trên bản đồ hoặc xóa đỉnh trong danh sách.
 4. Nếu cần vùng loại trừ bên trong, thêm một đường biên loại trừ với ít nhất ba đỉnh. Backend từ chối Polygon tự cắt, không có diện tích hoặc vùng loại trừ không hợp lệ.
 5. Bấm **Xem trước**, kiểm tra vùng rồi bấm **Lưu vùng văn phòng**. Phiên bản tăng sau khi lưu; tải lại trang vẫn giữ vùng.
 6. Mở cùng trang trong hai tab Admin, sửa và lưu tab thứ nhất. Lưu tab thứ hai phải báo vùng đã thay đổi và giữ bản nháp. **Tải lại bản đã lưu** có xác nhận bỏ bản nháp.
 
-Bản đồ nền dùng OpenStreetMap mặc định, có thể thay bằng `GEOATTEND_MAP_TILE_URL`/`GEOATTEND_MAP_ATTRIBUTION`. Nếu nền không tải được, các đỉnh và Polygon vẫn chỉnh/lưu được bằng tọa độ. Bản đồ mặc định chỉ là vị trí xem ban đầu; hệ thống không tự tạo Geofence thật.
+Bản đồ nền mặc định dùng OpenFreeMap, không cần API key. Khi mất kết nối, bấm **Tải lại bản đồ**; bản nháp vẫn được giữ. Có thể dùng nền raster qua `GEOATTEND_MAP_BACKGROUND=raster` và `GEOATTEND_MAP_TILE_URL`/`GEOATTEND_MAP_ATTRIBUTION`. Nếu nền không tải được, các đỉnh và Polygon vẫn chỉnh/lưu được bằng tọa độ. Bản đồ mặc định chỉ là vị trí xem ban đầu; hệ thống không tự tạo Geofence thật. Yêu cầu API quá 15 giây sẽ báo lỗi và mở lại giao diện. Nếu lưu bị quá thời gian, tải lại bản đã lưu để kiểm tra kết quả trước khi lưu tiếp.
 
 ## User Check-in Office
 

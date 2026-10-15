@@ -48,7 +48,7 @@ def create_app(settings=None, pool=None):
         response.headers['Referrer-Policy'] = 'same-origin'
         response.headers['Content-Security-Policy'] = "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; frame-ancestors 'none'; form-action 'self'; base-uri 'self'"
         if request.url.path=='/admin/office':
-            response.headers['Content-Security-Policy'] = "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: "+settings.map_tile_origin+"; frame-ancestors 'none'; form-action 'self'; base-uri 'self'"
+            response.headers['Content-Security-Policy'] = "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: "+settings.map_tile_origin+' '+settings.map_style_origin+"; connect-src 'self' "+settings.map_style_origin+"; worker-src 'self' blob:; frame-ancestors 'none'; form-action 'self'; base-uri 'self'"
         return response
 
     @app.exception_handler(ApiError)
