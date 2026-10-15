@@ -8,7 +8,7 @@ from app.attendance.schemas import OFFICE_ACTIONS
 
 VIETNAM = timezone(timedelta(hours=7))
 WORKING = ('WORKING_REMOTE', 'WORKING_OFFICE')
-START_ACTIONS = ('START_OFFICE','START_REMOTE','CANCEL_LEAVE_START_OFFICE','CANCEL_LEAVE_START_REMOTE')
+START_ACTIONS = ('START_OFFICE','START_REMOTE','CANCEL_LEAVE_START_OFFICE','CANCEL_LEAVE_START_REMOTE','SWITCH_OFFICE','SWITCH_REMOTE')
 LEAVE_ACTIONS = ('MORNING_LEAVE','FULL_DAY_LEAVE')
 
 
@@ -20,7 +20,7 @@ def actions_for(state):
     if state == 'FULL_DAY_LEAVE':
         return ['CANCEL_LEAVE_START_OFFICE','CANCEL_LEAVE_START_REMOTE']
     if state in WORKING:
-        return ['CHECK_OUT','START_LUNCH']
+        return ['CHECK_OUT','START_LUNCH','SWITCH_REMOTE' if state == 'WORKING_OFFICE' else 'SWITCH_OFFICE']
     return []
 
 
@@ -156,6 +156,11 @@ def act(conn, user_id, body, session_id=None):
                     event_ids.append(event(conn,day['id'],None,body.action,now,now,'USER',body.reason))
                     state = body.action
                 elif failure is None and body.action in START_ACTIONS:
+                    if body.action in ('SWITCH_OFFICE','SWITCH_REMOTE'):
+                        source = conn.execute("UPDATE geoattend.work_sessions SET end_time=%s,end_source='USER' WHERE day_id=%s AND end_time IS NULL RETURNING id", (now,day['id'])).fetchone()
+                        if source is None:
+                            raise ApiError(503,'INCONSISTENT_ATTENDANCE','Dữ liệu phiên cần được kiểm tra.')
+                        event_ids.append(event(conn,day['id'],source['id'],'WORK_END',now,now,'USER'))
                     if state == 'FULL_DAY_LEAVE':
                         event_ids.append(event(conn,day['id'],None,'LEAVE_CANCELLED',now,now,'USER'))
                     mode='OFFICE' if office else 'REMOTE'

@@ -3,8 +3,8 @@ from datetime import date
 from uuid import UUID
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-OFFICE_ACTIONS = ('START_OFFICE', 'CANCEL_LEAVE_START_OFFICE')
-REASON_ACTIONS = ('START_REMOTE', 'CANCEL_LEAVE_START_REMOTE', 'MORNING_LEAVE', 'FULL_DAY_LEAVE')
+OFFICE_ACTIONS = ('START_OFFICE', 'CANCEL_LEAVE_START_OFFICE', 'SWITCH_OFFICE')
+REASON_ACTIONS = ('START_REMOTE', 'CANCEL_LEAVE_START_REMOTE', 'SWITCH_REMOTE', 'MORNING_LEAVE', 'FULL_DAY_LEAVE')
 
 
 class ActionInput(BaseModel):
@@ -14,7 +14,8 @@ class ActionInput(BaseModel):
     expected_work_date: date
     action: Literal['START_REMOTE', 'START_OFFICE', 'CHECK_OUT', 'START_LUNCH',
                     'MORNING_LEAVE', 'FULL_DAY_LEAVE',
-                    'CANCEL_LEAVE_START_OFFICE', 'CANCEL_LEAVE_START_REMOTE']
+                    'CANCEL_LEAVE_START_OFFICE', 'CANCEL_LEAVE_START_REMOTE',
+                    'SWITCH_OFFICE', 'SWITCH_REMOTE']
     reason: str | None = None
     latitude: float | None = Field(default=None,ge=-90,le=90,allow_inf_nan=False,strict=True)
     longitude: float | None = Field(default=None,ge=-180,le=180,allow_inf_nan=False,strict=True)
