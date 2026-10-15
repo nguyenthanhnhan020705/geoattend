@@ -73,7 +73,7 @@ def test_concurrent_initial_office_save_only_one_revision(api_client,test_dsn,mi
         assert sorted(f.result(15) for f in futures)==[1,409]
 
 
-def test_office_functions_support_extensions_schema(db):
+def test_office_functions_support_extensions_schema(db,monkeypatch):
     from pathlib import Path
     from app.gis.schemas import OfficeInput
     from app.gis.service import save_office,verify_office,get_office
@@ -95,6 +95,20 @@ def test_office_functions_support_extensions_schema(db):
         with db.transaction():
             assert verify_office(db,10.5,106.5)['revision']==1
         assert get_office(db)['geom']==POLYGON
+        from app.accounts.service import create_user
+        from app.attendance.schemas import ActionInput
+        from app.attendance import service
+        from app.gis.retention import purge_locations
+        from datetime import datetime,timezone,timedelta
+        from uuid import uuid4
+        user=create_user(db,'worker','Worker','Worker1234');db.commit()
+        now=datetime(2026,10,14,2,tzinfo=timezone.utc)
+        monkeypatch.setattr('app.clock.utc_now',lambda:now)
+        body=ActionInput(request_id=uuid4(),expected_revision=0,expected_work_date='2026-10-14',action='START_OFFICE',latitude=10.5,longitude=106.5,accuracy_m=20)
+        assert service.act(db,user.id,body)['status']=='WORKING_OFFICE'
+        location=service.history(db,user.id,None,None,1,20)['items'][0]['sessions'][0]['location']
+        assert location['latitude']==10.5 and location['longitude']==106.5
+        assert purge_locations(db,now+timedelta(days=30))==1
     finally:
         db.rollback()
         db.execute('DROP SCHEMA IF EXISTS geoattend CASCADE')

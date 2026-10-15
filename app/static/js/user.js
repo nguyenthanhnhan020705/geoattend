@@ -11,6 +11,9 @@ function controls() {
   const allowed = current?.allowed_actions || [];
   el('remote-form').hidden = !allowed.includes('START_REMOTE');
   el('check-out').hidden = !allowed.includes('CHECK_OUT');
+  el('start-office').hidden = !allowed.includes('START_OFFICE');
+  el('gps-note').hidden = !allowed.includes('START_OFFICE');
+  el('start-office').disabled = busy || !!pending;
   el('retry-action').hidden = !pending;
   el('remote-form').querySelector('button').disabled = busy || !!pending;
   el('remote-reason').disabled = busy || !!pending;
@@ -30,7 +33,7 @@ async function refreshStatus() {
 function savePending() {
   // Exact payload survives ambiguous responses/reloads in this account/tab.
   // No GPS or auth token is stored here.
-  if (pending) sessionStorage.setItem(pendingKey,JSON.stringify(pending));
+  if (pending && pending.body.action!=='START_OFFICE') sessionStorage.setItem(pendingKey,JSON.stringify(pending));
   else sessionStorage.removeItem(pendingKey);
 }
 
@@ -52,9 +55,9 @@ async function sendPending() {
   catch (error) { message('message','Chưa tải được dữ liệu mới: '+error.message); }
 }
 
-function submit(action, reason) {
+function submit(action, reason, position=null, intended=current) {
   if (!current || pending || busy) return;
-  pending = {accountId,body:{request_id:crypto.randomUUID(),expected_revision:current.revision,expected_work_date:current.work_date,action,...(reason !== undefined ? {reason} : {})}};
+  pending = {accountId,body:{request_id:crypto.randomUUID(),expected_revision:intended.revision,expected_work_date:intended.work_date,action,...(reason !== undefined ? {reason} : {}),...(position || {})}};
   savePending(); sendPending();
 }
 
@@ -79,6 +82,8 @@ async function loadHistory(query, page=1) {
       line('p',`${session.work_mode==='REMOTE'?'Remote':'Office'} · ${clock(session.start_time)} → ${ending}`,section);
       if (session.start_reason) line('p',session.start_reason,section,'muted');
       if (session.end_source==='SYSTEM') line('p','Hệ thống tự đóng lúc 20:00; không phải giờ kết thúc thực tế.',section,'system-note');
+      if(session.location?.status==='available') line('p',`GPS đã xác minh · ${session.location.latitude}, ${session.location.longitude} · Sai số ${session.location.accuracy_m} m`,section,'muted');
+      if(session.location?.status==='expired') line('p','Dữ liệu vị trí đã hết hạn lưu. Kết quả xác minh được giữ lại.',section,'muted');
     }
     const events = document.createElement('ul'); events.className='timeline';
     for (const event of day.events) line('li',`${clock(event.event_time)} · ${eventLabels[event.event_type] || event.event_type}${event.source==='SYSTEM'?' · Hệ thống':''}${event.reason?' · '+event.reason:''}`,events);
@@ -91,6 +96,19 @@ async function loadHistory(query, page=1) {
 
 el('remote-form').addEventListener('submit', event => { event.preventDefault(); submit('START_REMOTE',el('remote-reason').value.trim()); });
 el('check-out').addEventListener('click',()=>submit('CHECK_OUT'));
+el('start-office').addEventListener('click',async()=>{
+  if(!current || busy || pending)return;
+  const intended={...current};let position=null;busy=true;controls();message('message','Đang xác minh vị trí…');
+  try{
+    if(!navigator.geolocation)throw {code:2};
+    const result=await new Promise((resolve,reject)=>navigator.geolocation.getCurrentPosition(resolve,reject,{enableHighAccuracy:true,timeout:15000,maximumAge:0}));
+    position={latitude:result.coords.latitude,longitude:result.coords.longitude,accuracy_m:result.coords.accuracy};
+  }catch(error){
+    const text=error.code===1?'Bạn chưa cấp quyền vị trí. Cho phép GPS rồi thử lại, hoặc tự chọn Remote và nhập lý do.':error.code===3?'Lấy vị trí quá thời gian chờ. Hãy thử lại hoặc tự chọn Remote.':'Chưa lấy được vị trí. Kiểm tra GPS hoặc tự chọn Remote.';
+    message('message',text);
+  }finally{busy=false;controls();}
+  if(position)submit('START_OFFICE',undefined,position,intended);
+});
 el('retry-action').addEventListener('click',sendPending);
 el('refresh-status').addEventListener('click',()=>refreshStatus().catch(error=>message('message',error.message)));
 el('history-form').addEventListener('submit',event=>{event.preventDefault(); loadHistory({from:el('history-from').value,to:el('history-to').value}).catch(error=>message('history-message',error.message));});
@@ -101,7 +119,7 @@ try {
   el('full-name').textContent = account.full_name; el('account-username').textContent = account.username;
   const saved = sessionStorage.getItem(pendingKey);
   if (saved) {
-    try { const value=JSON.parse(saved); if (value.accountId===accountId) pending=value; else sessionStorage.removeItem(pendingKey); }
+    try { const value=JSON.parse(saved); if (value.accountId===accountId && value.body?.action!=='START_OFFICE') pending=value; else sessionStorage.removeItem(pendingKey); }
     catch { sessionStorage.removeItem(pendingKey); }
   }
   await refreshStatus();

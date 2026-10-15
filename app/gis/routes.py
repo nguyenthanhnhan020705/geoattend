@@ -9,7 +9,9 @@ router=APIRouter(prefix='/api/admin/office',dependencies=[Depends(require_admin)
 @router.get('')
 def get(request: Request):
     with request.app.state.pool.connection() as conn:
-        return get_office(conn)
+        result=get_office(conn)
+        result['map']={'tile_url':request.app.state.settings.map_tile_url,'attribution':request.app.state.settings.map_attribution}
+        return result
 
 
 @router.put('')

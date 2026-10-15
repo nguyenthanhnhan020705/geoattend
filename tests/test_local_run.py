@@ -49,3 +49,12 @@ def test_migration_environment_contains_runtime_for_grants(tmp_path):
     result=local_environment(envfile,'migrate',{})
     assert conninfo_to_dict(result['GEOATTEND_DATABASE_URL'])['user']=='worker'
     assert conninfo_to_dict(result['GEOATTEND_MIGRATION_DATABASE_URL'])['user']=='postgres'
+
+
+def test_launcher_preserves_public_map_config(tmp_path):
+    from scripts.local_run import local_environment
+    path=tmp_path/'.env'
+    path.write_text('GEOATTEND_DATABASE_URL=host=localhost user=worker\nGEOATTEND_MAP_TILE_URL=https://tiles.example/{z}/{x}/{y}.png\nGEOATTEND_MAP_ATTRIBUTION=Example\n',encoding='utf-8')
+    env=local_environment(path,'serve',{})
+    assert env['GEOATTEND_MAP_TILE_URL']=='https://tiles.example/{z}/{x}/{y}.png'
+    assert env['GEOATTEND_MAP_ATTRIBUTION']=='Example'

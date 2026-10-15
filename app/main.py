@@ -47,6 +47,8 @@ def create_app(settings=None, pool=None):
         response.headers['X-Content-Type-Options'] = 'nosniff'
         response.headers['Referrer-Policy'] = 'same-origin'
         response.headers['Content-Security-Policy'] = "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; frame-ancestors 'none'; form-action 'self'; base-uri 'self'"
+        if request.url.path=='/admin/office':
+            response.headers['Content-Security-Policy'] = "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: "+settings.map_tile_origin+"; frame-ancestors 'none'; form-action 'self'; base-uri 'self'"
         return response
 
     @app.exception_handler(ApiError)
@@ -105,6 +107,10 @@ def create_app(settings=None, pool=None):
     @app.get('/account',include_in_schema=False)
     def account_page(request: Request):
         return protected_page(request,'account.html')
+
+    @app.get('/admin/office',include_in_schema=False)
+    def office_page(request: Request):
+        return protected_page(request,'admin-office.html','ADMIN')
 
     app.mount('/static', StaticFiles(directory=STATIC), name='static')
     return app

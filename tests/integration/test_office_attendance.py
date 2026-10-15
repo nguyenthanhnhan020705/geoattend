@@ -104,3 +104,26 @@ def test_office_row_wait_crossing_cutoff_rejects(configured,test_dsn,migrated_db
             response=pending.result(15)
     assert response.status_code==409 and response.json()['code']=='DAY_CLOSED'
     assert migrated_db.execute('SELECT count(*) AS n FROM geoattend.work_sessions').fetchone()['n']==0
+
+
+@pytest.mark.parametrize('change',['polygon','logout'])
+def test_waiting_office_uses_current_polygon_and_session(configured,test_dsn,migrated_db,monkeypatch,change):
+    from app.gis import service
+    client,headers,uid=configured
+    reached=Event();original=service.verify_office
+    def marked(*args):reached.set();return original(*args)
+    monkeypatch.setattr(service,'verify_office',marked)
+    with psycopg.connect(test_dsn) as blocker:
+        blocker.execute('SELECT id FROM geoattend.office FOR UPDATE')
+        with ThreadPoolExecutor(max_workers=1) as executor:
+            future=executor.submit(office_action,client,headers)
+            assert reached.wait(10)
+            if change=='polygon':
+                moved={'type':'Polygon','coordinates':[[[108,10],[109,10],[109,11],[108,11],[108,10]]]}
+                blocker.execute('UPDATE geoattend.office SET geom=ST_GeomFromGeoJSON(%s),revision=revision+1',(json.dumps(moved),))
+            else:
+                blocker.execute('UPDATE geoattend.auth_sessions SET revoked_at=now() WHERE user_id=%s',(uid,))
+            blocker.commit()
+            response=future.result(15)
+    assert response.status_code==(403 if change=='polygon' else 401)
+    assert migrated_db.execute('SELECT count(*) AS n FROM geoattend.work_sessions').fetchone()['n']==0
