@@ -161,3 +161,30 @@ def test_runtime_role_can_start_checkout_and_maintain(employee,migrated_db,test_
         migrated_db.execute(sql.SQL('DROP OWNED BY {}').format(sql.Identifier(role)))
         migrated_db.execute(sql.SQL('DROP ROLE {}').format(sql.Identifier(role)))
         migrated_db.commit()
+
+
+@pytest.mark.parametrize('kind,revision', [('START_LUNCH',1),('START_REMOTE',2)])
+@pytest.mark.parametrize('next_time,code', [(datetime(2026,10,14,13,tzinfo=timezone.utc),'DAY_CLOSED'),(datetime(2026,10,14,17,tzinfo=timezone.utc),'STALE_DATE')])
+def test_lunch_action_waiting_profile_rechecks_day(employee, test_dsn, migrated_db, monkeypatch, kind, revision, next_time, code):
+    from app.attendance import service
+    client, headers, uid = employee
+    assert action(client,headers).status_code == 200
+    if revision == 2:
+        assert action(client,headers,1,'START_LUNCH',None).status_code == 200
+    reached = Event()
+    original = service.lock_user
+    def marked(conn,user_id):
+        reached.set()
+        return original(conn,user_id)
+    monkeypatch.setattr(service,'lock_user',marked)
+    with psycopg.connect(test_dsn) as blocker:
+        blocker.execute('SELECT id FROM geoattend.profiles WHERE id=%s FOR UPDATE',(uid,))
+        with ThreadPoolExecutor(max_workers=1) as executor:
+            future = executor.submit(action,client,headers,revision,kind,'Home' if kind=='START_REMOTE' else None)
+            assert reached.wait(10)
+            monkeypatch.setattr('app.clock.utc_now',lambda:next_time)
+            blocker.commit()
+            response = future.result(15)
+    assert response.status_code == 409 and response.json()['code'] == code
+    assert migrated_db.execute('SELECT status FROM geoattend.attendance_days').fetchone()['status'] == 'CHECKED_OUT'
+    assert migrated_db.execute('SELECT count(*) AS n FROM geoattend.work_sessions').fetchone()['n'] == 1

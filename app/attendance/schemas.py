@@ -9,7 +9,7 @@ class ActionInput(BaseModel):
     request_id: UUID
     expected_revision: int = Field(ge=0, strict=True)
     expected_work_date: date
-    action: Literal['START_REMOTE', 'START_OFFICE', 'CHECK_OUT']
+    action: Literal['START_REMOTE', 'START_OFFICE', 'CHECK_OUT', 'START_LUNCH']
     reason: str | None = None
     latitude: float | None = Field(default=None,ge=-90,le=90,allow_inf_nan=False,strict=True)
     longitude: float | None = Field(default=None,ge=-180,le=180,allow_inf_nan=False,strict=True)

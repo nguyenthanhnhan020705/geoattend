@@ -62,10 +62,10 @@ def snapshot(conn, user_id, now):
         opened = conn.execute('SELECT id,work_mode,start_time,start_reason FROM geoattend.work_sessions WHERE day_id=%s AND end_time IS NULL', (day['id'],)).fetchone()
     allowed = []
     if now < cutoff(work_date):
-        if state in ('NOT_STARTED','CHECKED_OUT'):
+        if state in ('NOT_STARTED','CHECKED_OUT','LUNCH_BREAK'):
             allowed = ['START_OFFICE','START_REMOTE']
         elif state in WORKING:
-            allowed = ['CHECK_OUT']
+            allowed = ['CHECK_OUT','START_LUNCH']
     return dict(work_date=work_date,status=state,revision=day['revision'] if day else 0,open_session=opened,server_time=now,allowed_actions=allowed)
 
 
@@ -118,7 +118,7 @@ def act(conn, user_id, body, session_id=None):
                 failure = ApiError(409,'DAY_CLOSED','Ngày làm việc đã kết thúc lúc 20:00 giờ Việt Nam.')
             elif revision != body.expected_revision:
                 failure = ApiError(409,'STALE_REVISION','Trạng thái đã thay đổi. Vui lòng tải lại.')
-            elif (body.action in ('START_REMOTE','START_OFFICE') and state not in ('NOT_STARTED','CHECKED_OUT')) or (body.action=='CHECK_OUT' and state not in WORKING):
+            elif (body.action in ('START_REMOTE','START_OFFICE') and state not in ('NOT_STARTED','CHECKED_OUT','LUNCH_BREAK')) or (body.action in ('CHECK_OUT','START_LUNCH') and state not in WORKING):
                 failure = ApiError(409,'INVALID_TRANSITION','Không thể thực hiện thao tác ở trạng thái hiện tại.')
             else:
                 office=None
@@ -138,10 +138,12 @@ def act(conn, user_id, body, session_id=None):
                         failure=ApiError(409,'DAY_CLOSED','Ngày làm việc đã kết thúc lúc 20:00 giờ Việt Nam.')
                 if failure is None and day is None:
                     day = conn.execute("INSERT INTO geoattend.attendance_days(user_id,work_date,status) VALUES(%s,%s,'NOT_STARTED') RETURNING *", (user_id,today)).fetchone()
+                event_ids = []
                 if failure is None and body.action in ('START_REMOTE','START_OFFICE'):
                     mode='OFFICE' if office else 'REMOTE'
                     session_id = conn.execute('INSERT INTO geoattend.work_sessions(day_id,work_mode,start_time,start_reason,office_revision) VALUES(%s,%s,%s,%s,%s) RETURNING id', (day['id'],mode,now,body.reason,office['revision'] if office else None)).fetchone()['id']
                     event_id = event(conn,day['id'],session_id,'WORK_START',now,now,'USER',body.reason)
+                    event_ids.append(event_id)
                     if office:
                         conn.execute('UPDATE geoattend.attendance_events SET location_verified=true WHERE id=%s',(event_id,))
                         store_location(conn,session_id,event_id,body,now)
@@ -152,10 +154,14 @@ def act(conn, user_id, body, session_id=None):
                         raise ApiError(503,'INCONSISTENT_ATTENDANCE','Dữ liệu phiên cần được kiểm tra.')
                     session_id = session['id']
                     event_id = event(conn,day['id'],session_id,'WORK_END',now,now,'USER',body.reason)
+                    event_ids.append(event_id)
                     state = 'CHECKED_OUT'
+                    if body.action == 'START_LUNCH':
+                        event_ids.append(event(conn,day['id'],None,'LUNCH_START',now,now,'USER'))
+                        state = 'LUNCH_BREAK'
                 if failure is None:
                     conn.execute('UPDATE geoattend.attendance_days SET status=%s,revision=revision+1,updated_at=%s WHERE id=%s', (state,now,day['id']))
-                    saved = conn.execute('INSERT INTO geoattend.attendance_requests(user_id,request_id,payload_hash,result_event_ids,completed_at,result_status,result_revision,result_work_date,result_session_id) VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s) RETURNING *', (user_id,body.request_id,digest,[event_id],now,state,revision+1,today,session_id)).fetchone()
+                    saved = conn.execute('INSERT INTO geoattend.attendance_requests(user_id,request_id,payload_hash,result_event_ids,completed_at,result_status,result_revision,result_work_date,result_session_id) VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s) RETURNING *', (user_id,body.request_id,digest,event_ids,now,state,revision+1,today,session_id)).fetchone()
                     answer = result(saved)
     if failure:
         raise failure
