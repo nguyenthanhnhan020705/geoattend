@@ -77,6 +77,9 @@ def test_admin_map_and_user_gps_flow(office_site,migrated_db):
         admin.get_by_role('button',name='Lưu vùng văn phòng').click()
         expect(admin.locator('#message')).to_contain_text('thay đổi')
         expect(admin.get_by_label('Tên văn phòng')).to_have_value('Bản nháp đang sửa')
+        admin.set_viewport_size({'width':360,'height':800})
+        assert admin.evaluate('document.documentElement.scrollWidth<=innerWidth')
+        admin.screenshot(path=str(artifacts/'office-admin-mobile.png'),full_page=True)
         assert errors==[]
         browser.close()
 
@@ -104,4 +107,49 @@ def test_office_ambiguous_retry_no_persistent_gps(office_site,migrated_db):
         expect(page.locator('#attendance-status')).to_have_text('Đang làm tại văn phòng')
         assert calls[0]==calls[1] and page.evaluate('gpsCalls')==1
         assert migrated_db.execute('SELECT count(*) AS n FROM geoattend.work_sessions').fetchone()['n']==1
+        browser.close()
+
+
+def test_office_loading_blocks_edits_until_response(office_site):
+    with sync_playwright() as p:
+        channel=os.getenv('GEOATTEND_BROWSER_CHANNEL','msedge')
+        browser=p.chromium.launch(channel=None if channel=='chromium' else channel,headless=True)
+        page=browser.new_page()
+        page.route('https://tile.openstreetmap.org/**',lambda route:route.abort())
+        login(page,office_site,'admin','Admin1234')
+        held=[];get_count=[0]
+        def delay_get(route):
+            if route.request.method=='GET':
+                held.append((route,route.fetch()));get_count[0]+=1
+                page.evaluate('count=>document.documentElement.dataset.heldGets=String(count)',get_count[0])
+            else:route.continue_()
+        page.route('**/api/admin/office',delay_get)
+        page.goto(office_site+'/admin/office',wait_until='domcontentloaded')
+        expect(page.locator('html')).to_have_attribute('data-held-gets','1')
+        expect(page.get_by_label('Tên văn phòng')).to_be_disabled()
+        expect(page.get_by_role('button',name='Thêm đỉnh',exact=True)).to_be_disabled()
+        expect(page.locator('#office-form')).to_have_attribute('aria-busy','true')
+        assert len(held)==1
+        route,response=held.pop();route.fulfill(response=response)
+        expect(page.get_by_label('Tên văn phòng')).to_be_enabled()
+        page.get_by_label('Tên văn phòng').fill('Bản nháp sẽ được bỏ theo xác nhận')
+        page.on('dialog',lambda dialog:dialog.accept())
+        page.get_by_role('button',name='Tải lại bản đã lưu').click()
+        expect(page.locator('html')).to_have_attribute('data-held-gets','2')
+        expect(page.get_by_label('Tên văn phòng')).to_be_disabled()
+        expect(page.get_by_role('button',name='Tải lại bản đã lưu')).to_be_disabled()
+        page.locator('#office-map').click(position={'x':100,'y':100})
+        expect(page.locator('#vertices-list li')).to_have_count(0)
+        assert len(held)==1
+        route,response=held.pop();route.fulfill(response=response)
+        expect(page.get_by_label('Tên văn phòng')).to_be_enabled()
+        expect(page.get_by_role('button',name='Tải lại bản đã lưu')).to_be_enabled()
+        # A failed reload also releases controls and preserves the draft.
+        page.get_by_label('Tên văn phòng').fill('Giữ khi tải lỗi')
+        page.get_by_role('button',name='Tải lại bản đã lưu').click()
+        expect(page.locator('html')).to_have_attribute('data-held-gets','3')
+        expect(page.get_by_label('Tên văn phòng')).to_be_disabled()
+        route,_=held.pop();route.fulfill(status=503,json={'code':'DATABASE_UNAVAILABLE','message':'Chưa sẵn sàng'})
+        expect(page.get_by_label('Tên văn phòng')).to_be_enabled()
+        expect(page.get_by_label('Tên văn phòng')).to_have_value('Giữ khi tải lỗi')
         browser.close()

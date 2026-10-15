@@ -148,4 +148,4 @@ git diff --check
 
 ## 6. Phạm vi bàn giao
 
-Xem [roadmap](ROADMAP.md), [kế hoạch Phase 1](superpowers/plans/2026-10-14-phase-1-foundation-auth.md) và [báo cáo Phase 2](PHASE_2_VERIFICATION.md). Remote, lịch sử cá nhân và tác vụ 20:00 đã triển khai trong Phase 2. Office/GPS 30 ngày thuộc Phase 3; nghỉ và luồng hỗn hợp thuộc Phase 4. Supabase đã được cấu hình cho ứng dụng local; triển khai production và pilot thuộc Phase 6.
+Xem [roadmap](ROADMAP.md) và [báo cáo Phase 3](PHASE_3_VERIFICATION.md). Remote, Office/Geofence, lịch sử cá nhân, tác vụ 20:00 và GPS hết hạn 30 ngày đã triển khai. Nghỉ và luồng hỗn hợp thuộc Phase 4; Dashboard/Onsite thuộc Phase 5. Supabase đã được cấu hình cho ứng dụng local; triển khai production và pilot thuộc Phase 6.

@@ -4,7 +4,7 @@
 
 Chia phạm vi trong [BRD](../README.md) thành các phase có thứ tự phụ thuộc, công việc và điều kiện hoàn thành rõ ràng.
 
-Tại thời điểm bắt đầu dự án (14/10/2026), workspace chỉ có `README.md`. Hiện **Phase 0, Phase 1 và Phase 2 đã hoàn thành** trong worktree `.worktrees/phase-1`, nhánh `feat/phase-1-foundation-auth`. Phase 2 đã được kiểm chứng bằng 85 kiểm thử và chạy với Supabase; các phase 3–6 **chưa triển khai**. Xem [báo cáo Phase 2](PHASE_2_VERIFICATION.md) và [hướng dẫn kiểm thử thủ công](MANUAL_TEST_PHASE_2.md).
+Tại thời điểm bắt đầu dự án (14/10/2026), workspace chỉ có `README.md`. Hiện **Phase 0–3 đã hoàn thành** trong worktree `.worktrees/phase-1`, nhánh `feat/phase-1-foundation-auth`. Phase 3 đã qua review độc lập, đạt 119 kiểm thử và chạy với Supabase; các phase 4–6 **chưa triển khai**. Xem [báo cáo Phase 3](PHASE_3_VERIFICATION.md) và [hướng dẫn kiểm thử Office](MANUAL_TEST_PHASE_3.md).
 
 Đây là roadmap cấp dự án. Thiết kế và kế hoạch triển khai chi tiết sẽ được lập theo từng phase, sau khi các quyết định nghiệp vụ liên quan đã được chốt. Roadmap không tự quyết định thay các câu hỏi mở trong BRD.
 
@@ -98,16 +98,18 @@ Thứ tự thực hiện: **0 → 1 → 2 → 3 → 4 → 5 → 6**.
 
 ### Phase 3 — Geofence và luồng Office
 
+**Đã thực hiện:** [kế hoạch Phase 3](superpowers/plans/2026-10-15-phase-3-office-geofence.md), [kiểm chứng 119/119](PHASE_3_VERIFICATION.md). Admin cấu hình vùng thực tế qua `/admin/office`; hệ thống không tự chọn tọa độ văn phòng.
+
 **Yêu cầu BRD:** FR-02, FR-08 (Office), FR-14; BR-01, BR-08; phần GPS của NFR-02, NFR-05.
 
-- [ ] Xây dựng giao diện bản đồ để Admin xem/chỉnh sửa và lưu Geofence.
-- [ ] Kiểm tra Polygon hợp lệ và quyền quản trị tại API.
-- [ ] Lấy vị trí bằng Browser Geolocation khi nhân viên thực hiện thao tác Office cần xác minh.
-- [ ] Kiểm tra Point-in-Polygon phía Backend bằng PostGIS theo quy tắc ranh giới/sai số đã chốt.
-- [ ] Triển khai Check-in Office và Check-out Office theo quyết định TBD-01; xác minh GPS lại khi tạo phiên Office mới sau Check-out theo AC-12.
-- [ ] Ghi kết quả xác minh, vị trí và độ chính xác phù hợp với chính sách dữ liệu.
-- [ ] Triển khai tự động xóa tọa độ/độ chính xác GPS đủ 30 ngày, không trả vị trí hết hạn qua API; giữ lịch sử phiên và kết quả xác minh, kiểm thử theo AC-16.
-- [ ] Hiển thị lỗi dễ hiểu khi ngoài vùng, thiếu quyền vị trí, GPS lỗi; lưu độ chính xác GPS để tra cứu, không từ chối chỉ vì sai số lớn.
+- [x] Xây dựng giao diện bản đồ để Admin xem/chỉnh sửa và lưu Geofence.
+- [x] Kiểm tra Polygon hợp lệ và quyền quản trị tại API.
+- [x] Lấy vị trí bằng Browser Geolocation khi nhân viên thực hiện thao tác Office cần xác minh.
+- [x] Kiểm tra Point-in-Polygon phía Backend bằng PostGIS theo quy tắc ranh giới/sai số đã chốt.
+- [x] Triển khai Check-in Office và Check-out Office theo quyết định TBD-01; xác minh GPS lại khi tạo phiên Office mới sau Check-out theo AC-12.
+- [x] Ghi kết quả xác minh, vị trí và độ chính xác phù hợp với chính sách dữ liệu.
+- [x] Triển khai tự động xóa tọa độ/độ chính xác GPS đủ 30 ngày, không trả vị trí hết hạn qua API; giữ lịch sử phiên và kết quả xác minh, kiểm thử theo AC-16.
+- [x] Hiển thị lỗi dễ hiểu khi ngoài vùng, thiếu quyền vị trí, GPS lỗi; lưu độ chính xác GPS để tra cứu, không từ chối chỉ vì sai số lớn.
 
 **Đầu ra:** Admin lưu vùng văn phòng; nhân viên trong vùng Check-in Office và xem phiên đã ghi nhận.
 
@@ -172,4 +174,4 @@ Thứ tự thực hiện: **0 → 1 → 2 → 3 → 4 → 5 → 6**.
 - Chưa gán lịch theo tuần vì chưa biết số người phát triển và thời gian dành cho dự án. Ước lượng sau khi chia task và xác nhận nguồn lực.
 - PWA, notification, xuất báo cáo, Audit Log, Correction Request, QR, nhiều văn phòng/phòng ban, mobile và AI/RAG thuộc giai đoạn sau MVP.
 
-**Bước tiếp theo:** Phase 3 — Geofence và Office theo thiết kế đã duyệt. Xem [hướng dẫn chạy](DEVELOPMENT.md). Ứng dụng local đang dùng Supabase; bộ kiểm thử tự động dùng database riêng. Chưa triển khai production hoặc chạy pilot.
+**Bước tiếp theo:** Phase 4 — nghỉ trưa, nghỉ và luồng làm việc hỗn hợp theo thiết kế đã duyệt. Xem [hướng dẫn chạy](DEVELOPMENT.md). Ứng dụng local đang dùng Supabase; bộ kiểm thử tự động dùng database riêng. Chưa triển khai production hoặc chạy pilot.

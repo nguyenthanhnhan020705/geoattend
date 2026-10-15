@@ -2,6 +2,8 @@
 
 Phạm vi: Admin cấu hình một Geofence, User bắt đầu Office với GPS, Check-out không GPS, xác minh lại khi bắt đầu phiên mới, che và xóa GPS sau 30 ngày. Thiết kế nguồn: MVP Phase 0 đã duyệt; phương pháp inline và ủy quyền tự triển khai/test được giữ từ phiên trước.
 
+**Kết quả cuối:** 119/119 ca đạt sau một lượt sửa review, 99.09 giây, một warning upstream Starlette TestClient. `pip check` và `git diff --check` không lỗi. Web và một maintenance worker đã được khởi động lại bằng local_run; health/database ok. Không có Minor từ review Phase 3.
+
 ## Bằng chứng trước review
 
 - Baseline: 85/85 ca đạt trên PostgreSQL 17/PostGIS riêng, 65.44 giây.
@@ -12,6 +14,14 @@ Phạm vi: Admin cấu hình một Geofence, User bắt đầu Office với GPS,
 - Browser mất response sau commit: retry cùng UUID/payload, chỉ một phiên, chỉ một lần lấy GPS, không raw GPS trong sessionStorage/localStorage. PostGIS schema extensions kiểm tra toàn luồng save/verify/store/history/purge.
 - Races bổ sung: Polygon thay đổi lúc User chờ khóa được áp dụng; phiên bị thu hồi trong lúc chờ bị từ chối.
 - Full suite trước review: **118 passed, 1 warning trong 70.87 giây**. `pip check`: không lỗi phụ thuộc. `git diff --check`: không lỗi whitespace. Warning upstream Starlette TestClient/HTTPX được giữ nguyên.
+
+## Review độc lập và lượt sửa
+
+Agent `phase3_final_review` (GPT-6-astra), chỉ đọc, review base `cff6b05` đến `e20c1c0`; không truy cập Supabase hoặc bí mật. Không Critical, một Important, không Minor.
+
+Important: Admin có thể sửa trong lúc GET tải lại vùng đang chờ, phản hồi tới sau xóa bản nháp mới. Regression `test_office_loading_blocks_edits_until_response` thất bại vì input vẫn enabled. Đã sửa bằng trạng thái busy dùng chung cho tải lần đầu/tải lại/lưu, khóa form/map/drag/reload và khôi phục cả khi lỗi. Browser kiểm tra chậm/lỗi/giữ draft: 3/3 ca đạt.
+
+Lần chạy hồi quy đầu sau sửa ghi nhận 118 đạt/1 lỗi trong ca trên do helper chờ JavaScript bị CSP chặn unsafe-eval, không phải lỗi sản phẩm. Helper được sửa sang chờ DOM attribute, giữ nguyên CSP; các assertion đọc/ghi thực và phản hồi bị giữ vẫn giữ nguyên. Toàn suite được chạy lại sau sửa helper.
 
 ```powershell
 $env:GEOATTEND_TEST_DATABASE_URL='postgresql://postgres@127.0.0.1:55440/postgres'
@@ -31,6 +41,8 @@ git diff --check
 7. Chỉ trang Admin văn phòng cho phép inline styles mà Leaflet cần và origin tile được cấu hình. Các trang khác giữ CSP hiện tại. Chi phí: CSP trang bản đồ cho phép style động; script vẫn chỉ từ self.
 8. Lưu toàn bộ phiên/sự kiện/GPS atomically, recheck giờ và phiên sau chờ lock văn phòng; Geofence revision được giữ bằng shared lock. Chi phí: thao tác sửa vùng có thể chờ User xác minh trong transaction.
 9. Không cần migration mới: các cột/ràng buộc Phase 1 đủ cho Phase 3; quyền runtime hiện có gồm UPDATE office_locations. Chi phí: thay đổi nghiệp vụ dùng schema đã chuẩn bị, phải smoke-test trên Supabase trước handoff.
+10. Khóa editor trong lúc tải/lưu thay vì cho chỉnh rồi đoán bản nháp nào mới nhất; giữ draft khi tải lỗi và yêu cầu xác nhận trước bỏ draft. Chi phí: Admin chờ phản hồi trước khi chỉnh tiếp; tránh mất dữ liệu.
+11. Các mục reviewer không đánh giá được giữ đúng phase: GPS thiết bị thực/HTTPS và backup/hiệu năng production ở Phase 6; Dashboard/Onsite/nghỉ/chuyển chế độ ở Phase 4–5. Leaflet internals là thư viện có license; dùng bản pinned và kiểm thử tích hợp thay review minified code. Root kiểm tra Supabase riêng. Chi phí: chưa tuyên bố nghiệm thu thiết bị/pilot/production.
 
 ## Thư viện và nguồn kỹ thuật
 
@@ -46,4 +58,6 @@ Leaflet 1.9.4 JS/CSS được phục vụ local, kèm BSD license tại `app/sta
 - Dọn GPS cần maintenance chạy; API vẫn che dữ liệu hết hạn khi worker tạm dừng. Khôi phục backup phải chạy maintenance trước mở dịch vụ; vòng đời backup production thuộc Phase 6.
 - Không tạo Geofence hoặc dữ liệu chấm công thử trên Supabase thực. Không thay mật khẩu/tài khoản thực.
 - Office/Remote trực tiếp chuyển chế độ và nghỉ thuộc Phase 4; Dashboard/Onsite thuộc Phase 5; pilot/hiệu năng/production thuộc Phase 6.
-- Review độc lập và kiểm tra tiến trình thực được bổ sung sau lượt cuối.
+- Smoke-test Supabase chỉ đọc: `geoattend_runtime`, TLS true; get_office và ST_MakePoint/ST_X qua schema extensions hoạt động; quyền UPDATE văn phòng/vị trí có sẵn. Văn phòng thực chưa cấu hình; tài khoản thực vẫn 1 Admin/1 User.
+- Web sau restart: `/api/health` 200/database ok, `/login` và Leaflet JS 200; API office/attendance chưa đăng nhập trả 401. OpenAPI xác nhận START_OFFICE và GET/PUT office. Maintenance mới chạy đóng ngày/dọn auth/purge GPS; đã dừng hai chuỗi worker cũ, chỉ giữ một worker mới.
+- PostgreSQL thử nghiệm port 55440 đã dừng sau kiểm chứng. Log/ảnh ở `.local-tests/phase-3`, ledger tạm được giữ trong `.superpowers/sdd/2026-10-15-phase-3-office-geofence` (Git ignore); không lặp lại thao tác xóa đã bị policy chặn trong phiên trước. Branch/worktree được giữ để phát triển tiếp.

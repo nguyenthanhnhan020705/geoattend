@@ -3,6 +3,14 @@ bindLogout();
 const el=id=>document.getElementById(id);
 let revision=0,rings=[[]],active=0,map=null,polygon=null,markers=[],dirty=false,previewed=false,busy=false;
 
+function setBusy(value) {
+  busy=value;el('office-form').setAttribute('aria-busy',String(value));
+  for(const node of el('office-form').elements)node.disabled=value;
+  el('reload-office').disabled=value;
+  for(const marker of markers){if(value)marker.dragging.disable();else marker.dragging.enable();}
+  el('save-office').disabled=value || !previewed;
+}
+
 function markChanged() {
   dirty=true;previewed=false;el('save-office').disabled=true;
   el('draft-state').textContent='Có thay đổi chưa lưu. Xem trước rồi lưu để áp dụng.';
@@ -44,6 +52,8 @@ function geometry() {
 }
 
 async function loadOffice() {
+  setBusy(true);
+  try {
   const data=await apiFetch('/api/admin/office');revision=data.revision;
   el('office-name').value=data.name;el('office-address').value=data.address;
   rings=data.geom?data.geom.coordinates.map(r=>r.slice(0,-1).map(p=>[...p])):[[]];active=0;dirty=false;previewed=false;
@@ -57,6 +67,7 @@ async function loadOffice() {
     map.on('click',event=>{if(busy)return;rings[active].push([event.latlng.lng,event.latlng.lat]);markChanged();render();});
   }
   render();if(rings[0].length>=3)map.fitBounds(L.latLngBounds(rings[0].map(([lon,lat])=>[lat,lon])),{padding:[30,30],maxZoom:18});
+  } finally {setBusy(false);}
 }
 
 el('ring-select').addEventListener('change',()=>{active=Number(el('ring-select').value);render();});
@@ -71,13 +82,12 @@ el('office-name').addEventListener('input',markChanged);el('office-address').add
 el('preview-office').addEventListener('click',()=>{try{geometry();draw();if(polygon)map.fitBounds(polygon.getBounds(),{padding:[30,30],maxZoom:18});previewed=true;el('save-office').disabled=false;message('message','Đang xem trước. Bấm lưu để Backend kiểm tra và áp dụng.',true);}catch(error){message('message',error.message);}});
 el('reload-office').addEventListener('click',async()=>{if(busy)return;if(dirty && !confirm('Bỏ thay đổi chưa lưu và tải lại vùng mới nhất?'))return;try{await loadOffice();message('message','Đã tải bản đã lưu.',true);}catch(error){message('message',error.message);}});
 el('office-form').addEventListener('submit',async event=>{
-  event.preventDefault();if(busy || !previewed)return;busy=true;el('save-office').disabled=true;
-  for(const marker of markers)marker.dragging.disable();
-  const formControls=[...el('office-form').elements];for(const node of formControls)node.disabled=true;
+  event.preventDefault();if(busy || !previewed)return;setBusy(true);
   try{
     const saved=await apiFetch('/api/admin/office',{method:'PUT',body:JSON.stringify({name:el('office-name').value.trim(),address:el('office-address').value.trim(),geom:geometry(),expected_revision:revision})});
     revision=saved.revision;dirty=false;previewed=false;el('office-revision').textContent='Phiên bản '+revision;el('draft-state').textContent='Vùng đã lưu. Chỉ ảnh hưởng những lần Check-in Office tiếp theo.';message('message','Đã lưu vùng văn phòng.',true);
   }catch(error){message('message',error.message);}
-  finally{busy=false;for(const node of formControls)node.disabled=false;for(const marker of markers)marker.dragging.enable();el('save-office').disabled=!previewed;}
+  finally{setBusy(false);}
 });
-try{await loadAccount();await loadOffice();}catch(error){message('message',error.message);}
+setBusy(true);
+try{await loadAccount();await loadOffice();}catch(error){message('message',error.message);}finally{setBusy(false);}

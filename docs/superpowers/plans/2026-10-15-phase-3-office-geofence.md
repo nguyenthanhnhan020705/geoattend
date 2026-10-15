@@ -1,6 +1,6 @@
 # Phase 3 — Office và Geofence Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** Admin lưu vùng văn phòng; User Check-in Office qua GPS, Check-out không GPS; vị trí hết hạn được che và xóa sau 30 ngày.
 
@@ -29,10 +29,10 @@
 
 **Interfaces:** `OfficeInput(name,address,geom,expected_revision)`; `get_office(conn)` trả name/address/geom/revision (chưa có revision0); `save_office(conn,body,context)` khóa profile Admin, advisory singleton rồi cập nhật Polygon. `extension_schema(conn)` trả identifier PostGIS; `verify_office(conn,latitude,longitude)` khóa row FOR SHARE, trả office_revision/id hoặc ApiError. `GET/PUT /api/admin/office` chỉ Admin, GET gồm map tile config.
 
-- [ ] Tests RED: chưa login401, User403, Admin chưa cấu hình revision0; lưu và đọc lại Polygon; stale revision409 không ghi đè; CSRF403; rỗng/tự cắt/zero area/NaN/out-of-range/non-Polygon422; đồng thời hai lần lưu revision0 chỉ một thành công; hỗ trợ extension schema extensions.
-- [ ] Run `.venv/Scripts/python.exe -m pytest tests/integration/test_office.py -q -o cache_dir=.local-tests/phase-3/cache`; Expected FAIL endpoint absent.
-- [ ] Implement schema validation and schema-qualified PostGIS, parameterized SQL, Admin row/session revalidation and advisory singleton. No default real office is inserted.
-- [ ] Run same command; Expected PASS. Commit `feat: add admin office geofence API`.
+- [x] Tests RED: chưa login401, User403, Admin chưa cấu hình revision0; lưu và đọc lại Polygon; stale revision409 không ghi đè; CSRF403; rỗng/tự cắt/zero area/NaN/out-of-range/non-Polygon422; đồng thời hai lần lưu revision0 chỉ một thành công; hỗ trợ extension schema extensions.
+- [x] Run `.venv/Scripts/python.exe -m pytest tests/integration/test_office.py -q -o cache_dir=.local-tests/phase-3/cache`; Expected FAIL endpoint absent.
+- [x] Implement schema validation and schema-qualified PostGIS, parameterized SQL, Admin row/session revalidation and advisory singleton. No default real office is inserted.
+- [x] Run same command; Expected PASS. Commit `feat: add admin office geofence API`.
 
 ## Task 2: Office attendance và GPS retention
 
@@ -40,11 +40,11 @@
 
 **Interfaces:** START_OFFICE fields latitude/longitude/accuracy_m required and finite; GPS forbidden on Remote/checkout. Existing expected_work_date/revision/UUID unchanged. History session has location available/expired metadata; result replay still IDs/status only. `purge_locations(conn,now)` returns number purged; maintenance invokes in separate transaction after reconciliation/auth pruning.
 
-- [ ] Tests RED: inside/boundary accepted, outside403 unchanged; accuracy huge accepted; invalidGPS422; unconfigured409; checkout withoutGPS; restart newverification; geometry revision retained; GPS insertfailure rolls back session/event/request; stale and sameUUID not duplicate; differentGPS sameUUID409. Test old Remote canonical hash replay.
-- [ ] Retention tests RED: just-before expiry shows coords; exactly expiry hides coords even beforepurge; expired replay never exposes GPS; purge removespoint+accuracy but keeps verified/session/event; repeat returns0; runtime role can purge; extensions schema functions work.
-- [ ] Deadline race: hold office row lock, startOffice waits, move clock to20:00, release; no session. Concurrent geofence update/start serializes, each records the revision actually verified.
-- [ ] Run files, confirm failing behavior, implement minimal changes. Preserve canonical Phase2 hashes by excluding newGPS fields for nonOffice.
-- [ ] Run tests; Expected PASS. Commit `feat: verify office attendance and expire location data`.
+- [x] Tests RED: inside/boundary accepted, outside403 unchanged; accuracy huge accepted; invalidGPS422; unconfigured409; checkout withoutGPS; restart newverification; geometry revision retained; GPS insertfailure rolls back session/event/request; stale and sameUUID not duplicate; differentGPS sameUUID409. Test old Remote canonical hash replay.
+- [x] Retention tests RED: just-before expiry shows coords; exactly expiry hides coords even beforepurge; expired replay never exposes GPS; purge removespoint+accuracy but keeps verified/session/event; repeat returns0; runtime role can purge; extensions schema functions work.
+- [x] Deadline race: hold office row lock, startOffice waits, move clock to20:00, release; no session. Concurrent geofence update/start serializes, each records the revision actually verified.
+- [x] Run files, confirm failing behavior, implement minimal changes. Preserve canonical Phase2 hashes by excluding newGPS fields for nonOffice.
+- [x] Run tests; Expected PASS. Commit `feat: verify office attendance and expire location data`.
 
 ## Task 3: Admin map và User Office flow
 
@@ -52,19 +52,19 @@
 
 **Interfaces:** Admin edits vertices by map click, drag, delete and coordinate inputs, previews before explicit save, preserves draft on errors, reload explicit on409. StartOffice button confirms getCurrentPosition (not watchPosition), disable while locating/submitting; denial/timeout shows actionable message and leaves manualRemote available. Checkout never callsGPS. Office pending remains memory-only; reason and position displayed safely. History marks available or expiredGPS.
 
-- [ ] Browser RED: Admin saves Polygon and reloads, Userinside check-in, reload preservesOffice, checkout noGPS, newstart requestsGPS again; outside/denied unchanged, no automaticRemote. Mobile360px, noXSS/JSerrors. Map tilefailure doesnotprevent vertex editing/save. Draft survives saveerror; concurrent adminrevision conflict reloads only after confirmation.
-- [ ] Config tests RED: tileURL/attribution loaded from env including local_run; invalid protocol/credentials rejected; default no secrets. CSP authorizes only configuredtileorigin on officepage.
-- [ ] Vendor Leaflet1.9.4 with license, implement UI and page route `/admin/office`. Keep main UI conventions; vertex form also usable if tile unavailable.
-- [ ] Run browser/config/page tests; Expected PASS. Commit `feat: add office map editor and GPS check-in UI`.
+- [x] Browser RED: Admin saves Polygon and reloads, Userinside check-in, reload preservesOffice, checkout noGPS, newstart requestsGPS again; outside/denied unchanged, no automaticRemote. Mobile360px, noXSS/JSerrors. Map tilefailure doesnotprevent vertex editing/save. Draft survives saveerror; concurrent adminrevision conflict reloads only after confirmation.
+- [x] Config tests RED: tileURL/attribution loaded from env including local_run; invalid protocol/credentials rejected; default no secrets. CSP authorizes only configuredtileorigin on officepage.
+- [x] Vendor Leaflet1.9.4 with license, implement UI and page route `/admin/office`. Keep main UI conventions; vertex form also usable if tile unavailable.
+- [x] Run browser/config/page tests; Expected PASS. Commit `feat: add office map editor and GPS check-in UI`.
 
 ## Task 4: Review, verification và chạy thực
 
 **Files:** update ROADMAP, DEVELOPMENT, manual checklist, .env.example; create PHASE_3_VERIFICATION.
 
-- [ ] Run full Pytest with privatePostGIS/Edge; pipcheck, gitdiffcheck. Record exact count/commands/warnings and artifact paths. No false claim on real GPS precision or HTTPS device test.
-- [ ] One fresh-context whole-change review required by executing-plans; fix Critical/Important in one TDD pass, record Minor separately. Review focus below.
-- [ ] Verify real Supabase extension schema and runtime permissions, apply migration only if additive migration needed. Stop only verified project web/worker and restart with local_run; health200/login200/newroutes401. Do not insert actual office coordinates automatically.
-- [ ] Commit all changes, preserve branch/worktree. Stop private PG cluster; preserve logs if cleanup policy prevents removal.
+- [x] Run full Pytest with privatePostGIS/Edge; pipcheck, gitdiffcheck. Record exact count/commands/warnings and artifact paths. No false claim on real GPS precision or HTTPS device test.
+- [x] One fresh-context whole-change review required by executing-plans; fix Critical/Important in one TDD pass, record Minor separately. Review focus below.
+- [x] Verify real Supabase extension schema and runtime permissions, apply migration only if additive migration needed. Stop only verified project web/worker and restart with local_run; health200/login200/newroutes401. Do not insert actual office coordinates automatically.
+- [x] Commit all changes, preserve branch/worktree. Stop private PG cluster; preserve logs if cleanup policy prevents removal.
 
 ## Pre-flight / rulings
 
