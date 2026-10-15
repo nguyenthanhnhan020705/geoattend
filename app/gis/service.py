@@ -1,4 +1,5 @@
 import json
+from datetime import timedelta
 from psycopg import sql
 from app import clock
 from app.errors import ApiError
@@ -52,3 +53,19 @@ def verify_office(conn,latitude,longitude):
     if not inside:
         raise ApiError(403,'OUTSIDE_GEOFENCE','Vị trí nằm ngoài vùng văn phòng. Hãy kiểm tra GPS hoặc tự chọn Remote.')
     return office
+
+
+def store_location(conn,session_id,event_id,body,now):
+    ext=extension_schema(conn)
+    conn.execute(sql.SQL('INSERT INTO geoattend.office_locations(session_id,start_event_id,point,accuracy_m,recorded_at,expires_at) VALUES(%s,%s,{s}.ST_SetSRID({s}.ST_MakePoint(%s,%s),4326),%s,%s,%s)').format(s=ext),(session_id,event_id,body.longitude,body.latitude,body.accuracy_m,now,now+timedelta(days=30)))
+
+
+def get_location(conn,session_id,now):
+    ext=extension_schema(conn)
+    # SQL itself hides expired coordinates; no stale cached GPS is returned.
+    row=conn.execute(sql.SQL('SELECT expires_at,purged_at,CASE WHEN expires_at>%s AND purged_at IS NULL THEN {s}.ST_X(point) END AS longitude,CASE WHEN expires_at>%s AND purged_at IS NULL THEN {s}.ST_Y(point) END AS latitude,CASE WHEN expires_at>%s AND purged_at IS NULL THEN accuracy_m END AS accuracy_m FROM geoattend.office_locations WHERE session_id=%s').format(s=ext),(now,now,now,session_id)).fetchone()
+    if row is None:
+        return None
+    if row['expires_at']<=now or row['purged_at'] is not None:
+        return dict(status='expired',expires_at=row['expires_at'])
+    return dict(status='available',expires_at=row['expires_at'],latitude=row['latitude'],longitude=row['longitude'],accuracy_m=row['accuracy_m'])

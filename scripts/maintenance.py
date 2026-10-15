@@ -8,6 +8,7 @@ from app.config import Settings
 from app.attendance.service import maintain
 from app.auth.repository import prune_auth_data
 from app.errors import ApiError
+from app.gis.retention import purge_locations
 from scripts.console import configure_console
 
 
@@ -18,7 +19,8 @@ def run_once(dsn):
         # trying to obtain profile locks used by password changes.
         with conn.transaction():
             attempts,sessions = prune_auth_data(conn,clock.utc_now())
-    return closed,attempts,sessions
+        purged=purge_locations(conn,clock.utc_now())
+    return closed,attempts,sessions,purged
 
 
 def main():
@@ -32,8 +34,8 @@ def main():
     try:
         while True:
             try:
-                closed,attempts,sessions = run_once(dsn)
-                print(f'Maintenance: đóng {closed} ngày; dọn {attempts} lần thử sai và {sessions} phiên.',flush=True)
+                closed,attempts,sessions,purged = run_once(dsn)
+                print(f'Maintenance: đóng {closed} ngày; dọn {attempts} lần thử sai, {sessions} phiên và {purged} vị trí GPS hết hạn.',flush=True)
             except (psycopg.Error,ApiError):
                 print('Maintenance chưa hoàn tất; kiểm tra database và quyền runtime.',flush=True)
                 if args.once:
