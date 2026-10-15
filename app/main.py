@@ -13,6 +13,7 @@ from app.db.pool import make_pool
 from app.auth.routes import router as auth_router
 from app.accounts.routes import router as accounts_router
 from app.attendance.routes import router as attendance_router
+from app.gis.routes import router as office_router
 from app.auth.dependencies import get_auth_context
 
 STATIC = Path(__file__).parent / 'static'
@@ -36,6 +37,7 @@ def create_app(settings=None, pool=None):
     app.include_router(auth_router)
     app.include_router(accounts_router)
     app.include_router(attendance_router)
+    app.include_router(office_router)
 
     @app.middleware('http')
     async def auth_cache(request, call_next):
