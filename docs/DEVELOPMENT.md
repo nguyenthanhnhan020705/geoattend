@@ -1,6 +1,6 @@
-# GeoAttend — Chạy và kiểm tra Phase 1–2
+# GeoAttend — Chạy và kiểm tra Phase 1–3
 
-Phase 1 cung cấp đăng nhập và quản lý tài khoản. Phase 2 bổ sung Remote, Check-out, lịch sử cá nhân và tự đóng phiên lúc 20:00. Office, nghỉ, Dashboard và bản đồ thuộc các phase tiếp theo. Người kiểm thử giao diện xem [checklist thủ công Phase 2](MANUAL_TEST_PHASE_2.md).
+Phase 1 cung cấp đăng nhập và quản lý tài khoản. Phase 2 bổ sung Remote, Check-out, lịch sử cá nhân và tự đóng phiên lúc 20:00. Phase 3 bổ sung bản đồ cấu hình Geofence, Office và GPS hết hạn sau 30 ngày. Nghỉ, chuyển chế độ trực tiếp và Dashboard thuộc các phase tiếp theo. Xem checklist [Phase 2](MANUAL_TEST_PHASE_2.md) và [Phase 3](MANUAL_TEST_PHASE_3.md).
 
 ## 1. Chuẩn bị
 
@@ -26,9 +26,11 @@ Không cần nạp biến môi trường thủ công mỗi lần mở Terminal. 
 
 Mở `http://127.0.0.1:8000/login`. Khi tắt máy, hai tiến trình dừng; lần sau chạy lại hai lệnh serve/maintenance. Không chạy lại SQL CREATE ROLE hoặc bootstrap Admin. Database mới khởi tạo Admin bằng `local_run bootstrap-admin`.
 
-Phase 2: User bắt đầu Remote có lý do, Check-out, bắt đầu lại trước 20:00, xem lịch sử theo ngày. Client giữ mã thao tác và payload trong sessionStorage của tab để gửi lại an toàn khi mất phản hồi; không gửi GPS. API chỉ trả lịch sử của chính User; Admin không chấm công.
+User bắt đầu Remote có lý do hoặc Office có GPS, Check-out và bắt đầu lại trước 20:00; xem lịch sử theo ngày. Remote giữ mã thao tác/payload trong sessionStorage để gửi lại; Office giữ payload GPS trong bộ nhớ tab, không lưu vào storage. API chỉ trả lịch sử của chính User; Admin không chấm công. Admin mở `/admin/office` để vẽ và lưu vùng thực tế; chưa cấu hình thì Office bị từ chối.
 
-Maintenance đóng phiên còn mở tại 20:00 giờ Việt Nam. Nếu máy/tác vụ tắt lúc đó, lần chạy lại hoặc đọc/thao tác API xử lý bù, vẫn ghi mốc nghiệp vụ 20:00 và thời điểm thực thi riêng. Muốn tác vụ chạy đúng phút khi không ai mở web cần máy chạy maintenance liên tục; production cần worker độc lập. Nghỉ trưa được đối soát nhưng thao tác nghỉ/Office sẽ có ở Phase 3–4.
+Maintenance đóng phiên còn mở tại 20:00 giờ Việt Nam và xóa tọa độ/accuracy hết hạn 30 ngày. Nếu máy/tác vụ tắt lúc đó, lần chạy lại xử lý bù; API luôn che GPS hết hạn dù worker chưa chạy. Muốn tác vụ chạy đúng phút khi không ai mở web cần máy chạy maintenance liên tục; production cần worker độc lập. Thao tác nghỉ thuộc Phase 4.
+
+Bản đồ nền mặc định OpenStreetMap, Leaflet JS/CSS được phục vụ local. Có thể cấu hình `GEOATTEND_MAP_TILE_URL` (HTTPS, có `{z}/{x}/{y}`) và `GEOATTEND_MAP_ATTRIBUTION`. Lỗi tải tile không ngăn chỉnh/sửa vùng. GPS chỉ lấy khi User bấm Office; Check-out/Remote không lấy vị trí. Sau khôi phục backup, chạy `local_run maintenance --once` trước khi mở dịch vụ để dọn GPS hết hạn.
 
 - Python 3.13; PostgreSQL có PostGIS và tài khoản migration có quyền tạo schema/extension.
 - Một tài khoản database runtime riêng, không phải superuser hoặc owner schema; database thử nghiệm khác database dùng ứng dụng.
