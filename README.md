@@ -2,6 +2,8 @@
 
 > **Business Requirements Document** cho hệ thống chấm công và quản lý trạng thái làm việc dựa trên GIS.
 
+Bàn giao agent tiếp theo: [README Phase 0–4 — kết quả và kế hoạch triển khai](handoff/README.md).
+
 Lộ trình triển khai: [Các phase phát triển MVP](docs/ROADMAP.md).
 
 Chạy nền tảng và tài khoản: [Hướng dẫn phát triển](docs/DEVELOPMENT.md).
