@@ -4,6 +4,8 @@
 
 Bàn giao agent tiếp theo: [README Phase 0–4 — kết quả và kế hoạch triển khai](handoff/README.md).
 
+Bổ sung được người dùng xác nhận 15/10/2026: [Admin xem và xóa vĩnh viễn lịch sử từng ngày của nhân viên](docs/ADMIN_HISTORY.md), có xác nhận tên tài khoản và chặn ngày đang làm việc/nghỉ trưa. Quyền này thay thế giới hạn không xóa lịch sử trong thiết kế ban đầu; không cấp quyền xóa cho User.
+
 Lộ trình triển khai: [Các phase phát triển MVP](docs/ROADMAP.md).
 
 Chạy nền tảng và tài khoản: [Hướng dẫn phát triển](docs/DEVELOPMENT.md).

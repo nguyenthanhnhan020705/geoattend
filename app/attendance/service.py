@@ -112,7 +112,9 @@ def act(conn, user_id, body, session_id=None):
         reconcile_locked(conn,user_id,now)
         previous = conn.execute('SELECT * FROM geoattend.attendance_requests WHERE user_id=%s AND request_id=%s', (user_id,body.request_id)).fetchone()
         if previous:
-            if previous['payload_hash'] != digest:
+            if previous['history_deleted']:
+                failure = ApiError(409,'HISTORY_DELETED','Lịch sử của thao tác này đã bị Admin xóa. Vui lòng tải lại trạng thái.')
+            elif previous['payload_hash'] != digest:
                 failure = ApiError(409,'REQUEST_CONFLICT','Mã thao tác đã được dùng với nội dung khác.')
             else:
                 answer = result(previous)
@@ -183,7 +185,7 @@ def act(conn, user_id, body, session_id=None):
                         event_ids.append(event(conn,day['id'],None,'LUNCH_START',now,now,'USER'))
                         state = 'LUNCH_BREAK'
                 if failure is None:
-                    conn.execute('UPDATE geoattend.attendance_days SET status=%s,revision=revision+1,updated_at=%s WHERE id=%s', (state,now,day['id']))
+                    conn.execute('UPDATE geoattend.attendance_days SET status=%s,revision=revision+1,updated_at=%s,history_deleted=false WHERE id=%s', (state,now,day['id']))
                     saved = conn.execute('INSERT INTO geoattend.attendance_requests(user_id,request_id,payload_hash,result_event_ids,completed_at,result_status,result_revision,result_work_date,result_session_id) VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s) RETURNING *', (user_id,body.request_id,digest,event_ids,now,state,revision+1,today,result_session_id)).fetchone()
                     answer = result(saved)
     if failure:
@@ -192,24 +194,29 @@ def act(conn, user_id, body, session_id=None):
 
 
 def history(conn, user_id, start, end, page, page_size, session_id=None):
-    from app.gis.service import get_location
     with conn.transaction():
         lock_user(conn,user_id)
         now = clock.utc_now()
         validate_session(conn,user_id,session_id,now)
         reconcile_locked(conn,user_id,now)
-        end = end or now.astimezone(VIETNAM).date()
-        start = start or end-timedelta(days=6)
-        if start > end:
-            raise ApiError(422,'INVALID_RANGE','Ngày bắt đầu phải trước hoặc bằng ngày kết thúc.')
-        total = conn.execute('SELECT count(*) AS n FROM geoattend.attendance_days WHERE user_id=%s AND work_date BETWEEN %s AND %s', (user_id,start,end)).fetchone()['n']
-        days = conn.execute('SELECT id,work_date,status,revision FROM geoattend.attendance_days WHERE user_id=%s AND work_date BETWEEN %s AND %s ORDER BY work_date DESC LIMIT %s OFFSET %s', (user_id,start,end,page_size,(page-1)*page_size)).fetchall()
-        for day in days:
-            day['sessions'] = conn.execute('SELECT id,work_mode,start_time,end_time,start_reason,end_reason,end_source FROM geoattend.work_sessions WHERE day_id=%s ORDER BY start_time,id', (day['id'],)).fetchall()
-            for session in day['sessions']:
-                session['location']=get_location(conn,session['id'],now) if session['work_mode']=='OFFICE' else None
-            day['events'] = conn.execute('SELECT id,session_id,event_type,event_time,recorded_at,source,reason,location_verified FROM geoattend.attendance_events WHERE day_id=%s ORDER BY event_time,recorded_at,id', (day['id'],)).fetchall()
-        return dict(items=days,total=total,page=page,page_size=page_size)
+        return read_history(conn,user_id,start,end,page,page_size,now)
+
+
+def read_history(conn, user_id, start, end, page, page_size, now):
+    """Read under the caller's authorization/profile lock, including inactive targets."""
+    from app.gis.service import get_location
+    end = end or now.astimezone(VIETNAM).date()
+    start = start or end-timedelta(days=6)
+    if start > end:
+        raise ApiError(422,'INVALID_RANGE','Ngày bắt đầu phải trước hoặc bằng ngày kết thúc.')
+    total = conn.execute('SELECT count(*) AS n FROM geoattend.attendance_days WHERE user_id=%s AND NOT history_deleted AND work_date BETWEEN %s AND %s', (user_id,start,end)).fetchone()['n']
+    days = conn.execute('SELECT id,work_date,status,revision FROM geoattend.attendance_days WHERE user_id=%s AND NOT history_deleted AND work_date BETWEEN %s AND %s ORDER BY work_date DESC LIMIT %s OFFSET %s', (user_id,start,end,page_size,(page-1)*page_size)).fetchall()
+    for day in days:
+        day['sessions'] = conn.execute('SELECT id,work_mode,start_time,end_time,start_reason,end_reason,end_source FROM geoattend.work_sessions WHERE day_id=%s ORDER BY start_time,id', (day['id'],)).fetchall()
+        for session in day['sessions']:
+            session['location']=get_location(conn,session['id'],now) if session['work_mode']=='OFFICE' else None
+        day['events'] = conn.execute('SELECT id,session_id,event_type,event_time,recorded_at,source,reason,location_verified FROM geoattend.attendance_events WHERE day_id=%s ORDER BY event_time,recorded_at,id', (day['id'],)).fetchall()
+    return dict(items=days,total=total,page=page,page_size=page_size)
 
 
 def maintain(conn):

@@ -124,7 +124,7 @@ Các sự kiện: `WORK_START`, `WORK_END`, `LUNCH_START`, `MORNING_LEAVE`, `FUL
 - Đọc trạng thái và thao tác chấm công cũng đối soát ngày đã quá hạn trong giao dịch trước trả dữ liệu. Tác vụ chạy trễ/API khởi động lại vẫn xử lý bù ngày cũ trước khi mở phiên mới.
 - Sau lấy khóa và ngay trước ghi thay đổi, dùng thời gian thực hiện tại để kiểm tra mốc 20:00. Yêu cầu chờ khóa qua mốc bị từ chối; frontend không có quyền vượt giới hạn.
 - Tác vụ và Check-out đồng thời sử dụng cùng khóa và kiểm tra trạng thái nên chỉ có một lần đóng hợp lệ. Không tạo hai sự kiện tự kết thúc ngày.
-- Lưu trữ lâu dài lịch sử phiên/sự kiện trong MVP; không thêm chức năng xóa lịch sử cá nhân.
+- Lưu trữ lâu dài lịch sử phiên/sự kiện, ngoại trừ thao tác xóa vĩnh viễn từng ngày của Admin được người dùng yêu cầu và xác nhận bổ sung 15/10/2026. User không tự xóa lịch sử; xem [ADMIN_HISTORY](../../ADMIN_HISTORY.md).
 
 ## 8. Hợp đồng API mức thiết kế
 

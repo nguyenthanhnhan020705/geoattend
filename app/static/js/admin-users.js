@@ -1,4 +1,5 @@
 import {apiFetch, loadAccount, bindForm, bindLogout, message} from './api.js';
+import {openEmployeeHistory} from './admin-history.js';
 const dialog = document.getElementById('reset-dialog');
 let selected = null;
 bindLogout('list-message');
@@ -19,7 +20,10 @@ async function refresh() {
     const username = document.createElement('span'); username.textContent = account.username;
     const button = document.createElement('button'); button.type = 'button'; button.className = 'secondary'; button.textContent = 'Cấp lại mật khẩu';
     button.addEventListener('click',() => openReset(account));
-    info.append(name,username); row.append(info,button); list.append(row);
+    const history = document.createElement('button'); history.type='button'; history.className='secondary'; history.textContent='Lịch sử';
+    history.addEventListener('click',()=>openEmployeeHistory(account));
+    const actions = document.createElement('div'); actions.className='user-actions'; actions.append(history,button);
+    info.append(name,username); row.append(info,actions); list.append(row);
   }
 }
 document.getElementById('reload').addEventListener('click',async event => {

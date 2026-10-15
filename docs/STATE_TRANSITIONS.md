@@ -61,3 +61,7 @@ Các lựa chọn sau đã được duyệt trong bản thiết kế Phase 0 đ�
 - Riêng thao tác gửi lại hợp lệ với cùng mã yêu cầu xử lý theo mục 3, không coi là một lần chuyển trạng thái mới.
 
 Quy tắc mục 3–4, xác thực, mô hình dữ liệu, API và giao diện đã được duyệt cùng bản thiết kế Phase 0; triển khai theo kế hoạch từng phase.
+
+## 5. Ngoại lệ quản trị được bổ sung 15/10/2026
+
+Theo yêu cầu mới của người dùng, Admin được xóa vĩnh viễn lịch sử từng ngày đã dừng làm việc; chặn trạng thái đang làm việc/nghỉ trưa và mọi phiên mở. Phiên/sự kiện/lý do/GPS bị xóa trong cùng transaction; giữ revision/request UUID/hash kỹ thuật để chặn màn hình cũ/retry phục hồi lịch sử. Nếu xóa hôm nay, trạng thái trở về `NOT_STARTED` với revision tăng; thao tác User tiếp theo vẫn phải tuân thủ cutoff. Không thay đổi bảng chuyển trạng thái User thông thường. Xem [ADMIN_HISTORY](ADMIN_HISTORY.md).

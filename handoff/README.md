@@ -1,5 +1,7 @@
 # GeoAttend — Bàn giao Phase 0–4
 
+**Bổ sung sau Phase 4 (15/10/2026):** theo yêu cầu mới, Admin được xem/xóa vĩnh viễn lịch sử từng ngày nhân viên, có xác nhận và chặn ngày đang làm việc/nghỉ trưa. Cần migration 004 và runtime grants tương ứng; xem [ADMIN_HISTORY](../docs/ADMIN_HISTORY.md). Các kết quả Phase 0–4 bên dưới là mốc lịch sử; Dashboard/Onsite vẫn chưa triển khai.
+
 > Dành cho agent tiếp quản: đọc toàn bộ file này trước khi sửa mã. Phase 0–3 đã hoàn thành; Phase 4 đã triển khai theo kế hoạch bên dưới, bằng chứng mới tại [PHASE_4_VERIFICATION](../docs/PHASE_4_VERIFICATION.md). Không cần làm lại các quyết định nghiệp vụ đã duyệt.
 
 **Cập nhật:** 15/10/2026. **Mốc bàn giao ban đầu:** `e52d2dd`, sau bản sửa bản đồ `1d72990`. Phase 4 tiếp tục trên cùng branch/worktree; xem Git log và báo cáo Phase 4 cho các commit/kết quả mới. Số test Phase 1–3 bên dưới là bằng chứng lịch sử.

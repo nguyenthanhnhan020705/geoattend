@@ -41,6 +41,8 @@ Các nội dung mục 3 đã được mô tả và duyệt trong [bản thiết 
 
 ## 4. Đối chiếu yêu cầu
 
+Cập nhật theo yêu cầu người dùng 15/10/2026: Admin được xem lịch sử từng nhân viên và xóa vĩnh viễn từng ngày sau xác nhận tên tài khoản. Không xóa ngày đang làm việc/nghỉ trưa; không cấp quyền xóa cho User. Chi tiết tại [ADMIN_HISTORY](ADMIN_HISTORY.md).
+
 - FR-01 / AC-01: đăng nhập và phân quyền.
 - FR-16 / AC-17: khởi tạo một Admin và cấp tài khoản User.
 - FR-17 / AC-18: đổi mật khẩu cá nhân tùy chọn.

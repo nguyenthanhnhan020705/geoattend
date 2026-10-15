@@ -155,3 +155,7 @@ Xem [roadmap](ROADMAP.md) và [báo cáo Phase 4](PHASE_4_VERIFICATION.md). Remo
 Cùng endpoint `POST /api/attendance/actions`: `START_LUNCH`, `MORNING_LEAVE`, `FULL_DAY_LEAVE`, `CANCEL_LEAVE_START_OFFICE`, `CANCEL_LEAVE_START_REMOTE`, `SWITCH_OFFICE`, `SWITCH_REMOTE`; tiếp tục sau nghỉ dùng `START_OFFICE`/`START_REMOTE`. Dùng `allowed_actions`, revision và work date mới từ server. Mỗi thao tác tăng revision một lần, có thể trả nhiều event IDs; cùng UUID/payload replay kết quả cũ. Không có hủy nghỉ độc lập. Tên nghỉ trong OpenAPI là `MORNING_LEAVE`/`FULL_DAY_LEAVE` theo kế hoạch Phase 4.
 
 Retry Office (gồm switch/hủy nghỉ) chỉ giữ GPS trong bộ nhớ tab; reload đọc lại trạng thái server. Các thao tác không GPS dùng pending sessionStorage hiện có, cùng UUID sau reload. Lịch sử giữ phiên, sự kiện nghỉ/hủy và nhãn tự đóng hệ thống. Kiểm thử toàn suite trên database riêng; không tạo dữ liệu thử trên Supabase thật. Không có migration mới cho Phase 4.
+
+## 8. Bổ sung quyền lịch sử cho Admin
+
+Sau Phase 4, người dùng yêu cầu Admin xem và xóa vĩnh viễn lịch sử theo ngày. Áp dụng migration 004 bằng `local_run migrate`, khởi động lại web/worker rồi Ctrl+F5. Tại **Quản lý nhân viên → Lịch sử**, Admin lọc ngày, xem phiên/sự kiện và xóa từng ngày có xác nhận tên tài khoản. Chặn ngày đang làm việc/nghỉ trưa; xóa trong transaction và giữ dấu chống retry tối thiểu. Xem [ADMIN_HISTORY](ADMIN_HISTORY.md) cho hợp đồng, vận hành và kiểm thử. Migration không tự xóa dữ liệu.

@@ -140,7 +140,7 @@ Thứ tự thực hiện: **0 → 1 → 2 → 3 → 4 → 5 → 6**.
 - [ ] Hiển thị Geofence và Marker có tên cho nhân viên đang `WORKING_OFFICE`.
 - [ ] Dùng vị trí Check-in Office đã xác minh gần nhất; ghi rõ ý nghĩa vị trí trên giao diện.
 - [ ] Hiển thị Popup tên, trạng thái, giờ Check-in, xác minh GPS và liên kết chi tiết.
-- [ ] Hiển thị lịch sử từng nhân viên cho Admin; vị trí đã hết hạn hiển thị “Dữ liệu vị trí đã hết hạn lưu” và không có tọa độ trên bản đồ theo AC-16.
+- [x] Hiển thị lịch sử từng nhân viên cho Admin; vị trí đã hết hạn hiển thị “Dữ liệu vị trí đã hết hạn lưu” và không có tọa độ trên bản đồ theo AC-16. Đã bổ sung riêng sau Phase 4 theo yêu cầu mới, cùng quyền xóa vĩnh viễn từng ngày; xem [ADMIN_HISTORY](ADMIN_HISTORY.md). Dashboard/Onsite vẫn chưa triển khai.
 - [ ] Cập nhật danh sách/Marker khi trạng thái thay đổi bằng cơ chế làm mới đã chọn.
 - [ ] Triển khai cài đặt tên, địa chỉ văn phòng và tích hợp quản lý Geofence; giữ cố định giờ Việt Nam và mốc tự đóng 20:00, kiểm thử quyền và giới hạn cài đặt theo AC-15.
 

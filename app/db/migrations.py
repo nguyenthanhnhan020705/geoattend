@@ -37,5 +37,6 @@ def grant_runtime(conn, role):
     for table in tables:
         conn.execute(sql.SQL('GRANT SELECT, INSERT, UPDATE ON geoattend.{} TO {}').format(sql.Identifier(table), identifier))
     conn.execute(sql.SQL('GRANT DELETE ON geoattend.auth_sessions, geoattend.auth_attempts TO {}').format(identifier))
+    conn.execute(sql.SQL('GRANT DELETE ON geoattend.work_sessions, geoattend.attendance_events, geoattend.office_locations TO {}').format(identifier))
     ext = conn.execute("SELECT n.nspname FROM pg_extension e JOIN pg_namespace n ON e.extnamespace=n.oid WHERE e.extname='postgis'").fetchone()
     conn.execute(sql.SQL('GRANT USAGE ON SCHEMA {} TO {}').format(sql.Identifier(ext['nspname']), identifier))
