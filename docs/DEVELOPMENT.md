@@ -1,6 +1,6 @@
-# GeoAttend — Chạy và kiểm tra Phase 1–3
+# GeoAttend — Chạy và kiểm tra Phase 1–4
 
-Phase 1 cung cấp đăng nhập và quản lý tài khoản. Phase 2 bổ sung Remote, Check-out, lịch sử cá nhân và tự đóng phiên lúc 20:00. Phase 3 bổ sung bản đồ cấu hình Geofence, Office và GPS hết hạn sau 30 ngày. Nghỉ, chuyển chế độ trực tiếp và Dashboard thuộc các phase tiếp theo. Xem checklist [Phase 2](MANUAL_TEST_PHASE_2.md) và [Phase 3](MANUAL_TEST_PHASE_3.md).
+Phase 1 cung cấp đăng nhập và quản lý tài khoản. Phase 2 bổ sung Remote, Check-out, lịch sử cá nhân và tự đóng phiên lúc 20:00. Phase 3 bổ sung bản đồ cấu hình Geofence, Office và GPS hết hạn sau 30 ngày. Phase 4 bổ sung nghỉ trưa, nghỉ sáng/cả ngày, hủy nghỉ kết hợp bắt đầu và chuyển trực tiếp Office/Remote. Dashboard thuộc Phase 5. Xem checklist [Phase 2](MANUAL_TEST_PHASE_2.md), [Phase 3](MANUAL_TEST_PHASE_3.md) và [Phase 4](MANUAL_TEST_PHASE_4.md).
 
 ## 1. Chuẩn bị
 
@@ -28,7 +28,7 @@ Mở `http://127.0.0.1:8000/login`. Khi tắt máy, hai tiến trình dừng; l�
 
 User bắt đầu Remote có lý do hoặc Office có GPS, Check-out và bắt đầu lại trước 20:00; xem lịch sử theo ngày. Remote giữ mã thao tác/payload trong sessionStorage để gửi lại; Office giữ payload GPS trong bộ nhớ tab, không lưu vào storage. API chỉ trả lịch sử của chính User; Admin không chấm công. Admin mở `/admin/office` để vẽ và lưu vùng thực tế; chưa cấu hình thì Office bị từ chối.
 
-Maintenance đóng phiên còn mở tại 20:00 giờ Việt Nam và xóa tọa độ/accuracy hết hạn 30 ngày. Nếu máy/tác vụ tắt lúc đó, lần chạy lại xử lý bù; API luôn che GPS hết hạn dù worker chưa chạy. Muốn tác vụ chạy đúng phút khi không ai mở web cần máy chạy maintenance liên tục; production cần worker độc lập. Thao tác nghỉ thuộc Phase 4.
+Maintenance đóng phiên còn mở tại 20:00 giờ Việt Nam và xóa tọa độ/accuracy hết hạn 30 ngày. Nếu máy/tác vụ tắt lúc đó, lần chạy lại xử lý bù; API luôn che GPS hết hạn dù worker chưa chạy. Muốn tác vụ chạy đúng phút khi không ai mở web cần máy chạy maintenance liên tục; production cần worker độc lập. Nghỉ trưa lúc 20:00 chỉ ghi kết thúc ngày, giữ giờ đóng phiên trước nghỉ; nghỉ sáng/cả ngày giữ nguyên trạng thái.
 
 Bản đồ nền mặc định OpenFreeMap (vector), không cần API key; Leaflet, MapLibre và thư viện kết nối được phục vụ local. `GEOATTEND_MAP_BACKGROUND=auto` chọn nền vector mặc định, hoặc raster nếu đã cấu hình URL tile khác. Có thể chọn rõ `vector`/`raster`; nền raster dùng `GEOATTEND_MAP_TILE_URL` (HTTPS, có `{z}/{x}/{y}`) và `GEOATTEND_MAP_ATTRIBUTION`. `GEOATTEND_MAP_STYLE_URL` cấu hình style vector HTTPS; các tài nguyên của style cần cùng origin để phù hợp CSP. Lỗi tải nền không ngăn chỉnh/sửa vùng. GPS chỉ lấy khi User bấm Office; Check-out/Remote không lấy vị trí. Sau khôi phục backup, chạy `local_run maintenance --once` trước khi mở dịch vụ để dọn GPS hết hạn.
 
@@ -148,4 +148,10 @@ git diff --check
 
 ## 6. Phạm vi bàn giao
 
-Xem [roadmap](ROADMAP.md) và [báo cáo Phase 3](PHASE_3_VERIFICATION.md). Remote, Office/Geofence, lịch sử cá nhân, tác vụ 20:00 và GPS hết hạn 30 ngày đã triển khai. Nghỉ và luồng hỗn hợp thuộc Phase 4; Dashboard/Onsite thuộc Phase 5. Supabase đã được cấu hình cho ứng dụng local; triển khai production và pilot thuộc Phase 6.
+Xem [roadmap](ROADMAP.md) và [báo cáo Phase 4](PHASE_4_VERIFICATION.md). Remote, Office/Geofence, lịch sử cá nhân, tác vụ 20:00, GPS hết hạn 30 ngày, nghỉ và luồng hỗn hợp đã triển khai. Dashboard/Onsite thuộc Phase 5. Supabase đã được cấu hình cho ứng dụng local; triển khai production và pilot thuộc Phase 6.
+
+## 7. Hợp đồng Phase 4
+
+Cùng endpoint `POST /api/attendance/actions`: `START_LUNCH`, `MORNING_LEAVE`, `FULL_DAY_LEAVE`, `CANCEL_LEAVE_START_OFFICE`, `CANCEL_LEAVE_START_REMOTE`, `SWITCH_OFFICE`, `SWITCH_REMOTE`; tiếp tục sau nghỉ dùng `START_OFFICE`/`START_REMOTE`. Dùng `allowed_actions`, revision và work date mới từ server. Mỗi thao tác tăng revision một lần, có thể trả nhiều event IDs; cùng UUID/payload replay kết quả cũ. Không có hủy nghỉ độc lập. Tên nghỉ trong OpenAPI là `MORNING_LEAVE`/`FULL_DAY_LEAVE` theo kế hoạch Phase 4.
+
+Retry Office (gồm switch/hủy nghỉ) chỉ giữ GPS trong bộ nhớ tab; reload đọc lại trạng thái server. Các thao tác không GPS dùng pending sessionStorage hiện có, cùng UUID sau reload. Lịch sử giữ phiên, sự kiện nghỉ/hủy và nhãn tự đóng hệ thống. Kiểm thử toàn suite trên database riêng; không tạo dữ liệu thử trên Supabase thật. Không có migration mới cho Phase 4.

@@ -4,7 +4,7 @@
 
 Chia phạm vi trong [BRD](../README.md) thành các phase có thứ tự phụ thuộc, công việc và điều kiện hoàn thành rõ ràng.
 
-Tại thời điểm bắt đầu dự án (14/10/2026), workspace chỉ có `README.md`. Hiện **Phase 0–3 đã hoàn thành** trong worktree `.worktrees/phase-1`, nhánh `feat/phase-1-foundation-auth`. Phase 3 đã qua review độc lập, đạt 119 kiểm thử và chạy với Supabase; các phase 4–6 **chưa triển khai**. Xem [báo cáo Phase 3](PHASE_3_VERIFICATION.md) và [hướng dẫn kiểm thử Office](MANUAL_TEST_PHASE_3.md).
+Tại thời điểm bắt đầu dự án (14/10/2026), workspace chỉ có `README.md`. Hiện **Phase 0–4 đã triển khai** trong worktree `.worktrees/phase-1`, nhánh `feat/phase-1-foundation-auth`. Phase 3 đã qua review độc lập, đạt 119 kiểm thử; sau sửa bản đồ baseline đạt 122 kiểm thử. Phase 4 bổ sung nghỉ/hủy nghỉ/chuyển chế độ; xem [báo cáo Phase 4](PHASE_4_VERIFICATION.md). Các phase 5–6 **chưa triển khai**.
 
 Đây là roadmap cấp dự án. Thiết kế và kế hoạch triển khai chi tiết sẽ được lập theo từng phase, sau khi các quyết định nghiệp vụ liên quan đã được chốt. Roadmap không tự quyết định thay các câu hỏi mở trong BRD.
 
@@ -119,14 +119,14 @@ Thứ tự thực hiện: **0 → 1 → 2 → 3 → 4 → 5 → 6**.
 
 **Yêu cầu BRD:** FR-04 đến FR-07; BR-03, BR-04, BR-09; các kịch bản tại mục 6.4 của BRD.
 
-- [ ] Triển khai nghỉ trưa: đóng phiên và ghi trạng thái `LUNCH_BREAK`; lúc 20:00 tự chuyển `CHECKED_OUT`, ghi sự kiện kết thúc ngày mà không kéo dài phiên cũ theo AC-11.
-- [ ] Triển khai tiếp tục Office/Remote, áp dụng lại xác minh vị trí hoặc yêu cầu lý do.
-- [ ] Triển khai nghỉ buổi sáng/cả ngày có lý do, không phê duyệt và không lấy GPS.
-- [ ] Cho phép bắt đầu làm việc sau nghỉ sáng theo quy tắc đã chốt.
-- [ ] Cho phép hủy nghỉ cả ngày để bắt đầu Office/Remote trước 20:00; giữ lịch sử đăng ký/hủy và loại nghỉ đã hủy khỏi thống kê nghỉ cả ngày còn hiệu lực theo AC-13.
-- [ ] Triển khai chuyển trực tiếp Office ↔ Remote trước 20:00, đóng/mở phiên trong cùng giao dịch sau khi kiểm tra điều kiện; kiểm thử chuyển thành công và thất bại theo AC-14.
-- [ ] Hoàn thiện Timeline gồm phiên làm việc và các sự kiện nghỉ.
-- [ ] Kiểm thử tất cả kịch bản sáng/chiều trong BRD và các chuyển trạng thái bị cấm.
+- [x] Triển khai nghỉ trưa: đóng phiên và ghi trạng thái `LUNCH_BREAK`; lúc 20:00 tự chuyển `CHECKED_OUT`, ghi sự kiện kết thúc ngày mà không kéo dài phiên cũ theo AC-11.
+- [x] Triển khai tiếp tục Office/Remote, áp dụng lại xác minh vị trí hoặc yêu cầu lý do.
+- [x] Triển khai nghỉ buổi sáng/cả ngày có lý do, không phê duyệt và không lấy GPS.
+- [x] Cho phép bắt đầu làm việc sau nghỉ sáng theo quy tắc đã chốt.
+- [x] Cho phép hủy nghỉ cả ngày để bắt đầu Office/Remote trước 20:00; giữ lịch sử đăng ký/hủy và loại nghỉ đã hủy khỏi thống kê nghỉ cả ngày còn hiệu lực theo AC-13.
+- [x] Triển khai chuyển trực tiếp Office ↔ Remote trước 20:00, đóng/mở phiên trong cùng giao dịch sau khi kiểm tra điều kiện; kiểm thử chuyển thành công và thất bại theo AC-14.
+- [x] Hoàn thiện Timeline gồm phiên làm việc và các sự kiện nghỉ.
+- [x] Kiểm thử tất cả kịch bản sáng/chiều trong BRD và các chuyển trạng thái bị cấm.
 
 **Đầu ra:** nhân viên thực hiện trọn ngày Office/Remote, đổi hình thức sau nghỉ trưa hoặc ghi nhận nghỉ.
 
@@ -174,4 +174,4 @@ Thứ tự thực hiện: **0 → 1 → 2 → 3 → 4 → 5 → 6**.
 - Chưa gán lịch theo tuần vì chưa biết số người phát triển và thời gian dành cho dự án. Ước lượng sau khi chia task và xác nhận nguồn lực.
 - PWA, notification, xuất báo cáo, Audit Log, Correction Request, QR, nhiều văn phòng/phòng ban, mobile và AI/RAG thuộc giai đoạn sau MVP.
 
-**Bước tiếp theo:** Phase 4 — nghỉ trưa, nghỉ và luồng làm việc hỗn hợp theo thiết kế đã duyệt. Xem [hướng dẫn chạy](DEVELOPMENT.md). Ứng dụng local đang dùng Supabase; bộ kiểm thử tự động dùng database riêng. Chưa triển khai production hoặc chạy pilot.
+**Bước tiếp theo:** Phase 5 — Dashboard, Onsite và lịch sử nhân viên cho Admin, dùng trạng thái và lịch sử bất biến của Phase 4. Xem [hướng dẫn chạy](DEVELOPMENT.md). Ứng dụng local đang dùng Supabase; bộ kiểm thử tự động dùng database riêng. Chưa triển khai production hoặc chạy pilot.

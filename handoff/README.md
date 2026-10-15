@@ -1,8 +1,8 @@
 # GeoAttend — Bàn giao Phase 0–4
 
-> Dành cho agent tiếp quản: đọc toàn bộ file này trước khi sửa mã. Phase 0–3 đã hoàn thành; Phase 4 dưới đây là kế hoạch chưa triển khai. Không cần làm lại các quyết định nghiệp vụ đã duyệt.
+> Dành cho agent tiếp quản: đọc toàn bộ file này trước khi sửa mã. Phase 0–3 đã hoàn thành; Phase 4 đã triển khai theo kế hoạch bên dưới, bằng chứng mới tại [PHASE_4_VERIFICATION](../docs/PHASE_4_VERIFICATION.md). Không cần làm lại các quyết định nghiệp vụ đã duyệt.
 
-**Cập nhật:** 15/10/2026. **Mốc mã nguồn:** commit `1d72990` (đã gồm bản sửa bản đồ sau Phase 3). Số kiểm thử là bằng chứng tại mốc bàn giao, không phải kết quả chạy mới của phiên viết tài liệu này.
+**Cập nhật:** 15/10/2026. **Mốc bàn giao ban đầu:** `e52d2dd`, sau bản sửa bản đồ `1d72990`. Phase 4 tiếp tục trên cùng branch/worktree; xem Git log và báo cáo Phase 4 cho các commit/kết quả mới. Số test Phase 1–3 bên dưới là bằng chứng lịch sử.
 
 ## 1. Bắt đầu đúng workspace
 
@@ -33,7 +33,7 @@ GeoAttend là ứng dụng chấm công Office/Remote có xác minh vị trí Of
 | 1 | Hoàn thành | Nền tảng, migration, đăng nhập, phân quyền, Admin cấp User |
 | 2 | Hoàn thành | Remote, Check-out, bắt đầu lại, lịch sử bản thân, tự đóng 20:00 |
 | 3 | Hoàn thành | Geofence, Office/GPS, hết hạn vị trí 30 ngày; đã sửa nền bản đồ và chờ vô hạn |
-| 4 | Chưa triển khai | Nghỉ trưa, nghỉ sáng/cả ngày, hủy nghỉ kết hợp bắt đầu, chuyển Office ↔ Remote |
+| 4 | Hoàn thành | Nghỉ trưa, nghỉ sáng/cả ngày, hủy nghỉ kết hợp bắt đầu, chuyển Office ↔ Remote; 195 test đạt, review không lỗi chặn |
 
 Phase 5 (Dashboard/Onsite/lịch sử nhân viên cho Admin) và Phase 6 (production/pilot) chưa triển khai và không thuộc đợt bàn giao triển khai Phase 4. Không tự thêm tính lương, duyệt nghỉ, nhiều văn phòng, đăng ký công khai, QR hay theo dõi GPS liên tục.
 
@@ -102,7 +102,7 @@ Tất cả đường dẫn sau tính từ worktree ứng dụng.
 | --- | --- |
 | `app/main.py`, `app/config.py` | Khởi tạo ứng dụng, cấu hình, security headers/CSP |
 | `app/auth/`, `app/accounts/` | Xác thực, phân quyền, quản lý tài khoản |
-| `app/attendance/schemas.py` | `ActionInput`, hiện chỉ nhận `START_REMOTE`, `START_OFFICE`, `CHECK_OUT` |
+| `app/attendance/schemas.py` | `ActionInput`, START_REMOTE/OFFICE, CHECK_OUT và action nghỉ/hủy/chuyển Phase 4 |
 | `app/attendance/service.py` | `act`, `snapshot`, `history`, `reconcile_locked`, `maintain`; lock, replay, transaction |
 | `app/attendance/routes.py` | GET status/history, POST actions; chỉ User |
 | `app/gis/` | Cấu hình/xác minh Office, lưu vị trí, retention; đọc lại tên hàm thực trước sửa |
@@ -121,9 +121,9 @@ API hiện có: `GET /api/attendance/status`, `POST /api/attendance/actions`, `G
 
 Request chấm công dùng `request_id`, `expected_revision`, `expected_work_date`, `action`; Remote có `reason`; Office có `latitude`, `longitude`, `accuracy_m`. Reason được trim, độ dài 1–1000. Response thao tác có `event_ids`, `session_id`, `work_date`, `status`, `revision`. `allowed_actions` phải khớp Backend, không chỉ ẩn/hiện nút theo suy đoán ở UI.
 
-**Chú ý:** schema đã khai báo `LUNCH_BREAK`, `MORNING_LEAVE`, `FULL_DAY_LEAVE` và các event nghỉ; đối soát đã có nhánh `LUNCH_BREAK` lúc 20:00. Điều này không có nghĩa API/UI nghỉ đã triển khai. Không sửa các migration đã áp dụng để thêm tính năng: checksum được kiểm tra. Nếu cần schema mới, thêm migration số tiếp theo.
+**Chú ý:** schema đã khai báo đủ trạng thái/event nghỉ, đối soát `LUNCH_BREAK` lúc 20:00 và replay nhiều event. Phase 4 dùng lại các phần này, không cần migration mới. Không sửa migration đã áp dụng: checksum được kiểm tra. Nếu cần schema mới, thêm migration số tiếp theo.
 
-`history` hiện đã trả cả `sessions` và `events`; UI đã có nhãn event nghỉ. Tái sử dụng các phần này, kiểm tra dữ liệu và hiển thị thực tế thay vì dựng timeline thứ hai. Logic hash/pending hiện phân biệt action Office bằng tên `START_OFFICE`: khi thêm action hủy nghỉ/chuyển vào Office phải mở rộng phân loại để hash có GPS và không lưu GPS vào storage, đồng thời giữ hash của action cũ.
+`history` trả cả `sessions` và `events`; UI dùng chung timeline hiện có. Phase 4 mở rộng phân loại Office cho START, CANCEL_LEAVE_START và SWITCH: hash bao gồm GPS, pending chỉ giữ bộ nhớ tab, không storage. Hash action cũ được giữ. Nghỉ dùng tên action `MORNING_LEAVE`/`FULL_DAY_LEAVE` theo kế hoạch này, không dùng tên đề xuất cũ `LEAVE_MORNING`/`LEAVE_FULL_DAY`.
 
 ## 9. Chạy local và kiểm thử
 
@@ -161,13 +161,13 @@ git diff --check
 
 Đổi `run-01` thành tên mới nếu thư mục cũ lỗi quyền Windows. Fixture tự tạo database `geoattend_test_<uuid>` và dọn database đó; cần quyền CREATEDB/role/extension theo fixture. Không dùng test DSN trùng DSN ứng dụng/migration.
 
-Port 55440 là cluster local từng dùng để kiểm thử, **đã dừng sau kiểm chứng**; không giả định đang chạy hoặc test credential ở ví dụ là tài khoản thật. Cần khởi động PostgreSQL test trước. Có thể dùng PostgreSQL/PostGIS test khác và sửa DSN. Với máy đã có cluster tại `.local-tests/phase-3/pgdata`, xác minh đường dẫn/config/port rồi mới dùng `pg_ctl` của PostgreSQL 17 để start; không initdb hoặc xóa cluster hiện hữu.
+Port 55440 là cluster local test, được khởi động lại cho Phase 4; không giả định đang chạy ở phiên sau hoặc test credential ở ví dụ là tài khoản thật. Kiểm tra `pg_ctl status` trước khi dùng. Có thể dùng PostgreSQL/PostGIS test khác và sửa DSN. Với máy đã có cluster tại `.local-tests/phase-3/pgdata`, xác minh đường dẫn/config/port rồi mới dùng `pg_ctl` của PostgreSQL 17 để start; không initdb hoặc xóa cluster hiện hữu.
 
 Không đưa mật khẩu/DSN đầy đủ vào chat, commit hay log. Không tạo chấm công/Geofence thử trên Supabase thật. `.env`, `.venv`, `.local-tests`, `.superpowers` không nằm trong Git và không được xem là đầu vào bắt buộc trên máy mới.
 
-## 10. Phase 4 Implementation Plan — chưa thực hiện
+## 10. Phase 4 Implementation Plan — đã triển khai
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use `superpowers:executing-plans` để thực hiện tuần tự từng task; có thể dùng `superpowers:subagent-driven-development` nếu người dùng chọn phương thức đó. Tuân thủ AGENTS.md và prerequisite skill đang áp dụng. File này bàn giao kế hoạch, không triển khai Phase 4 trong phiên viết tài liệu.
+> **For agentic workers:** Đã thực hiện inline theo `superpowers:executing-plans`, từng task với test đỏ/xanh. Không làm lại task đã commit; xem [báo cáo](../docs/PHASE_4_VERIFICATION.md) và [checklist tay](../docs/MANUAL_TEST_PHASE_4.md). Giữ nguyên yêu cầu bảo toàn dữ liệu, idempotency và GPS bên dưới.
 
 **Goal:** Hoàn thiện ngày làm việc có nghỉ và chuyển Office/Remote theo nghiệp vụ đã duyệt.
 
@@ -208,10 +208,10 @@ Không có hủy nghỉ độc lập. Hủy nghỉ hoặc chuyển chế độ t
 
 **Interfaces:** mở rộng `ActionInput`; giữ chữ ký `act(conn,user_id,body,session_id=None)` và `snapshot(conn,user_id,now)`, response hiện tại. `START_LUNCH` không nhận GPS; `START_OFFICE`/`START_REMOTE` dùng cho tiếp tục từ `LUNCH_BREAK`. Một thao tác có thể trả nhiều `event_ids`.
 
-- [ ] Viết và chạy test đỏ: nghỉ trưa đóng đúng một phiên, `LUNCH_START` không có phiên mở mới; resume tạo session ID khác; Office resume phải xác minh lại, Remote resume cần lý do; nghỉ khi chưa làm việc bị 409.
-- [ ] Mở rộng validator/action/allowed_actions; ghi transaction nguyên tử, revision tăng một lần cho mỗi thao tác, lưu đủ event IDs vào replay. Giữ hash cũ cho payload action cũ.
-- [ ] Kiểm thử `LUNCH_BREAK` trước/đúng/sau 20:00, maintenance lặp và chạy bù: đúng một `DAY_END`, không đổi end_time của phiên trước nghỉ. Kiểm thử chờ khóa qua cutoff và retry UUID đã commit.
-- [ ] Chạy `.\.venv\Scripts\python.exe -m pytest tests/integration/test_attendance_breaks.py tests/integration/test_attendance_races.py -q`; chỉ commit khi đạt. Kết quả: API nghỉ trưa/resume và đối soát hoạt động độc lập với UI.
+- [x] Viết và chạy test đỏ: nghỉ trưa đóng đúng một phiên, `LUNCH_START` không có phiên mở mới; resume tạo session ID khác; Office resume phải xác minh lại, Remote resume cần lý do; nghỉ khi chưa làm việc bị 409.
+- [x] Mở rộng validator/action/allowed_actions; ghi transaction nguyên tử, revision tăng một lần cho mỗi thao tác, lưu đủ event IDs vào replay. Giữ hash cũ cho payload action cũ.
+- [x] Kiểm thử `LUNCH_BREAK` trước/đúng/sau 20:00, maintenance lặp và chạy bù: đúng một `DAY_END`, không đổi end_time của phiên trước nghỉ. Kiểm thử chờ khóa qua cutoff và retry UUID đã commit.
+- [x] Chạy `.\.venv\Scripts\python.exe -m pytest tests/integration/test_attendance_breaks.py tests/integration/test_attendance_races.py -q`; chỉ commit khi đạt. Kết quả: API nghỉ trưa/resume và đối soát hoạt động độc lập với UI.
 
 ### Task 2 — Nghỉ sáng/cả ngày và hủy nghỉ kết hợp bắt đầu
 
@@ -219,11 +219,11 @@ Không có hủy nghỉ độc lập. Hủy nghỉ hoặc chuyển chế độ t
 
 **Interfaces:** thêm action theo bảng; lý do nghỉ/Remote trim 1–1000; chỉ action vào Office nhận bộ GPS đầy đủ. `history` phải trả được event nghỉ/hủy nghỉ và trạng thái hiện tại. Không thêm endpoint hủy nghỉ riêng.
 
-- [ ] Viết/chạy test đỏ cho nghỉ có/thiếu lý do, input thừa/GPS bị cấm, chỉ nghỉ từ `NOT_STARTED`; bắt đầu sau nghỉ sáng không cần đợi giờ chiều.
-- [ ] Implement nghỉ và bắt đầu sau nghỉ sáng theo bảng. Nghỉ không tạo `work_sessions`; giữ event đăng ký nghỉ.
-- [ ] Implement hủy nghỉ kết hợp bắt đầu: chỉ ghi `LEAVE_CANCELLED` khi GPS/lý do đạt; thất bại giữ `FULL_DAY_LEAVE`. Ngày đã hủy phải có trạng thái làm việc và lịch sử đăng ký/hủy để Phase 5 không đếm thành nghỉ cả ngày hiệu lực.
-- [ ] Thêm test rollback lỗi insert event, hai request cùng revision, logout/reset khi chờ khóa, qua ngày, trước/đúng 20:00. Giữ trạng thái nghỉ nguyên khi đối soát cuối ngày theo spec.
-- [ ] Chạy `.\.venv\Scripts\python.exe -m pytest tests/integration/test_attendance_leave.py -q`; đạt rồi commit. Không sửa migration cũ; chỉ thêm migration mới nếu chứng minh cần schema/quyền mới.
+- [x] Viết/chạy test đỏ cho nghỉ có/thiếu lý do, input thừa/GPS bị cấm, chỉ nghỉ từ `NOT_STARTED`; bắt đầu sau nghỉ sáng không cần đợi giờ chiều.
+- [x] Implement nghỉ và bắt đầu sau nghỉ sáng theo bảng. Nghỉ không tạo `work_sessions`; giữ event đăng ký nghỉ.
+- [x] Implement hủy nghỉ kết hợp bắt đầu: chỉ ghi `LEAVE_CANCELLED` khi GPS/lý do đạt; thất bại giữ `FULL_DAY_LEAVE`. Ngày đã hủy phải có trạng thái làm việc và lịch sử đăng ký/hủy để Phase 5 không đếm thành nghỉ cả ngày hiệu lực.
+- [x] Thêm test rollback lỗi insert event, hai request cùng revision, logout/reset khi chờ khóa, qua ngày, trước/đúng 20:00. Giữ trạng thái nghỉ nguyên khi đối soát cuối ngày theo spec.
+- [x] Chạy `.\.venv\Scripts\python.exe -m pytest tests/integration/test_attendance_leave.py -q`; đạt rồi commit. Không sửa migration cũ; chỉ thêm migration mới nếu chứng minh cần schema/quyền mới.
 
 ### Task 3 — Chuyển trực tiếp Office ↔ Remote
 
@@ -231,10 +231,10 @@ Không có hủy nghỉ độc lập. Hủy nghỉ hoặc chuyển chế độ t
 
 **Interfaces:** `SWITCH_REMOTE` chỉ từ `WORKING_OFFICE`, bắt buộc lý do; `SWITCH_OFFICE` chỉ từ `WORKING_REMOTE`, bắt buộc GPS. `act` trả session mới cùng event kết thúc/bắt đầu; dùng cùng một thời điểm chuyển cho end/start.
 
-- [ ] Viết/chạy test đỏ: cả hai chiều thành công, cùng chế độ bị từ chối, ngoài vùng/thiếu lý do giữ phiên cũ mở, không tạo event/phiên mới.
-- [ ] Xác minh điều kiện chế độ đích và kiểm tra lại giờ/session sau chờ khóa trước khi đóng phiên nguồn. Ghi đóng/mở/event/location/replay trong một transaction; giữ lock order hiện có để tránh deadlock với Admin sửa Geofence và maintenance.
-- [ ] Thêm test lỗi ghi GPS/event rollback toàn bộ, chuyển vs Check-out/worker, hai tab, UUID lặp/khác payload, chờ lock Office qua cutoff và replay payload cũ.
-- [ ] Chạy `.\.venv\Scripts\python.exe -m pytest tests/integration/test_attendance_switch.py tests/integration/test_office_attendance.py -q`; đạt rồi commit.
+- [x] Viết/chạy test đỏ: cả hai chiều thành công, cùng chế độ bị từ chối, ngoài vùng/thiếu lý do giữ phiên cũ mở, không tạo event/phiên mới.
+- [x] Xác minh điều kiện chế độ đích và kiểm tra lại giờ/session sau chờ khóa trước khi đóng phiên nguồn. Ghi đóng/mở/event/location/replay trong một transaction; giữ lock order hiện có để tránh deadlock với Admin sửa Geofence và maintenance.
+- [x] Thêm test lỗi ghi GPS/event rollback toàn bộ, chuyển vs Check-out/worker, hai tab, UUID lặp/khác payload, chờ lock Office qua cutoff và replay payload cũ.
+- [x] Chạy `.\.venv\Scripts\python.exe -m pytest tests/integration/test_attendance_switch.py tests/integration/test_office_attendance.py -q`; đạt rồi commit.
 
 ### Task 4 — UI, timeline và thử lại thao tác
 
@@ -242,20 +242,22 @@ Không có hủy nghỉ độc lập. Hủy nghỉ hoặc chuyển chế độ t
 
 **Interfaces:** UI dựa trên `allowed_actions` và revision/work date do server trả. Các action vào Office dùng cùng cơ chế GPS một lần và pending payload trong bộ nhớ; các action không GPS có thể dùng cơ chế pending hiện có. Không sửa tên/cấu trúc payload pending cũ nếu chưa có kiểm thử tương thích.
 
-- [ ] Viết/chạy test browser đỏ cho nút nghỉ trưa/tiếp tục/nghỉ sáng/nghỉ cả ngày/hủy nghỉ/chuyển chế độ, form lý do và timeline tiếng Việt.
-- [ ] Thêm nút/form theo quyền và trạng thái, khóa nút khi gửi; hiển thị rõ tự đóng hệ thống, đăng ký/hủy nghỉ, từng phiên sáng/chiều. Không tính khoảng nghỉ thành thời gian làm việc.
-- [ ] Test mất phản hồi sau commit → retry cùng UUID không nhân đôi; timeout mở lại thao tác; refresh trạng thái/lịch sử; GPS không nằm trong `sessionStorage`/`localStorage`; HTML trong lý do hiển thị dạng text.
-- [ ] Test viewport 360px và desktop, không tràn ngang/JS error. Chạy `.\.venv\Scripts\python.exe -m pytest tests/integration/test_phase4_browser.py -q`; đạt rồi commit.
+- [x] Viết/chạy test browser đỏ cho nút nghỉ trưa/tiếp tục/nghỉ sáng/nghỉ cả ngày/hủy nghỉ/chuyển chế độ, form lý do và timeline tiếng Việt.
+- [x] Thêm nút/form theo quyền và trạng thái, khóa nút khi gửi; hiển thị rõ tự đóng hệ thống, đăng ký/hủy nghỉ, từng phiên sáng/chiều. Không tính khoảng nghỉ thành thời gian làm việc.
+- [x] Test mất phản hồi sau commit → retry cùng UUID không nhân đôi; timeout mở lại thao tác; refresh trạng thái/lịch sử; GPS không nằm trong `sessionStorage`/`localStorage`; HTML trong lý do hiển thị dạng text.
+- [x] Test viewport 360px và desktop, không tràn ngang/JS error. Chạy `.\.venv\Scripts\python.exe -m pytest tests/integration/test_phase4_browser.py -q`; đạt rồi commit.
 
 ### Task 5 — Hồi quy, nghiệm thu và bàn giao Phase 4
 
 **Files:** bổ sung test phase 4/race nếu thiếu; tạo `docs/MANUAL_TEST_PHASE_4.md`, `docs/PHASE_4_VERIFICATION.md`; cập nhật `docs/ROADMAP.md`, `docs/DEVELOPMENT.md` và file này.
 
-- [ ] Kiểm tra đủ tám kịch bản dưới đây, cộng hủy nghỉ cả ngày và chuyển trực tiếp hai chiều; không đánh dấu hoàn thành chỉ vì đã có nút UI.
-- [ ] Chạy toàn bộ pytest với database test riêng, `pip check`, `git diff --check`; lưu lệnh/kết quả và giới hạn thực tế. 122 là baseline cũ, tổng test mới phải tăng theo thay đổi.
-- [ ] Review độc lập theo skill áp dụng; sửa lỗi Critical/Important rồi chạy lại kiểm thử liên quan. Không merge/deploy tự động ngoài phạm vi được giao.
-- [ ] Nếu có migration mới, kiểm thử chạy lại an toàn trên database test/runtime role hạn chế trước khi áp dụng môi trường thực. Không seed dữ liệu thử lên Supabase thật.
-- [ ] Hoàn thiện checklist tay, báo cáo và commit. Chỉ ghi Phase 4 hoàn thành khi API/DB/UI/worker và tiêu chí dưới đây đều có bằng chứng.
+**Kết quả:** 195 passed, 1 warning upstream; pip check/diff check không lỗi. Review độc lập không có Critical/Important. Minor hoãn: event trùng timestamp có thể hiển thị đảo thứ tự do UUID; phiên/trạng thái/replay vẫn đúng. Không migration mới; không tạo dữ liệu thử trên Supabase thật. Xem báo cáo Phase 4 cho bằng chứng và giới hạn thiết bị/production.
+
+- [x] Kiểm tra đủ tám kịch bản dưới đây, cộng hủy nghỉ cả ngày và chuyển trực tiếp hai chiều; không đánh dấu hoàn thành chỉ vì đã có nút UI.
+- [x] Chạy toàn bộ pytest với database test riêng, `pip check`, `git diff --check`; lưu lệnh/kết quả và giới hạn thực tế. 122 là baseline cũ, tổng test mới phải tăng theo thay đổi.
+- [x] Review độc lập theo skill áp dụng; sửa lỗi Critical/Important rồi chạy lại kiểm thử liên quan. Không merge/deploy tự động ngoài phạm vi được giao.
+- [x] Nếu có migration mới, kiểm thử chạy lại an toàn trên database test/runtime role hạn chế trước khi áp dụng môi trường thực. Không seed dữ liệu thử lên Supabase thật.
+- [x] Hoàn thiện checklist tay, báo cáo và commit. Chỉ ghi Phase 4 hoàn thành khi API/DB/UI/worker và tiêu chí dưới đây đều có bằng chứng.
 
 ### 10.3. Checklist nghiệm thu
 
@@ -274,4 +276,4 @@ Ngoài tám luồng: đúng/trễ 20:00; nghỉ trưa qua cutoff; ngày mới; d
 
 ## 11. Lời giao việc cho agent tiếp theo
 
-> Tiếp tục GeoAttend ở Phase 4 theo `handoff/README.md`. Kiểm tra branch/worktree và baseline thực tế trước khi sửa. Dùng BRD, STATE_TRANSITIONS và thiết kế Phase 0 làm nguồn nghiệp vụ; không hỏi lại các quyết định đã duyệt. Thực hiện từng task có test đỏ/xanh, giữ nguyên bảo đảm transaction/idempotency/GPS/privacy. Tự code và test phần có thể thực hiện; chỉ hướng dẫn người dùng khi cần thao tác ngoài khả năng công cụ hoặc thiếu đầu vào thực sự. Không thay tài khoản/mật khẩu hay tạo dữ liệu thử trên Supabase thật. Báo cáo cuối gồm thay đổi, kiểm thử, giới hạn và việc còn lại; chưa triển khai production/Phase 5 trong phạm vi Phase 4.
+> Phase 4 đã triển khai; đọc báo cáo kiểm chứng trước khi tiếp tục. Phase tiếp theo là Phase 5 (Dashboard/Onsite/lịch sử nhân viên cho Admin), chưa được triển khai trong đợt này. Kiểm tra branch/worktree và baseline thực tế trước khi sửa; không làm lại Phase 03 hoặc Phase 4 đã commit. Dùng BRD, STATE_TRANSITIONS và thiết kế Phase 0 làm nguồn nghiệp vụ; giữ transaction/idempotency/GPS/privacy. Không thay tài khoản/mật khẩu hay tạo dữ liệu thử trên Supabase thật. GPS thiết bị thật, HTTPS production và pilot thuộc Phase 6.
