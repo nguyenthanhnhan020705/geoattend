@@ -4,9 +4,24 @@ import hashlib
 import json
 from app import clock
 from app.errors import ApiError
+from app.attendance.schemas import OFFICE_ACTIONS
 
 VIETNAM = timezone(timedelta(hours=7))
 WORKING = ('WORKING_REMOTE', 'WORKING_OFFICE')
+START_ACTIONS = ('START_OFFICE','START_REMOTE','CANCEL_LEAVE_START_OFFICE','CANCEL_LEAVE_START_REMOTE')
+LEAVE_ACTIONS = ('MORNING_LEAVE','FULL_DAY_LEAVE')
+
+
+def actions_for(state):
+    if state == 'NOT_STARTED':
+        return ['START_OFFICE','START_REMOTE','MORNING_LEAVE','FULL_DAY_LEAVE']
+    if state in ('CHECKED_OUT','LUNCH_BREAK','MORNING_LEAVE'):
+        return ['START_OFFICE','START_REMOTE']
+    if state == 'FULL_DAY_LEAVE':
+        return ['CANCEL_LEAVE_START_OFFICE','CANCEL_LEAVE_START_REMOTE']
+    if state in WORKING:
+        return ['CHECK_OUT','START_LUNCH']
+    return []
 
 
 def cutoff(work_date):
@@ -62,10 +77,7 @@ def snapshot(conn, user_id, now):
         opened = conn.execute('SELECT id,work_mode,start_time,start_reason FROM geoattend.work_sessions WHERE day_id=%s AND end_time IS NULL', (day['id'],)).fetchone()
     allowed = []
     if now < cutoff(work_date):
-        if state in ('NOT_STARTED','CHECKED_OUT','LUNCH_BREAK'):
-            allowed = ['START_OFFICE','START_REMOTE']
-        elif state in WORKING:
-            allowed = ['CHECK_OUT','START_LUNCH']
+        allowed = actions_for(state)
     return dict(work_date=work_date,status=state,revision=day['revision'] if day else 0,open_session=opened,server_time=now,allowed_actions=allowed)
 
 
@@ -85,7 +97,7 @@ def result(row):
 def act(conn, user_id, body, session_id=None):
     from app.gis.service import verify_office,store_location
     excluded={'request_id'}
-    if body.action!='START_OFFICE':
+    if body.action not in OFFICE_ACTIONS:
         excluded.update({'latitude','longitude','accuracy_m'})
     payload = body.model_dump(mode='json', exclude=excluded)
     digest = hashlib.sha256(json.dumps(payload,sort_keys=True,separators=(',',':'),ensure_ascii=False).encode()).hexdigest()
@@ -118,11 +130,11 @@ def act(conn, user_id, body, session_id=None):
                 failure = ApiError(409,'DAY_CLOSED','Ngày làm việc đã kết thúc lúc 20:00 giờ Việt Nam.')
             elif revision != body.expected_revision:
                 failure = ApiError(409,'STALE_REVISION','Trạng thái đã thay đổi. Vui lòng tải lại.')
-            elif (body.action in ('START_REMOTE','START_OFFICE') and state not in ('NOT_STARTED','CHECKED_OUT','LUNCH_BREAK')) or (body.action in ('CHECK_OUT','START_LUNCH') and state not in WORKING):
+            elif body.action not in actions_for(state):
                 failure = ApiError(409,'INVALID_TRANSITION','Không thể thực hiện thao tác ở trạng thái hiện tại.')
             else:
                 office=None
-                if body.action=='START_OFFICE':
+                if body.action in OFFICE_ACTIONS:
                     try:
                         office=verify_office(conn,body.latitude,body.longitude)
                     except ApiError as error:
@@ -139,21 +151,27 @@ def act(conn, user_id, body, session_id=None):
                 if failure is None and day is None:
                     day = conn.execute("INSERT INTO geoattend.attendance_days(user_id,work_date,status) VALUES(%s,%s,'NOT_STARTED') RETURNING *", (user_id,today)).fetchone()
                 event_ids = []
-                if failure is None and body.action in ('START_REMOTE','START_OFFICE'):
+                result_session_id = None
+                if failure is None and body.action in LEAVE_ACTIONS:
+                    event_ids.append(event(conn,day['id'],None,body.action,now,now,'USER',body.reason))
+                    state = body.action
+                elif failure is None and body.action in START_ACTIONS:
+                    if state == 'FULL_DAY_LEAVE':
+                        event_ids.append(event(conn,day['id'],None,'LEAVE_CANCELLED',now,now,'USER'))
                     mode='OFFICE' if office else 'REMOTE'
-                    session_id = conn.execute('INSERT INTO geoattend.work_sessions(day_id,work_mode,start_time,start_reason,office_revision) VALUES(%s,%s,%s,%s,%s) RETURNING id', (day['id'],mode,now,body.reason,office['revision'] if office else None)).fetchone()['id']
-                    event_id = event(conn,day['id'],session_id,'WORK_START',now,now,'USER',body.reason)
+                    result_session_id = conn.execute('INSERT INTO geoattend.work_sessions(day_id,work_mode,start_time,start_reason,office_revision) VALUES(%s,%s,%s,%s,%s) RETURNING id', (day['id'],mode,now,body.reason,office['revision'] if office else None)).fetchone()['id']
+                    event_id = event(conn,day['id'],result_session_id,'WORK_START',now,now,'USER',body.reason)
                     event_ids.append(event_id)
                     if office:
                         conn.execute('UPDATE geoattend.attendance_events SET location_verified=true WHERE id=%s',(event_id,))
-                        store_location(conn,session_id,event_id,body,now)
+                        store_location(conn,result_session_id,event_id,body,now)
                     state = 'WORKING_'+mode
                 elif failure is None:
                     session = conn.execute("UPDATE geoattend.work_sessions SET end_time=%s,end_source='USER',end_reason=%s WHERE day_id=%s AND end_time IS NULL RETURNING id", (now,body.reason,day['id'])).fetchone()
                     if session is None:
                         raise ApiError(503,'INCONSISTENT_ATTENDANCE','Dữ liệu phiên cần được kiểm tra.')
-                    session_id = session['id']
-                    event_id = event(conn,day['id'],session_id,'WORK_END',now,now,'USER',body.reason)
+                    result_session_id = session['id']
+                    event_id = event(conn,day['id'],result_session_id,'WORK_END',now,now,'USER',body.reason)
                     event_ids.append(event_id)
                     state = 'CHECKED_OUT'
                     if body.action == 'START_LUNCH':
@@ -161,7 +179,7 @@ def act(conn, user_id, body, session_id=None):
                         state = 'LUNCH_BREAK'
                 if failure is None:
                     conn.execute('UPDATE geoattend.attendance_days SET status=%s,revision=revision+1,updated_at=%s WHERE id=%s', (state,now,day['id']))
-                    saved = conn.execute('INSERT INTO geoattend.attendance_requests(user_id,request_id,payload_hash,result_event_ids,completed_at,result_status,result_revision,result_work_date,result_session_id) VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s) RETURNING *', (user_id,body.request_id,digest,event_ids,now,state,revision+1,today,session_id)).fetchone()
+                    saved = conn.execute('INSERT INTO geoattend.attendance_requests(user_id,request_id,payload_hash,result_event_ids,completed_at,result_status,result_revision,result_work_date,result_session_id) VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s) RETURNING *', (user_id,body.request_id,digest,event_ids,now,state,revision+1,today,result_session_id)).fetchone()
                     answer = result(saved)
     if failure:
         raise failure
