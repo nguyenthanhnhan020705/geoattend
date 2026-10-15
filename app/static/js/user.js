@@ -6,13 +6,25 @@ const eventLabels = {WORK_START:'Bắt đầu làm việc', WORK_END:'Kết thú
 const clock = value => new Intl.DateTimeFormat('vi-VN',{timeZone:'Asia/Ho_Chi_Minh',hour:'2-digit',minute:'2-digit',second:'2-digit'}).format(new Date(value));
 let current = null, pending = null, busy = false, historyPage = 1, historyQuery = null, accountId = null;
 const pendingKey = 'geoattend.pendingAttendance';
+const officeActions = ['START_OFFICE','CANCEL_LEAVE_START_OFFICE','SWITCH_OFFICE'];
+const remoteActions = ['START_REMOTE','CANCEL_LEAVE_START_REMOTE','SWITCH_REMOTE'];
+const isOffice = action => officeActions.includes(action);
+const available = actions => actions.find(action => current?.allowed_actions.includes(action));
 
 function controls() {
   const allowed = current?.allowed_actions || [];
-  el('remote-form').hidden = !allowed.includes('START_REMOTE');
+  const remote = available(remoteActions), office = available(officeActions);
+  el('remote-form').hidden = !remote;
+  el('remote-form').querySelector('button').textContent = remote==='CANCEL_LEAVE_START_REMOTE'?'Hủy nghỉ và bắt đầu Remote':remote==='SWITCH_REMOTE'?'Chuyển sang Remote':current?.status==='LUNCH_BREAK'?'Tiếp tục Remote':'Bắt đầu Remote';
   el('check-out').hidden = !allowed.includes('CHECK_OUT');
-  el('start-office').hidden = !allowed.includes('START_OFFICE');
-  el('gps-note').hidden = !allowed.includes('START_OFFICE');
+  el('start-office').hidden = !office;
+  el('start-office').textContent = office==='CANCEL_LEAVE_START_OFFICE'?'Hủy nghỉ và bắt đầu Office':office==='SWITCH_OFFICE'?'Chuyển sang Office':current?.status==='LUNCH_BREAK'?'Tiếp tục Office':'Check-in Office';
+  el('gps-note').hidden = !office;
+  el('start-lunch').hidden = !allowed.includes('START_LUNCH');
+  el('leave-form').hidden = !allowed.some(action=>['MORNING_LEAVE','FULL_DAY_LEAVE'].includes(action));
+  el('morning-leave').hidden = !allowed.includes('MORNING_LEAVE');
+  el('full-day-leave').hidden = !allowed.includes('FULL_DAY_LEAVE');
+  for (const id of ['start-lunch','morning-leave','full-day-leave','leave-reason']) el(id).disabled = busy || !!pending;
   el('start-office').disabled = busy || !!pending;
   el('retry-action').hidden = !pending;
   el('remote-form').querySelector('button').disabled = busy || !!pending;
@@ -33,25 +45,25 @@ async function refreshStatus() {
 function savePending() {
   // Exact payload survives ambiguous responses/reloads in this account/tab.
   // No GPS or auth token is stored here.
-  if (pending && pending.body.action!=='START_OFFICE') sessionStorage.setItem(pendingKey,JSON.stringify(pending));
+  if (pending && !isOffice(pending.body.action)) sessionStorage.setItem(pendingKey,JSON.stringify(pending));
   else sessionStorage.removeItem(pendingKey);
 }
 
 async function sendPending() {
   if (!pending || busy) return;
   busy = true; controls(); message('message','Đang gửi…');
-  let completed = false;
   try {
     await apiFetch('/api/attendance/actions',{method:'POST',body:JSON.stringify(pending.body)});
-    pending = null; savePending(); completed = true;
+    pending = null; savePending();
     el('remote-reason').value = '';
+    el('leave-reason').value = '';
     message('message','Đã ghi nhận thao tác.',true);
   } catch (error) {
     if (error.code && error.code !== 'DATABASE_UNAVAILABLE' && error.code !== 'INCONSISTENT_ATTENDANCE') {
       pending = null; savePending(); message('message',error.message);
     } else message('message','Chưa xác nhận được kết quả. Bấm “Gửi lại thao tác” để kiểm tra và gửi lại an toàn.');
   } finally { busy = false; controls(); }
-  try { await refreshStatus(); if (completed) await loadHistory(historyQuery,historyPage); }
+  try { await refreshStatus(); await loadHistory(historyQuery,historyPage); }
   catch (error) { message('message','Chưa tải được dữ liệu mới: '+error.message); }
 }
 
@@ -86,7 +98,10 @@ async function loadHistory(query, page=1) {
       if(session.location?.status==='expired') line('p','Dữ liệu vị trí đã hết hạn lưu. Kết quả xác minh được giữ lại.',section,'muted');
     }
     const events = document.createElement('ul'); events.className='timeline';
-    for (const event of day.events) line('li',`${clock(event.event_time)} · ${eventLabels[event.event_type] || event.event_type}${event.source==='SYSTEM'?' · Hệ thống':''}${event.reason?' · '+event.reason:''}`,events);
+    for (const event of day.events) {
+      const label = event.event_type==='DAY_END' && event.source==='SYSTEM' ? 'Hệ thống kết thúc ngày lúc 20:00; không phải giờ kết thúc thực tế.' : eventLabels[event.event_type] || event.event_type;
+      line('li',`${clock(event.event_time)} · ${label}${event.source==='SYSTEM'?' · Hệ thống':''}${event.reason?' · '+event.reason:''}`,events);
+    }
     section.append(events); el('history-list').append(section);
   }
   el('history-page').textContent = `${page} / ${Math.max(1,Math.ceil(data.total/20))}`;
@@ -94,10 +109,13 @@ async function loadHistory(query, page=1) {
   message('history-message','');
 }
 
-el('remote-form').addEventListener('submit', event => { event.preventDefault(); submit('START_REMOTE',el('remote-reason').value.trim()); });
+el('remote-form').addEventListener('submit', event => { event.preventDefault(); const action=available(remoteActions); if(action)submit(action,el('remote-reason').value.trim()); });
+el('leave-form').addEventListener('submit', event => { event.preventDefault(); const action=event.submitter?.value; if(current?.allowed_actions.includes(action))submit(action,el('leave-reason').value.trim()); });
+el('start-lunch').addEventListener('click',()=>submit('START_LUNCH'));
 el('check-out').addEventListener('click',()=>submit('CHECK_OUT'));
 el('start-office').addEventListener('click',async()=>{
   if(!current || busy || pending)return;
+  const action=available(officeActions);if(!action)return;
   const intended={...current};let position=null;busy=true;controls();message('message','Đang xác minh vị trí…');
   try{
     if(!navigator.geolocation)throw {code:2};
@@ -107,10 +125,11 @@ el('start-office').addEventListener('click',async()=>{
     const text=error.code===1?'Bạn chưa cấp quyền vị trí. Cho phép GPS rồi thử lại, hoặc tự chọn Remote và nhập lý do.':error.code===3?'Lấy vị trí quá thời gian chờ. Hãy thử lại hoặc tự chọn Remote.':'Chưa lấy được vị trí. Kiểm tra GPS hoặc tự chọn Remote.';
     message('message',text);
   }finally{busy=false;controls();}
-  if(position)submit('START_OFFICE',undefined,position,intended);
+  if(position)submit(action,undefined,position,intended);
 });
 el('retry-action').addEventListener('click',sendPending);
-el('refresh-status').addEventListener('click',()=>refreshStatus().catch(error=>message('message',error.message)));
+async function refreshAll() { await refreshStatus(); await loadHistory(historyQuery,historyPage); }
+el('refresh-status').addEventListener('click',()=>refreshAll().catch(error=>message('message',error.message)));
 el('history-form').addEventListener('submit',event=>{event.preventDefault(); loadHistory({from:el('history-from').value,to:el('history-to').value}).catch(error=>message('history-message',error.message));});
 el('history-prev').addEventListener('click',()=>loadHistory(historyQuery,historyPage-1).catch(error=>message('history-message',error.message)));
 el('history-next').addEventListener('click',()=>loadHistory(historyQuery,historyPage+1).catch(error=>message('history-message',error.message)));
@@ -119,7 +138,7 @@ try {
   el('full-name').textContent = account.full_name; el('account-username').textContent = account.username;
   const saved = sessionStorage.getItem(pendingKey);
   if (saved) {
-    try { const value=JSON.parse(saved); if (value.accountId===accountId && value.body?.action!=='START_OFFICE') pending=value; else sessionStorage.removeItem(pendingKey); }
+    try { const value=JSON.parse(saved); if (value.accountId===accountId && value.body && !isOffice(value.body.action) && !['latitude','longitude','accuracy_m'].some(key=>key in value.body)) pending=value; else sessionStorage.removeItem(pendingKey); }
     catch { sessionStorage.removeItem(pendingKey); }
   }
   await refreshStatus();
@@ -129,5 +148,5 @@ try {
   el('history-from').value = start.toISOString().slice(0,10);
   await loadHistory({from:el('history-from').value,to:current.work_date});
 } catch (error) { message('message',error.message); }
-setInterval(()=>{if(!document.hidden && !busy) refreshStatus().catch(error=>message('message',error.message));},60000);
-window.addEventListener('focus',()=>{if(!busy) refreshStatus().catch(error=>message('message',error.message));});
+setInterval(()=>{if(!document.hidden && !busy) refreshAll().catch(error=>message('message',error.message));},60000);
+window.addEventListener('focus',()=>{if(!busy) refreshAll().catch(error=>message('message',error.message));});
