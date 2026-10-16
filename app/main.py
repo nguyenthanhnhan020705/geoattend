@@ -16,6 +16,7 @@ from app.attendance.routes import router as attendance_router
 from app.gis.routes import router as office_router
 from app.admin.routes import router as admin_router
 from app.auth.dependencies import get_auth_context
+from app.telemetry import ApiTiming
 
 STATIC = Path(__file__).parent / 'static'
 
@@ -119,6 +120,7 @@ def create_app(settings=None, pool=None):
         return protected_page(request,'admin-office.html','ADMIN')
 
     app.mount('/static', StaticFiles(directory=STATIC), name='static')
+    app.add_middleware(ApiTiming)
     return app
 
 
