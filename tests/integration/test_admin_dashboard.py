@@ -57,10 +57,10 @@ def test_dashboard_catches_up_without_worker(employee,migrated_db,monkeypatch,lu
     assert count == (0 if hour==12 else 1)
 
 
-def test_dashboard_cancelled_leave_and_deleted_today(employee):
+def test_dashboard_resumed_morning_leave_and_deleted_today(employee):
     client, headers, uid = employee
-    assert action(client,headers,0,'FULL_DAY_LEAVE','Nghỉ').status_code == 200
-    assert action(client,headers,1,'CANCEL_LEAVE_START_REMOTE','Trở lại').status_code == 200
+    assert action(client,headers,0,'MORNING_LEAVE','Nghỉ').status_code == 200
+    assert action(client,headers,1,'START_REMOTE','Trở lại').status_code == 200
     assert action(client,headers,2,'CHECK_OUT','Personal appointment').status_code == 200
     csrf = signin(client).json()['csrf_token']
     data=client.get('/api/admin/dashboard').json()

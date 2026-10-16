@@ -1,11 +1,11 @@
 import {loadAccount, bindLogout, message, apiFetch} from './api.js';
 bindLogout();
 const el = id => document.getElementById(id);
-const labels = {NOT_STARTED:'Chưa bắt đầu', WORKING_REMOTE:'Đang làm Remote', WORKING_OFFICE:'Đang làm tại văn phòng', CHECKED_OUT:'Đã Check-out', LUNCH_BREAK:'Đang nghỉ trưa', MORNING_LEAVE:'Nghỉ buổi sáng', FULL_DAY_LEAVE:'Nghỉ cả ngày'};
+const labels = {NOT_STARTED:'Chưa bắt đầu', WORKING_REMOTE:'Đang làm Remote', WORKING_OFFICE:'Đang làm tại văn phòng', CHECKED_OUT:'Đã Check-out', LUNCH_BREAK:'Đang nghỉ trưa', MORNING_LEAVE:'Đang nghỉ buổi sáng', FULL_DAY_LEAVE:'Nghỉ cả ngày'};
 const eventLabels = {WORK_START:'Bắt đầu làm việc', WORK_END:'Kết thúc phiên', DAY_END:'Kết thúc ngày', LUNCH_START:'Nghỉ trưa', MORNING_LEAVE:'Nghỉ buổi sáng', FULL_DAY_LEAVE:'Nghỉ cả ngày', LEAVE_CANCELLED:'Hủy nghỉ'};
 const clock = value => new Intl.DateTimeFormat('vi-VN',{timeZone:'Asia/Ho_Chi_Minh',hour:'2-digit',minute:'2-digit',second:'2-digit'}).format(new Date(value));
 let current = null, pending = null, busy = false, historyPage = 1, historyQuery = null, accountId = null;
-let reasonPanel = null;
+let reasonPanel = null, leaveKind = null;
 let historyGeneration = 0;
 const pendingKey = 'geoattend.pendingAttendance';
 const officeActions = ['START_OFFICE','CANCEL_LEAVE_START_OFFICE','SWITCH_OFFICE'];
@@ -16,14 +16,16 @@ const available = actions => actions.find(action => current?.allowed_actions.inc
 function controls() {
   const allowed = current?.allowed_actions || [];
   const working = ['WORKING_OFFICE','WORKING_REMOTE'].includes(current?.status);
-  const resuming = current?.status==='LUNCH_BREAK';
+  const morning = current?.status==='MORNING_LEAVE';
+  const resuming = current?.status==='LUNCH_BREAK' || morning;
+  const afternoon = current?.lunch_taken || current?.morning_leave;
   const remote = working ? undefined : available(remoteActions), office = working ? undefined : available(officeActions);
   el('attendance-choices').hidden = working || !!current?.day_finished;
   el('attendance-choices').classList.toggle('is-resuming',resuming);
-  el('choose-remote').textContent = resuming?'TIẾP TỤC REMOTE':'CHECK-IN REMOTE';
+  el('choose-remote').textContent = morning?'TIẾP TỤC BUỔI CHIỀU REMOTE':resuming?'TIẾP TỤC REMOTE':'CHECK-IN REMOTE';
   el('choose-leave').hidden = resuming;
   const leave = allowed.some(action=>['MORNING_LEAVE','FULL_DAY_LEAVE'].includes(action));
-  const earlyCheckout = allowed.includes('CHECK_OUT') && !current?.lunch_taken;
+  const earlyCheckout = allowed.includes('CHECK_OUT') && !afternoon;
   if ((reasonPanel==='remote' && !remote) || (reasonPanel==='leave' && !leave) || (reasonPanel==='checkout' && !earlyCheckout)) reasonPanel=null;
   el('reason-panel').hidden = !reasonPanel;
   el('reason-heading').textContent = reasonPanel==='checkout'?'Check-out sớm':reasonPanel==='leave'?'Xin nghỉ':'Check-in Remote';
@@ -38,17 +40,21 @@ function controls() {
   el('close-reason').disabled = busy || !!pending;
   el('choose-remote').setAttribute('aria-expanded',String(reasonPanel==='remote'));
   el('choose-leave').setAttribute('aria-expanded',String(reasonPanel==='leave'));
-  el('remote-form').querySelector('button').textContent = remote==='CANCEL_LEAVE_START_REMOTE'?'Hủy nghỉ và bắt đầu Remote':remote==='SWITCH_REMOTE'?'Chuyển sang Remote':current?.status==='LUNCH_BREAK'?'Tiếp tục Remote':'Bắt đầu Remote';
+  el('remote-form').querySelector('button').textContent = remote==='CANCEL_LEAVE_START_REMOTE'?'Hủy nghỉ và bắt đầu Remote':remote==='SWITCH_REMOTE'?'Chuyển sang Remote':resuming?'Tiếp tục Remote':'Bắt đầu Remote';
   el('check-out').hidden = !allowed.includes('CHECK_OUT');
-  el('check-out').textContent = current?.lunch_taken?'CHECK-OUT':'CHECK-OUT SỚM';
-  el('start-office').textContent = office==='CANCEL_LEAVE_START_OFFICE'?'Hủy nghỉ và bắt đầu Office':resuming?'TIẾP TỤC OFFICE':'CHECK-IN OFFICE';
+  el('check-out').textContent = afternoon?'CHECK-OUT':'CHECK-OUT SỚM';
+  el('start-office').textContent = morning?'TIẾP TỤC BUỔI CHIỀU OFFICE':office==='CANCEL_LEAVE_START_OFFICE'?'Hủy nghỉ và bắt đầu Office':resuming?'TIẾP TỤC OFFICE':'CHECK-IN OFFICE';
   el('gps-note').hidden = !office;
-  el('start-lunch').hidden = !allowed.includes('START_LUNCH') || !!current?.lunch_taken;
+  el('start-lunch').hidden = !allowed.includes('START_LUNCH') || !!afternoon;
   el('start-lunch').textContent = 'NGHỈ TRƯA';
   el('leave-form').hidden = reasonPanel!=='leave';
   el('morning-leave').hidden = !allowed.includes('MORNING_LEAVE');
   el('full-day-leave').hidden = !allowed.includes('FULL_DAY_LEAVE');
-  for (const id of ['start-lunch','morning-leave','full-day-leave','leave-reason']) el(id).disabled = busy || !!pending;
+  el('leave-fields').hidden = !leaveKind;
+  el('morning-leave').setAttribute('aria-pressed',String(leaveKind==='MORNING_LEAVE'));
+  el('full-day-leave').setAttribute('aria-pressed',String(leaveKind==='FULL_DAY_LEAVE'));
+  el('confirm-leave').textContent = leaveKind==='MORNING_LEAVE'?'Xác nhận nghỉ buổi sáng':'Xác nhận nghỉ cả ngày';
+  for (const id of ['start-lunch','morning-leave','full-day-leave','leave-reason','confirm-leave']) el(id).disabled = busy || !!pending;
   el('start-office').disabled = busy || !!pending || !office;
   el('retry-action').hidden = !pending;
   el('remote-form').querySelector('button').disabled = busy || !!pending;
@@ -60,7 +66,7 @@ function controls() {
 async function refreshStatus() {
   const data = await apiFetch('/api/attendance/status'); current = data;
   el('work-date').textContent = data.work_date + ' · Giờ Việt Nam';
-  el('attendance-status').textContent = labels[data.status] || data.status;
+  el('attendance-status').textContent = data.morning_leave && data.status==='WORKING_OFFICE'?'Đang làm việc tại văn phòng':data.morning_leave && data.status==='WORKING_REMOTE'?'Đang làm việc Remote':labels[data.status] || data.status;
   el('session-info').textContent = data.open_session ? `Bắt đầu lúc ${clock(data.open_session.start_time)} · ${data.open_session.start_reason || ''}` : 'Hiện không có phiên đang mở.';
   el('day-notice').textContent = data.day_finished ? 'Ngày làm việc đã kết thúc. Có thể bắt đầu lại vào ngày mai.' : data.allowed_actions.length ? '' : 'Hiện chưa có thao tác khả dụng. Ngày làm việc kết thúc lúc 20:00.';
   controls();
@@ -80,6 +86,7 @@ async function sendPending() {
     await apiFetch('/api/attendance/actions',{method:'POST',body:JSON.stringify(pending.body)});
     pending = null; savePending();
     reasonPanel = null;
+    leaveKind = null;
     el('remote-reason').value = '';
     el('leave-reason').value = '';
     el('checkout-reason').value = '';
@@ -144,20 +151,28 @@ async function loadHistory(query, page=1) {
 function openReason(panel) {
   if (!current || busy || pending) return;
   reasonPanel=panel;controls();
-  el(panel==='checkout'?'checkout-reason':panel==='remote'?'remote-reason':'leave-reason').focus();
+  el(panel==='checkout'?'checkout-reason':panel==='remote'?'remote-reason':leaveKind?'leave-reason':'morning-leave').focus();
 }
 el('choose-remote').addEventListener('click',()=>openReason('remote'));
 el('choose-leave').addEventListener('click',()=>openReason('leave'));
 el('close-reason').addEventListener('click',()=>{const previous=reasonPanel;reasonPanel=null;controls();el(previous==='checkout'?'check-out':previous==='remote'?'choose-remote':'choose-leave').focus();});
 el('remote-form').addEventListener('submit', event => { event.preventDefault(); const action=available(remoteActions); if(action)submit(action,el('remote-reason').value.trim()); });
-el('leave-form').addEventListener('submit', event => { event.preventDefault(); const action=event.submitter?.value; if(current?.allowed_actions.includes(action))submit(action,el('leave-reason').value.trim()); });
+for(const id of ['morning-leave','full-day-leave']) el(id).addEventListener('click',()=>{
+  if(busy || pending)return;
+  leaveKind=el(id).value;controls();el('leave-reason').focus();
+});
+el('leave-form').addEventListener('submit', event => {
+  event.preventDefault();const reason=el('leave-reason').value.trim();
+  if(!reason){message('message','Vui lòng nhập lý do nghỉ.');el('leave-reason').focus();return;}
+  if(current?.allowed_actions.includes(leaveKind))submit(leaveKind,reason);
+});
 el('start-lunch').addEventListener('click',()=>submit('START_LUNCH'));
-el('check-out').addEventListener('click',()=>current?.lunch_taken?submit('CHECK_OUT'):openReason('checkout'));
+el('check-out').addEventListener('click',()=>current?.lunch_taken || current?.morning_leave?submit('CHECK_OUT'):openReason('checkout'));
 el('checkout-form').addEventListener('submit',event=>{
   event.preventDefault();
   const reason=el('checkout-reason').value.trim();
   if(!reason){message('message','Vui lòng nhập lý do Check-out sớm.');el('checkout-reason').focus();return;}
-  if(current?.allowed_actions.includes('CHECK_OUT') && !current.lunch_taken)submit('CHECK_OUT',reason);
+  if(current?.allowed_actions.includes('CHECK_OUT') && !current.lunch_taken && !current.morning_leave)submit('CHECK_OUT',reason);
 });
 el('start-office').addEventListener('click',async()=>{
   if(!current || busy || pending)return;

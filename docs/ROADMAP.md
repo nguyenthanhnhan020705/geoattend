@@ -1,5 +1,7 @@
 # GeoAttend — Lộ trình phát triển MVP
 
+Điều chỉnh Xin nghỉ tiếp theo: chọn buổi rồi lý do; sau nghỉ sáng tiếp tục ca chiều rồi CHECK-OUT cuối ngày; nghỉ cả ngày kết thúc ngày. Full suite mới **267 passed, 1 warning**, `pip check`/`git diff --check` đạt. Xem [báo cáo mới](LEAVE_FLOW_VERIFICATION.md). Các số test ở các mốc trước là bằng chứng lịch sử.
+
 Điều chỉnh sau Phase 5, 16/10/2026: CHECK-OUT SỚM bắt buộc lý do và kết thúc ngày; mọi Check-out khóa đến ngày hôm sau. Full suite mới **259 passed, 1 warning**, `pip check`/`git diff --check` đạt. Xem [báo cáo điều chỉnh](EARLY_CHECKOUT_VERIFICATION.md); kết quả 249 test bên dưới là mốc Phase 5 trước thay đổi này.
 
 ## 1. Mục đích và hiện trạng

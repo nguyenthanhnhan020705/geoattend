@@ -40,6 +40,12 @@ def test_leave_then_start_and_cancel_atomic(configured, migrated_db, leave, mode
     assert action(client,headers,0,leave,'Việc gia đình').status_code == 200
     kind = ('CANCEL_LEAVE_START_' if leave == 'FULL_DAY_LEAVE' else 'START_') + mode
     state = client.get('/api/attendance/status').json()
+    if leave == 'FULL_DAY_LEAVE':
+        assert state['allowed_actions']==[] and state['day_finished'] is True
+        response=action(client,headers,1,kind,'Quay lại' if mode=='REMOTE' else None,**(GPS if mode=='OFFICE' else {}))
+        assert response.status_code==409 and response.json()['code']=='DAY_FINISHED'
+        assert migrated_db.execute('SELECT count(*) AS n FROM geoattend.work_sessions').fetchone()['n']==0
+        return
     assert kind in state['allowed_actions']
     assert action(client,headers,1,kind,None).status_code == 422
     if mode == 'OFFICE':
@@ -67,25 +73,26 @@ def test_leave_invalid_from_working(configured, kind):
     assert client.get('/api/attendance/status').json()['status'] == 'WORKING_REMOTE'
 
 
-@pytest.mark.parametrize('failed_event', ['LEAVE_CANCELLED','WORK_START'])
-def test_cancel_insert_failure_retains_full_leave(configured, migrated_db, failed_event):
+@pytest.mark.parametrize('failed_table', ['attendance_events','office_locations'])
+def test_resume_insert_failure_retains_morning_leave(configured, migrated_db, failed_table):
     client, headers, _ = configured
-    assert action(client,headers,0,'FULL_DAY_LEAVE','Nghỉ').status_code == 200
-    migrated_db.execute("CREATE FUNCTION geoattend.fail_cancel() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN IF NEW.event_type='"+failed_event+"' THEN RAISE EXCEPTION 'test failure' USING ERRCODE='08006'; END IF; RETURN NEW; END $$")
-    migrated_db.execute('CREATE TRIGGER fail_cancel BEFORE INSERT ON geoattend.attendance_events FOR EACH ROW EXECUTE FUNCTION geoattend.fail_cancel()')
+    assert action(client,headers,0,'MORNING_LEAVE','Nghỉ').status_code == 200
+    migrated_db.execute("CREATE FUNCTION geoattend.fail_resume() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN RAISE EXCEPTION 'test failure' USING ERRCODE='08006'; END $$")
+    from psycopg import sql
+    migrated_db.execute(sql.SQL('CREATE TRIGGER fail_resume BEFORE INSERT ON geoattend.{} FOR EACH ROW EXECUTE FUNCTION geoattend.fail_resume()').format(sql.Identifier(failed_table)))
     migrated_db.commit()
-    assert action(client,headers,1,'CANCEL_LEAVE_START_OFFICE',None,**GPS).status_code == 503
-    assert client.get('/api/attendance/status').json()['status'] == 'FULL_DAY_LEAVE'
+    assert action(client,headers,1,'START_OFFICE',None,**GPS).status_code == 503
+    assert client.get('/api/attendance/status').json()['status'] == 'MORNING_LEAVE'
     assert migrated_db.execute('SELECT count(*) AS n FROM geoattend.work_sessions').fetchone()['n'] == 0
     assert migrated_db.execute('SELECT count(*) AS n FROM geoattend.attendance_events').fetchone()['n'] == 1
     assert migrated_db.execute('SELECT count(*) AS n FROM geoattend.attendance_requests').fetchone()['n'] == 1
 
 
 @pytest.mark.parametrize('change', ['cutoff','midnight','logout','reset','inactive'])
-def test_cancel_waiting_profile_rechecks_context(employee, test_dsn, migrated_db, monkeypatch, change):
+def test_resume_waiting_profile_rechecks_context(employee, test_dsn, migrated_db, monkeypatch, change):
     from app.attendance import service
     client, headers, uid = employee
-    assert action(client,headers,0,'FULL_DAY_LEAVE','Nghỉ').status_code == 200
+    assert action(client,headers,0,'MORNING_LEAVE','Nghỉ').status_code == 200
     reached = Event(); original = service.lock_user
     def marked(conn,user_id):
         reached.set(); return original(conn,user_id)
@@ -93,7 +100,7 @@ def test_cancel_waiting_profile_rechecks_context(employee, test_dsn, migrated_db
     with psycopg.connect(test_dsn,row_factory=dict_row) as blocker:
         blocker.execute('SELECT id FROM geoattend.profiles WHERE id=%s FOR UPDATE',(uid,))
         with ThreadPoolExecutor(max_workers=1) as executor:
-            future = executor.submit(action,client,headers,1,'CANCEL_LEAVE_START_REMOTE','Quay lại')
+            future = executor.submit(action,client,headers,1,'START_REMOTE','Quay lại')
             assert reached.wait(10)
             if change in ('cutoff','midnight'):
                 monkeypatch.setattr('app.clock.utc_now',lambda:datetime(2026,10,14,13 if change=='cutoff' else 17,tzinfo=timezone.utc))
@@ -107,7 +114,7 @@ def test_cancel_waiting_profile_rechecks_context(employee, test_dsn, migrated_db
             blocker.commit()
             response = future.result(15)
     assert response.status_code == (409 if change in ('cutoff','midnight') else 401)
-    assert migrated_db.execute('SELECT status FROM geoattend.attendance_days').fetchone()['status'] == 'FULL_DAY_LEAVE'
+    assert migrated_db.execute('SELECT status FROM geoattend.attendance_days').fetchone()['status'] == 'MORNING_LEAVE'
     assert migrated_db.execute('SELECT count(*) AS n FROM geoattend.work_sessions').fetchone()['n'] == 0
 
 

@@ -18,7 +18,7 @@ ALLOWED = {
     'WORKING_REMOTE': ['CHECK_OUT','START_LUNCH','SWITCH_OFFICE'],
     'LUNCH_BREAK': ['START_OFFICE','START_REMOTE'],
     'MORNING_LEAVE': ['START_OFFICE','START_REMOTE'],
-    'FULL_DAY_LEAVE': ['CANCEL_LEAVE_START_OFFICE','CANCEL_LEAVE_START_REMOTE'],
+    'FULL_DAY_LEAVE': [],
     'CHECKED_OUT': [],
 }
 ACTIONS = ['START_OFFICE','START_REMOTE','MORNING_LEAVE','FULL_DAY_LEAVE','CHECK_OUT','START_LUNCH','SWITCH_OFFICE','SWITCH_REMOTE','CANCEL_LEAVE_START_OFFICE','CANCEL_LEAVE_START_REMOTE']
@@ -63,7 +63,9 @@ def test_phase4_start_cutoff_boundaries(configured, migrated_db, monkeypatch, ho
         revision = 1
     monkeypatch.setattr('app.clock.utc_now',lambda:datetime(2026,10,14,hour,minute,tzinfo=timezone.utc))
     response = action(client,headers,revision,kind,'Quay lại')
-    assert response.status_code == (200 if allowed else 409)
+    assert response.status_code == (200 if allowed and kind!='CANCEL_LEAVE_START_REMOTE' else 409)
+    if allowed and kind=='CANCEL_LEAVE_START_REMOTE':
+        assert response.json()['code']=='DAY_FINISHED'
     if not allowed:
         assert response.json()['code'] == 'DAY_CLOSED'
         assert migrated_db.execute("SELECT count(*) AS n FROM geoattend.attendance_events WHERE event_type='LEAVE_CANCELLED'").fetchone()['n'] == 0
@@ -91,7 +93,7 @@ def test_runtime_role_phase4_actions_and_worker(configured, migrated_db, test_ds
     grant_runtime(migrated_db,role); migrated_db.commit()
     try:
         with psycopg.connect(make_conninfo(test_dsn,user=role),row_factory=dict_row) as conn:
-            steps = [dict(action='FULL_DAY_LEAVE',reason='Nghỉ'),dict(action='CANCEL_LEAVE_START_OFFICE',**GPS),dict(action='SWITCH_REMOTE',reason='Về nhà'),dict(action='START_LUNCH'),dict(action='START_OFFICE',**GPS)]
+            steps = [dict(action='MORNING_LEAVE',reason='Nghỉ'),dict(action='START_OFFICE',**GPS),dict(action='SWITCH_REMOTE',reason='Về nhà'),dict(action='START_LUNCH'),dict(action='START_OFFICE',**GPS)]
             for revision, data in enumerate(steps):
                 answer = act(conn,uid,ActionInput(request_id=uuid4(),expected_revision=revision,expected_work_date='2026-10-14',**data))
                 assert answer['revision'] == revision+1
@@ -99,7 +101,8 @@ def test_runtime_role_phase4_actions_and_worker(configured, migrated_db, test_ds
             assert maintain(conn) == 1 and maintain(conn) == 0
             day = history(conn,uid,None,None,1,20)['items'][0]
             assert day['status'] == 'CHECKED_OUT' and len(day['sessions']) == 3
-            assert sum(event['event_type']=='LEAVE_CANCELLED' for event in day['events']) == 1
+            assert sum(event['event_type']=='LEAVE_CANCELLED' for event in day['events']) == 0
+            assert sum(event['event_type']=='MORNING_LEAVE' for event in day['events']) == 1
     finally:
         migrated_db.execute(sql.SQL('DROP OWNED BY {}').format(sql.Identifier(role)))
         migrated_db.execute(sql.SQL('DROP ROLE {}').format(sql.Identifier(role)))

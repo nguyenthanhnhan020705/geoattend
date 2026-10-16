@@ -1,5 +1,7 @@
 # GeoAttend — Chạy và kiểm tra Phase 1–5
 
+Điều chỉnh Xin nghỉ: chọn buổi trước lý do; sau nghỉ sáng là ca chiều với CHECK-OUT cuối ngày, nghỉ cả ngày khóa đến ngày mai. Khởi động lại web và Ctrl+F5, không cần migration. Bằng chứng mới: [LEAVE_FLOW_VERIFICATION](LEAVE_FLOW_VERIFICATION.md).
+
 Giao diện User đã tối ưu cho điện thoại: thông tin nhân viên ở đầu; chọn **CHECK-IN REMOTE** hoặc **XIN NGHỈ** mới hiện form lý do; **Lịch sử cá nhân** thu gọn cuối trang và chỉ tải khi mở. Xem [USER_MOBILE_UI](USER_MOBILE_UI.md). Sau cập nhật chỉ cần Ctrl+F5, không cần migration cho thay đổi giao diện này.
 
 Điều chỉnh mới theo ca: đang làm trước nghỉ trưa chỉ có **NGHỈ TRƯA / CHECK-OUT SỚM**; nghỉ trưa hiện **TIẾP TỤC OFFICE / TIẾP TỤC REMOTE**; sau tiếp tục chỉ có **CHECK-OUT**. Theo yêu cầu 16/10/2026, mọi Check-out, kể cả Check-out sớm, kết thúc ngày và khóa đến ngày mai theo giờ Việt Nam. Khởi động lại web rồi Ctrl+F5 để dùng Backend mới; không có migration mới. Replay UUID và ngoại lệ Admin xóa ngày hôm nay/reset vẫn giữ nguyên.

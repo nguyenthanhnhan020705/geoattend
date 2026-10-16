@@ -81,9 +81,12 @@ Các số test là kết quả đã chạy tại từng mốc, không phải l�
 2. Đang làm trước nghỉ trưa: chỉ **NGHỈ TRƯA** và **CHECK-OUT SỚM**. Check-out sớm mở form lý do bắt buộc (1–1000 ký tự sau trim), chỉ kết thúc khi xác nhận hợp lệ; lưu lý do vào phiên/sự kiện và lịch sử.
 3. Đang nghỉ trưa: chỉ **TIẾP TỤC OFFICE** và **TIẾP TỤC REMOTE**; Remote vẫn cần lý do, Office xác minh GPS lại.
 4. Sau tiếp tục: chỉ **CHECK-OUT**. Sau Check-out cuối ngày khóa đến ngày hôm sau, kể cả reload hoặc gọi API mới.
-5. Backend xác định khóa bằng trạng thái `CHECKED_OUT`, không phụ thuộc `LUNCH_START`; trả `lunch_taken`, `day_finished`. Không suy ra ca bằng giờ trên đồng hồ.
+5. Backend xác định khóa bằng trạng thái `CHECKED_OUT` hoặc `FULL_DAY_LEAVE`; trả `lunch_taken`, `morning_leave`, `day_finished`. Không suy ra ca bằng giờ trên đồng hồ.
 6. Cập nhật theo yêu cầu 16/10/2026: **CHECK-OUT SỚM cũng kết thúc ngày, không CHECK-IN lại đến ngày hôm sau theo giờ Việt Nam**, kể cả reload hoặc gọi API mới. Replay UUID đã commit và ngoại lệ Admin xóa ngày hôm nay/reset vẫn giữ nguyên. API chuyển trực tiếp Office/Remote cũ còn được giữ tương thích; UI hiện tại không hiển thị các nút đó khi đang làm.
 7. Lịch sử cá nhân ở cuối, thu gọn, chỉ tải khi mở; phản hồi cũ không được ghi đè lịch sử mới.
+8. Điều chỉnh Xin nghỉ 16/10/2026: chọn BUỔI SÁNG/CẢ NGÀY trước rồi nhập lý do và xác nhận. Nghỉ sáng hiện “Đang nghỉ buổi sáng” và hai lựa chọn tiếp tục buổi chiều Office/Remote; sau tiếp tục chỉ CHECK-OUT cuối ngày, không Nghỉ trưa/Check-out sớm. Nghỉ cả ngày khóa ngày, không hủy nghỉ để làm tiếp. Giữ action/schema cũ cho UUID đã commit replay; ngoại lệ Admin reset vẫn giữ. Xem [LEAVE_FLOW_VERIFICATION](../docs/LEAVE_FLOW_VERIFICATION.md).
+
+Kiểm chứng mới nhất sau điều chỉnh Xin nghỉ: **267 passed, 1 warning**, 677.18s; review độc lập không có lỗi chặn, `pip check`/`git diff --check` đạt. Các số 218/249/259 bên dưới là kết quả lịch sử tại từng mốc.
 
 Chi tiết: [USER_MOBILE_UI](../docs/USER_MOBILE_UI.md), [STATE_TRANSITIONS mục 6](../docs/STATE_TRANSITIONS.md).
 

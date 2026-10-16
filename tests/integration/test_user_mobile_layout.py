@@ -37,6 +37,8 @@ def test_account_first_reason_panels_and_lazy_history(office_site,migrated_db,wi
         expect(page.get_by_label('Lý do làm Remote')).to_be_focused()
         page.get_by_label('Lý do làm Remote').fill('Bản nháp Remote')
         page.get_by_role('button',name='XIN NGHỈ',exact=True).click()
+        expect(page.get_by_label('Lý do nghỉ')).to_be_hidden()
+        page.locator('#morning-leave').click()
         expect(page.get_by_label('Lý do nghỉ')).to_be_focused()
         expect(page.get_by_label('Lý do làm Remote')).to_be_hidden()
         page.get_by_role('button',name='Đóng nhập lý do',exact=True).click()

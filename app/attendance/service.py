@@ -13,14 +13,12 @@ LEAVE_ACTIONS = ('MORNING_LEAVE','FULL_DAY_LEAVE')
 
 
 def actions_for(state, lunch_taken=False):
-    if state == 'CHECKED_OUT':
+    if state in ('CHECKED_OUT','FULL_DAY_LEAVE'):
         return []
     if state == 'NOT_STARTED':
         return ['START_OFFICE','START_REMOTE','MORNING_LEAVE','FULL_DAY_LEAVE']
     if state in ('LUNCH_BREAK','MORNING_LEAVE'):
         return ['START_OFFICE','START_REMOTE']
-    if state == 'FULL_DAY_LEAVE':
-        return ['CANCEL_LEAVE_START_OFFICE','CANCEL_LEAVE_START_REMOTE']
     if state in WORKING:
         return ['CHECK_OUT','START_LUNCH','SWITCH_REMOTE' if state == 'WORKING_OFFICE' else 'SWITCH_OFFICE']
     return []
@@ -74,6 +72,10 @@ def has_lunch(conn, day):
     return bool(day and conn.execute("SELECT EXISTS(SELECT 1 FROM geoattend.attendance_events WHERE day_id=%s AND event_type='LUNCH_START') AS taken", (day['id'],)).fetchone()['taken'])
 
 
+def has_morning_leave(conn, day):
+    return bool(day and conn.execute("SELECT EXISTS(SELECT 1 FROM geoattend.attendance_events WHERE day_id=%s AND event_type='MORNING_LEAVE') AS taken", (day['id'],)).fetchone()['taken'])
+
+
 def snapshot(conn, user_id, now):
     work_date = now.astimezone(VIETNAM).date()
     day = current_day(conn,user_id,work_date)
@@ -85,7 +87,7 @@ def snapshot(conn, user_id, now):
     allowed = []
     if now < cutoff(work_date):
         allowed = actions_for(state,lunch_taken)
-    return dict(work_date=work_date,status=state,revision=day['revision'] if day else 0,open_session=opened,server_time=now,allowed_actions=allowed,lunch_taken=lunch_taken,day_finished=state=='CHECKED_OUT')
+    return dict(work_date=work_date,status=state,revision=day['revision'] if day else 0,open_session=opened,server_time=now,allowed_actions=allowed,lunch_taken=lunch_taken,morning_leave=has_morning_leave(conn,day),day_finished=state in ('CHECKED_OUT','FULL_DAY_LEAVE'))
 
 
 def status(conn, user_id, session_id=None):
@@ -139,11 +141,11 @@ def act(conn, user_id, body, session_id=None):
                 failure = ApiError(409,'DAY_CLOSED','Ngày làm việc đã kết thúc lúc 20:00 giờ Việt Nam.')
             elif revision != body.expected_revision:
                 failure = ApiError(409,'STALE_REVISION','Trạng thái đã thay đổi. Vui lòng tải lại.')
-            elif state == 'CHECKED_OUT':
-                failure = ApiError(409,'DAY_FINISHED','Bạn đã CHECK-OUT. Vui lòng bắt đầu lại vào ngày mai.')
+            elif state in ('CHECKED_OUT','FULL_DAY_LEAVE'):
+                failure = ApiError(409,'DAY_FINISHED','Ngày làm việc đã kết thúc. Vui lòng bắt đầu lại vào ngày mai.')
             elif body.action not in actions_for(state):
                 failure = ApiError(409,'INVALID_TRANSITION','Không thể thực hiện thao tác ở trạng thái hiện tại.')
-            elif body.action == 'CHECK_OUT' and not has_lunch(conn,day) and not body.reason:
+            elif body.action == 'CHECK_OUT' and not has_lunch(conn,day) and not has_morning_leave(conn,day) and not body.reason:
                 failure = ApiError(422,'REASON_REQUIRED','Vui lòng nhập lý do Check-out sớm.')
             else:
                 office=None

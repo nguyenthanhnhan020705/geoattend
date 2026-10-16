@@ -2,6 +2,8 @@
 
 Theo yêu cầu 15/10/2026, trang User được bố trí một cột: thông tin nhân viên/tài khoản đầu tiên, trạng thái và chọn phiên ở giữa, lịch sử cá nhân cuối trang.
 
+Cập nhật Xin nghỉ 16/10/2026: chọn BUỔI SÁNG/CẢ NGÀY rồi nhập lý do và xác nhận. Nghỉ sáng hiện “Đang nghỉ buổi sáng”, hai nút TIẾP TỤC BUỔI CHIỀU OFFICE/REMOTE; sau tiếp tục hiện “Đang làm việc” và chỉ CHECK-OUT cuối ngày. Nghỉ cả ngày khóa ngày, không hủy nghỉ để làm tiếp. `morning_leave` được lấy từ sự kiện ngày hiện tại, giữ đúng sau reload; CHECK-OUT sau nghỉ sáng không yêu cầu lý do sớm. Xem [LEAVE_FLOW_VERIFICATION](LEAVE_FLOW_VERIFICATION.md).
+
 - Khi chưa vào ca: ba lựa chọn **CHECK-IN OFFICE**, **CHECK-IN REMOTE**, **XIN NGHỈ**. Khi đang làm trước nghỉ trưa, chỉ hiện **NGHỈ TRƯA / CHECK-OUT SỚM**. Đang nghỉ trưa chỉ có hai lựa chọn **TIẾP TỤC OFFICE / TIẾP TỤC REMOTE**. Khi đã tiếp tục làm việc, chỉ hiện **CHECK-OUT** cuối ngày. Các form/nhóm thao tác khác được ẩn theo giai đoạn; không còn nút chuyển trực tiếp chế độ khi đang làm việc trên giao diện User.
 - Remote và Xin nghỉ mở khung nhập lý do nhỏ ngay dưới các lựa chọn; chỉ một khung xuất hiện tại một thời điểm. Mở/đóng khung không ghi chấm công. Khung được đóng sau khi xác nhận thao tác thành công; chuyển khung/đóng vẫn giữ bản nháp chưa gửi. Có nút đóng, quản lý focus và aria-expanded.
 - CHECK-OUT SỚM mở cùng khung lý do: bắt buộc 1–1000 ký tự sau trim, có thông báo kết thúc ngày và nút xác nhận. Backend kiểm tra trong transaction sau replay/kiểm tra trạng thái; thiếu lý do không đóng phiên hoặc tăng revision. Lưu lý do vào phiên và sự kiện kết thúc; lịch sử User/Admin đọc lại được. CHECK-OUT sau nghỉ trưa vẫn không yêu cầu lý do. Xem [kiểm chứng điều chỉnh](EARLY_CHECKOUT_VERIFICATION.md).

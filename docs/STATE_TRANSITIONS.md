@@ -21,16 +21,15 @@ Mục 1–2 tổng hợp quy tắc đã chốt. Mục 3–4 đã được duyệ
 | `NOT_STARTED` | Check-in Office | `WORKING_OFFICE` | Xác minh vị trí, tạo phiên Office và sự kiện bắt đầu. |
 | `NOT_STARTED` | Check-in Remote | `WORKING_REMOTE` | Kiểm tra lý do, tạo phiên Remote và sự kiện bắt đầu. |
 | `NOT_STARTED` | Nghỉ buổi sáng | `MORNING_LEAVE` | Lưu sự kiện nghỉ và lý do; không tạo phiên làm việc. |
-| `NOT_STARTED` | Nghỉ cả ngày | `FULL_DAY_LEAVE` | Lưu sự kiện nghỉ và lý do; không tạo phiên làm việc. |
+| `NOT_STARTED` | Nghỉ cả ngày | `FULL_DAY_LEAVE` | Lưu sự kiện nghỉ và lý do; kết thúc ngày, không tạo phiên làm việc. |
 | `WORKING_OFFICE` hoặc `WORKING_REMOTE` | Nghỉ trưa | `LUNCH_BREAK` | Đóng phiên hiện tại tại thời điểm nghỉ và lưu sự kiện nghỉ trưa. |
 | `LUNCH_BREAK` | Tiếp tục Office | `WORKING_OFFICE` | Xác minh lại vị trí, tạo phiên mới. |
 | `LUNCH_BREAK` | Tiếp tục Remote | `WORKING_REMOTE` | Nhập lý do và tạo phiên mới. |
-| `MORNING_LEAVE` | Bắt đầu Office | `WORKING_OFFICE` | Xác minh vị trí, tạo phiên; không phải chờ mốc bắt đầu buổi chiều. |
-| `MORNING_LEAVE` | Bắt đầu Remote | `WORKING_REMOTE` | Nhập lý do, tạo phiên; không phải chờ mốc bắt đầu buổi chiều. |
-| `WORKING_OFFICE` hoặc `WORKING_REMOTE` | Check-out | `CHECKED_OUT` | Trước nghỉ trưa bắt buộc lý do; đóng phiên và kết thúc ngày, lưu lý do ở phiên/sự kiện. Sau nghỉ trưa không bắt buộc lý do. |
+| `MORNING_LEAVE` | Tiếp tục buổi chiều Office | `WORKING_OFFICE` | Xác minh vị trí, tạo phiên buổi chiều; UI chỉ có CHECK-OUT cuối ngày. |
+| `MORNING_LEAVE` | Tiếp tục buổi chiều Remote | `WORKING_REMOTE` | Nhập lý do, tạo phiên buổi chiều; UI chỉ có CHECK-OUT cuối ngày. |
+| `WORKING_OFFICE` hoặc `WORKING_REMOTE` | Check-out | `CHECKED_OUT` | Ca đầu bắt buộc lý do; đóng phiên và kết thúc ngày. Sau nghỉ trưa hoặc nghỉ sáng không bắt buộc lý do. |
 | `CHECKED_OUT` | Mọi thao tác mới trong cùng ngày | Không đổi | Ngày đã kết thúc, không cho Check-in lại, kể cả Check-out sớm. |
-| `FULL_DAY_LEAVE` | Hủy nghỉ và bắt đầu Office | `WORKING_OFFICE` | Giữ sự kiện đăng ký nghỉ, ghi hủy nghỉ và tạo phiên Office sau xác minh. |
-| `FULL_DAY_LEAVE` | Hủy nghỉ và bắt đầu Remote | `WORKING_REMOTE` | Giữ sự kiện đăng ký nghỉ, ghi hủy nghỉ và tạo phiên Remote có lý do. |
+| `FULL_DAY_LEAVE` | Mọi action mới trong cùng ngày | Không đổi | Ngày đã kết thúc; chặn hủy nghỉ/bắt đầu lại. UUID đã commit vẫn replay. |
 | `WORKING_OFFICE` | Chuyển sang Remote | `WORKING_REMOTE` | Kiểm tra lý do rồi đóng phiên Office và tạo phiên Remote trong cùng giao dịch. |
 | `WORKING_REMOTE` | Chuyển sang Office | `WORKING_OFFICE` | Xác minh GPS rồi đóng phiên Remote và tạo phiên Office trong cùng giao dịch. |
 | `WORKING_OFFICE` hoặc `WORKING_REMOTE` | Hệ thống tự đóng lúc 20:00 | `CHECKED_OUT` | Đóng phiên và ghi nguồn hệ thống; không coi mốc này là giờ kết thúc thực tế. |
@@ -66,6 +65,8 @@ Quy tắc mục 3–4, xác thực, mô hình dữ liệu, API và giao diện �
 Theo yêu cầu mới của người dùng, Admin được xóa vĩnh viễn lịch sử từng ngày đã dừng làm việc; chặn trạng thái đang làm việc/nghỉ trưa và mọi phiên mở. Phiên/sự kiện/lý do/GPS bị xóa trong cùng transaction; giữ revision/request UUID/hash kỹ thuật để chặn màn hình cũ/retry phục hồi lịch sử. Nếu xóa hôm nay, trạng thái trở về `NOT_STARTED` với revision tăng; thao tác User tiếp theo vẫn phải tuân thủ cutoff. Không thay đổi bảng chuyển trạng thái User thông thường. Xem [ADMIN_HISTORY](ADMIN_HISTORY.md).
 
 ## 6. Điều chỉnh luồng User theo ca, 15/10/2026
+
+Cập nhật Xin nghỉ 16/10/2026: chọn buổi rồi lý do; nghỉ sáng hiện hai lựa chọn tiếp tục buổi chiều và sau tiếp tục chỉ CHECK-OUT cuối ngày. Nghỉ cả ngày khóa ngày, không hủy nghỉ để làm tiếp. Chi tiết/bằng chứng: [LEAVE_FLOW_VERIFICATION](LEAVE_FLOW_VERIFICATION.md). Cờ `morning_leave` từ sự kiện ngày hiện tại phân biệt ca sau nghỉ sáng; `lunch_taken` giữ nghĩa nghỉ trưa. `FULL_DAY_LEAVE` cũng trả `day_finished=true`.
 
 Người dùng yêu cầu chỉ hiển thị nghỉ trưa/Check-out sớm ở ca đầu, hai lựa chọn tiếp tục Office/Remote khi nghỉ trưa, và chỉ Check-out sau khi tiếp tục. Cập nhật 16/10/2026: **mọi Check-out, kể cả CHECK-OUT SỚM, đều kết thúc ngày và khóa đến ngày hôm sau theo giờ Việt Nam**. Quy tắc này thay thế quyền bắt đầu lại sau Check-out trong thiết kế cũ.
 
