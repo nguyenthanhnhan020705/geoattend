@@ -113,7 +113,18 @@ document.addEventListener('visibilitychange',()=>{
   clearTimeout(timer);
   if(document.visibilityState==='visible')load();
 });
-window.addEventListener('pagehide',()=>{stopped=true;clearTimeout(timer);generation++;activeRequest?.abort();});
+let suspended=false;
+window.addEventListener('pagehide',()=>{
+  // Preserve a terminal auth failure; restoring a cached page must not undo it.
+  suspended=!stopped;
+  stopped=true;clearTimeout(timer);generation++;activeRequest?.abort();
+});
+window.addEventListener('pageshow',event=>{
+  if(event.persisted && suspended){
+    suspended=false;stopped=false;
+    if(document.visibilityState==='visible')load();
+  }
+});
 el('retry-map').addEventListener('click',()=>{if(lastData){startBackground(lastData);renderMap(lastData);}});
 bindLogout('dashboard-message');
 load();

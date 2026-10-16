@@ -130,3 +130,51 @@ def test_dashboard_refresh_removes_marker_for_expired_gps_and_checkout(office_si
         expect(page.locator('[data-status="CHECKED_OUT"] .status-count')).to_have_text('1')
         expect(page.locator('.onsite-marker')).to_have_count(0)
         browser.close()
+
+
+def test_dashboard_bfcache_restore_restarts_one_timer(office_site):
+    """Lifecycle probe; does not claim that Edge really selected bfcache."""
+    with sync_playwright() as p:
+        browser,page=launch(p)
+        login(page,office_site,'admin','Admin1234')
+        data=dashboard_response(page,office_site);calls=[]
+        page.route('**/api/admin/dashboard',lambda route:(calls.append(1),route.fulfill(json=data)))
+        page.clock.install()
+        page.goto(office_site+'/admin/dashboard')
+        expect(page.locator('#total-users')).to_have_text('1')
+        page.evaluate("window.dispatchEvent(new PageTransitionEvent('pagehide',{persisted:true}))")
+        page.clock.fast_forward(60000)
+        assert len(calls)==1
+        data['as_of']='2026-10-14T03:00:00Z'
+        page.evaluate("window.dispatchEvent(new PageTransitionEvent('pageshow',{persisted:true}))")
+        expect(page.locator('#snapshot-time')).to_contain_text('10:00')
+        expect(page.locator('#reload-dashboard')).to_have_attribute('aria-busy','false')
+        assert len(calls)==2
+        data['as_of']='2026-10-14T04:00:00Z'
+        page.clock.fast_forward(30000)
+        expect(page.locator('#snapshot-time')).to_contain_text('11:00')
+        expect(page.locator('#reload-dashboard')).to_have_attribute('aria-busy','false')
+        assert len(calls)==3
+        browser.close()
+
+
+def test_dashboard_bfcache_does_not_restart_forbidden_polling(office_site):
+    with sync_playwright() as p:
+        browser,page=launch(p)
+        login(page,office_site,'admin','Admin1234')
+        data=dashboard_response(page,office_site);calls=[]
+        def respond(route):
+            calls.append(1)
+            if len(calls)==1:route.fulfill(json=data)
+            else:route.fulfill(status=403,json={'code':'FORBIDDEN','message':'Không có quyền'})
+        page.route('**/api/admin/dashboard',respond)
+        page.clock.install()
+        page.goto(office_site+'/admin/dashboard')
+        expect(page.locator('#total-users')).to_have_text('1')
+        page.locator('#reload-dashboard').click()
+        expect(page.locator('#reload-dashboard')).to_be_disabled()
+        page.evaluate("window.dispatchEvent(new PageTransitionEvent('pagehide',{persisted:true}));window.dispatchEvent(new PageTransitionEvent('pageshow',{persisted:true}))")
+        page.clock.fast_forward(90000)
+        assert len(calls)==2
+        expect(page.locator('#reload-dashboard')).to_be_disabled()
+        browser.close()

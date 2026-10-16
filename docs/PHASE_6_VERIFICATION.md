@@ -9,7 +9,7 @@ Phase 6 **đang thực hiện**, chưa nghiệm thu môi trường thật/pilot.
 | Task | Trạng thái | Bằng chứng |
 | --- | --- | --- |
 | 1 — Baseline/ma trận | Hoàn tất local | 19 AC + 5 NFR; baseline 267 passed, 1 warning, 693.88s |
-| 2 — Hồi quy/Minor | Đang hoàn thiện | Lifecycle RED 1 fail/1 pass → refresh GREEN 7 pass; probe timeline 1 pass |
+| 2 — Hồi quy/Minor | Hoàn tất local | Lifecycle RED 1 fail/1 pass → refresh GREEN 7 pass; probe timeline 1 pass; chờ cache thực đa browser |
 | 3 — Hiệu năng | Đang đo | Unit timing/statistics RED → GREEN 4 pass; burst c20 chưa đạt, phải báo cả kết quả này |
 | 4 — Vận hành/restore/log | Đang thực hiện | Guard DB test RED 5 fail → GREEN 5 pass; diễn tập đang chạy |
 | 5 — Bàn giao/checklist | Chưa hoàn tất | Thiết bị thật/HTTPS đích/tải đích/pilot đều chưa chạy |
@@ -35,9 +35,10 @@ Kết quả thực tế **267 passed, 1 warning, 693.88s**; log `.local-tests/ph
 ## Nhật ký lỗi kiểm thử mới
 
 - Probe bfcache: RED snapshot không đổi 09:00 → 10:00 sau pageshow; pagehide đặt stopped nhưng thiếu pageshow. Sửa lifecycle có kiểm tra persisted, không bỏ trạng thái dừng vì 403; cả nhóm refresh **7 passed, 1 warning, 115.36s**. Đây là lifecycle tổng hợp trên Edge, chưa chứng nhận cache thực đa browser.
-- Timeline: ép UUID cố định và timestamp trùng cho WORK_END/LUNCH_START; API không mất sự kiện, phiên đã đóng và resume/Checkout đúng. Cần ghi thứ tự cụ thể từ JUnit probe; không thay schema chỉ để xử lý trình bày.
+- Timeline: ép UUID cố định và timestamp trùng; JUnit `.local-tests/phase-6/timeline.xml` ghi `LUNCH_START,WORK_END,WORK_START`. API không mất sự kiện, phiên đã đóng và resume/Checkout đúng; probe **1 passed, 12.45s**. Đây là Minor trình bày: không có thứ tự nhân quả đáng tin giữa UUID khi cả hai timestamp bằng nhau, có thể gặp nhiều sự kiện ghép (không chỉ lunch). Không thay schema/đoán ưu tiên event_type vì có thể đảo các thao tác thực khác. Giữ event IDs/thời gian/replay, owner biết giới hạn khi xem timeline; không chứng nhận thứ tự đẹp cho trường hợp này.
 - Load smoke đầu: 3 lỗi 401 do clock login đã cố định nhưng dependency giữ imported utc_now thực; session hết hạn theo giờ thật buổi tối. Đồng bộ cả hai clock trong harness, không sửa xác thực sản phẩm. Lượt smoke-02 c1/c10 đạt; c20 **173 request, 0 lỗi, 94.21965% ≤2s**, assertion đúng ngưỡng nên báo FAIL. Chưa kết luận nguyên nhân cho tới đo endpoint và lượt chạy riêng.
 - Restore lượt đầu: TypeError do TestClient.delete không nhận json; dùng request('DELETE',...) như helper hiện có. Đây là lỗi harness, chưa tác động database đích thật.
+- Tải dài trước tối ưu (rounds=10): mỗi mức **1217 request**; c1 100%, p95 128.283ms; c10 99.096%, p95 1058.781ms; c20 93.509%, p95 2171.957ms, 0 lỗi HTTP. Log load-measure-01 giữ nguyên. Dashboard giữ khóa toàn bộ profile trong nhiều truy vấn/User. Test query bound RED `(6,24)` khi 1→10 User chưa có ngày; gom truy vấn ngày/phiên/xác minh và chỉ gọi reconcile cho User có ngày quá cutoff, giữ nguyên khóa/recheck/clock và bộ đọc retention. Cần GREEN hồi quy và đo lại riêng sau sửa.
 
 ## Các cổng còn mở
 
