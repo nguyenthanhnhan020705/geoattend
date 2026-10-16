@@ -2,6 +2,8 @@
 
 > **Business Requirements Document** cho hệ thống chấm công và quản lý trạng thái làm việc dựa trên GIS.
 
+Phase 6 đang kiểm chứng local và chuẩn bị vận hành; chưa nghiệm thu HTTPS/thiết bị thật/hiệu năng đích/pilot. Bàn giao hiện hành: [Phase 6](handoff/README_PHASE_6.md), [ma trận AC/NFR](docs/PHASE_6_ACCEPTANCE.md), [báo cáo](docs/PHASE_6_VERIFICATION.md), [hiệu năng](docs/PHASE_6_PERFORMANCE.md), [runbook](docs/PHASE_6_OPERATIONS.md), [thiết bị/pilot](docs/PHASE_6_PILOT.md). Các số test Phase 0–5 bên dưới là lịch sử.
+
 Bàn giao agent tiếp theo: [README Phase 0–5 — kết quả và prompt tiếp quản](handoff/README_PHASE_0_5.md). [Bàn giao Phase 0–4 cũ](handoff/README.md) giữ chi tiết lịch sử.
 
 Phase 5 đã triển khai Dashboard/Onsite cho Admin trong worktree `.worktrees/phase-1`: đăng nhập, chọn **Dashboard** hoặc mở `/admin/dashboard`. Lần kiểm chứng mới ngày 16/10/2026 đạt **249 test**; xem [báo cáo Phase 5](docs/PHASE_5_VERIFICATION.md) và [checklist](docs/MANUAL_TEST_PHASE_5.md). Không có migration mới; production/pilot và đo hiệu năng thuộc Phase 6.

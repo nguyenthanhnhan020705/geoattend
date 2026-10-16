@@ -12,7 +12,7 @@ Phase 6 **đang thực hiện**, chưa nghiệm thu môi trường thật/pilot.
 | 2 — Hồi quy/Minor | Hoàn tất local | Lifecycle RED 1 fail/1 pass → refresh GREEN 7 pass; probe timeline 1 pass; chờ cache thực đa browser |
 | 3 — Hiệu năng | Hoàn tất local | Query bound RED 6→24 → GREEN; đo lại 3651 request, 0 lỗi; c1/c10 100%, c20 99.91783%≤2s; tải đích pending |
 | 4 — Vận hành/restore/log | Hoàn tất chuẩn bị/local | Guard RED → GREEN; 12 test timing/log/restore đạt; mẫu triển khai chưa chạy trên host đích |
-| 5 — Bàn giao/checklist | Chưa hoàn tất | Thiết bị thật/HTTPS đích/tải đích/pilot đều chưa chạy |
+| 5 — Bàn giao/checklist | Chuẩn bị xong; đang full suite/review | Checklist thiết bị/pilot, phiếu duyệt đích, roadmap/handoff; cổng T/P chưa chạy |
 
 ## Baseline mới
 
@@ -40,8 +40,6 @@ Kết quả thực tế **267 passed, 1 warning, 693.88s**; log `.local-tests/ph
 - Restore lượt đầu: TypeError do TestClient.delete không nhận json; dùng request('DELETE',...) như helper hiện có. Đây là lỗi harness, chưa tác động database đích thật.
 - Tải dài trước tối ưu (rounds=10): mỗi mức **1217 request**; c1 100%, p95 128.283ms; c10 99.096%, p95 1058.781ms; c20 93.509%, p95 2171.957ms, 0 lỗi HTTP. Log load-measure-01 giữ nguyên. Dashboard giữ khóa toàn bộ profile trong nhiều truy vấn/User. Test query bound RED `(6,24)` khi 1→10 User chưa có ngày; gom truy vấn ngày/phiên/xác minh và chỉ gọi reconcile cho User có ngày quá cutoff, giữ nguyên khóa/recheck/clock và bộ đọc retention. Cần GREEN hồi quy và đo lại riêng sau sửa.
 - GREEN sau tối ưu: nhóm query/Dashboard/Onsite/unit/restore **35 passed, 1 warning, 103.17s**. Tải riêng `load-measure-02` **3 passed, 164.10s**: mỗi mức 1217 request; c1 100%/p95 108.394ms, c10 100%/579.407ms, c20 99.91783%/806.608ms; 0 lỗi, max c20 2009.836ms. Đạt ngưỡng local, vẫn 1 request >2s; không chứng nhận production. Chi tiết [PERFORMANCE](PHASE_6_PERFORMANCE.md).
-
-## Các cổng còn mở
 
 ## Vận hành, dữ liệu và kiểm tra log
 

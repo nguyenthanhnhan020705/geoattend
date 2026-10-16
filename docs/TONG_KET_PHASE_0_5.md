@@ -1,5 +1,7 @@
 # GeoAttend — Tổng kết hoàn thành Phase 0–5
 
+Tiếp quản Phase 6 ngày 16/10/2026: [bàn giao hiện hành](../handoff/README_PHASE_6.md), [báo cáo mới](PHASE_6_VERIFICATION.md). Nội dung và số test trong tổng kết này giữ làm bằng chứng lịch sử; Phase 6 chưa nghiệm thu môi trường thật/pilot.
+
 - **Ngày tổng hợp:** 16/10/2026.
 - **Workspace:** `.worktrees/phase-1`.
 - **Branch:** `feat/phase-1-foundation-auth`.

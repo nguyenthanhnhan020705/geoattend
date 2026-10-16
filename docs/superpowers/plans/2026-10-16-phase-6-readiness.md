@@ -81,4 +81,4 @@
 
 ## Trạng thái thực hiện
 
-Đang Task 1. Kết quả/commit và các quyết định phát sinh ghi trong `docs/PHASE_6_VERIFICATION.md`; scratch ledger ở `.superpowers/sdd/2026-10-16-phase-6-readiness/progress.md`.
+Task 1–4 hoàn tất local/chuẩn bị; Task 5 checklist/handoff đã soạn, đang full suite/review cuối. Kết quả/commit và các quyết định phát sinh ghi trong `docs/PHASE_6_VERIFICATION.md`; scratch ledger ở `.superpowers/sdd/2026-10-16-phase-6-readiness/progress.md`. Toàn Phase 6 còn mở các cổng HTTPS/thiết bị thật/tải đích/pilot.

@@ -156,6 +156,8 @@ Thứ tự thực hiện: **0 → 1 → 2 → 3 → 4 → 5 → 6**.
 
 ### Phase 6 — Kiểm thử tổng thể, triển khai và pilot
 
+**Đang thực hiện phần local/chuẩn bị.** [Kế hoạch task](superpowers/plans/2026-10-16-phase-6-readiness.md), [ma trận AC/NFR](PHASE_6_ACCEPTANCE.md), [bằng chứng mới](PHASE_6_VERIFICATION.md), [runbook](PHASE_6_OPERATIONS.md), [checklist/pilot](PHASE_6_PILOT.md). Chưa hoàn tất toàn phase khi thiếu HTTPS/thiết bị thật, tải đích và pilot 5 ngày.
+
 **Yêu cầu BRD:** toàn bộ AC-01 đến AC-19, NFR-01 đến NFR-05 và các ngưỡng thống nhất ở Phase 0.
 
 - [ ] Chạy kiểm thử hồi quy API, database, phân quyền, trạng thái và GIS.
@@ -180,4 +182,4 @@ Thứ tự thực hiện: **0 → 1 → 2 → 3 → 4 → 5 → 6**.
 - Chưa gán lịch theo tuần vì chưa biết số người phát triển và thời gian dành cho dự án. Ước lượng sau khi chia task và xác nhận nguồn lực.
 - PWA, notification, xuất báo cáo, Audit Log, Correction Request, QR, nhiều văn phòng/phòng ban, mobile và AI/RAG thuộc giai đoạn sau MVP.
 
-**Bước tiếp theo:** Phase 5 — Dashboard, Onsite và lịch sử nhân viên cho Admin, dùng trạng thái và lịch sử bất biến của Phase 4. Xem [hướng dẫn chạy](DEVELOPMENT.md). Ứng dụng local đang dùng Supabase; bộ kiểm thử tự động dùng database riêng. Chưa triển khai production hoặc chạy pilot.
+**Bước tiếp theo:** tiếp tục các cổng môi trường thật của Phase 6 theo [bàn giao hiện hành](../handoff/README_PHASE_6.md). Phase 0–5 không làm lại. Bộ kiểm thử dùng PostgreSQL/PostGIS riêng; không tạo/xóa dữ liệu thử trên Supabase thật. Chưa triển khai production hoặc chạy pilot.

@@ -1,5 +1,7 @@
 # GeoAttend — Chạy và kiểm tra Phase 1–5
 
+Cập nhật Phase 6: [báo cáo local](PHASE_6_VERIFICATION.md), [đo tải](PHASE_6_PERFORMANCE.md), [runbook HTTPS/secret/worker/backup/restore](PHASE_6_OPERATIONS.md), [checklist thiết bị/pilot](PHASE_6_PILOT.md). Các mẫu `deploy/` chỉ là chuẩn bị, chưa cài lên môi trường thật. Vận hành dùng `deploy/logging.json` và tắt access/body/query logs như runbook.
+
 Điều chỉnh Xin nghỉ: chọn buổi trước lý do; sau nghỉ sáng là ca chiều với CHECK-OUT cuối ngày, nghỉ cả ngày khóa đến ngày mai. Khởi động lại web và Ctrl+F5, không cần migration. Bằng chứng mới: [LEAVE_FLOW_VERIFICATION](LEAVE_FLOW_VERIFICATION.md).
 
 Giao diện User đã tối ưu cho điện thoại: thông tin nhân viên ở đầu; chọn **CHECK-IN REMOTE** hoặc **XIN NGHỈ** mới hiện form lý do; **Lịch sử cá nhân** thu gọn cuối trang và chỉ tải khi mở. Xem [USER_MOBILE_UI](USER_MOBILE_UI.md). Sau cập nhật chỉ cần Ctrl+F5, không cần migration cho thay đổi giao diện này.
@@ -34,7 +36,7 @@ Không cần nạp biến môi trường thủ công mỗi lần mở Terminal. 
 
 Mở `http://127.0.0.1:8000/login`. Khi tắt máy, hai tiến trình dừng; lần sau chạy lại hai lệnh serve/maintenance. Không chạy lại SQL CREATE ROLE hoặc bootstrap Admin. Database mới khởi tạo Admin bằng `local_run bootstrap-admin`.
 
-User bắt đầu Remote có lý do hoặc Office có GPS, Check-out và bắt đầu lại trước 20:00; xem lịch sử theo ngày. Remote giữ mã thao tác/payload trong sessionStorage để gửi lại; Office giữ payload GPS trong bộ nhớ tab, không lưu vào storage. API chỉ trả lịch sử của chính User; Admin không chấm công. Admin mở `/admin/office` để vẽ và lưu vùng thực tế; chưa cấu hình thì Office bị từ chối.
+User bắt đầu Remote có lý do hoặc Office có GPS; mọi Check-out kết thúc ngày, chỉ ngày hôm sau theo giờ Việt Nam mở lại (trừ Admin xóa hôm nay/reset hợp lệ). Xem lịch sử theo ngày. Remote giữ mã thao tác/payload trong sessionStorage để gửi lại; Office giữ payload GPS trong bộ nhớ tab, không lưu vào storage. API chỉ trả lịch sử của chính User; Admin không chấm công. Admin mở `/admin/office` để vẽ và lưu vùng thực tế; chưa cấu hình thì Office bị từ chối.
 
 Maintenance đóng phiên còn mở tại 20:00 giờ Việt Nam và xóa tọa độ/accuracy hết hạn 30 ngày. Nếu máy/tác vụ tắt lúc đó, lần chạy lại xử lý bù; API luôn che GPS hết hạn dù worker chưa chạy. Muốn tác vụ chạy đúng phút khi không ai mở web cần máy chạy maintenance liên tục; production cần worker độc lập. Nghỉ trưa lúc 20:00 chỉ ghi kết thúc ngày, giữ giờ đóng phiên trước nghỉ; nghỉ sáng/cả ngày giữ nguyên trạng thái.
 

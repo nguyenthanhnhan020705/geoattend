@@ -2,6 +2,8 @@
 
 > **For agentic workers:** Phase 0–5 đã triển khai; kiểm tra Git và báo cáo trước khi sửa mã, không tự chạy lại các task đã hoàn thành. Tuân thủ AGENTS.md và skill bắt buộc. Kế hoạch Task 1–5 bên dưới được giữ làm bằng chứng phạm vi đã thực hiện.
 
+**Tiếp quản Phase 6:** xem [bàn giao hiện hành](README_PHASE_6.md) và [bằng chứng Phase 6](../docs/PHASE_6_VERIFICATION.md). Các ghi chú “Phase 6 chưa thực hiện” bên dưới thuộc thời điểm bàn giao cũ, không thay thế trạng thái mới.
+
 **Cập nhật:** 16/10/2026. **Baseline mã nguồn:** `8dd1af2`, branch `feat/phase-1-foundation-auth`. Đây là tài liệu bàn giao tổng hợp mới; [bàn giao cũ](README.md) giữ chi tiết và bằng chứng lịch sử.
 
 **Goal:** hoàn thiện Dashboard trạng thái nhân viên và Onsite Map cho Admin, tích hợp các chức năng quản lý sẵn có mà bảo toàn Phase 0–4.

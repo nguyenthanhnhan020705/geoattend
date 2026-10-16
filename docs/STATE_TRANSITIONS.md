@@ -43,7 +43,7 @@ Các lựa chọn sau đã được duyệt trong bản thiết kế Phase 0 đ�
 
 - Tối đa một phiên đang mở cho mỗi nhân viên; chỉ `WORKING_OFFICE` và `WORKING_REMOTE` có phiên đang mở.
 - Ghi thay đổi phiên, sự kiện và trạng thái trong cùng giao dịch. Lỗi ghi dữ liệu phải hủy toàn bộ thay đổi của thao tác.
-- Hủy nghỉ và bắt đầu làm việc là một thao tác kết hợp: chỉ ghi hủy nghỉ sau khi điều kiện Office/Remote hợp lệ; thất bại giữ `FULL_DAY_LEAVE`. Không cung cấp thao tác hủy nghỉ độc lập trong MVP.
+- Quy tắc hủy nghỉ kết hợp bắt đầu của phiên bản cũ chỉ còn dùng để replay UUID đã commit. Theo điều chỉnh 16/10/2026, `FULL_DAY_LEAVE` khóa ngày, action hủy nghỉ mới bị chặn; không cung cấp hủy nghỉ độc lập. Nghỉ sáng tiếp tục Office/Remote theo bảng trên.
 - Tuần tự hóa các thay đổi của cùng nhân viên; thao tác gửi từ màn hình đã cũ phải kiểm tra lại trạng thái tại Backend.
 - Yêu cầu gửi lại với cùng mã thao tác và cùng nội dung trả kết quả trước đó, không tạo thêm phiên/sự kiện. Tái sử dụng mã với nội dung khác bị từ chối.
 - Dùng thời gian Backend để quyết định trước hay sau 20:00; không cho thời gian thiết bị vượt qua giới hạn. Quy tắc này cần kiểm thử cả yêu cầu chờ xử lý qua mốc 20:00.
