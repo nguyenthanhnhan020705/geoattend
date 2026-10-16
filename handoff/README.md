@@ -1,5 +1,7 @@
 # GeoAttend — Bàn giao Phase 0–4
 
+> **Tiếp quản hiện hành:** Phase 5 đã triển khai và đạt full suite 249 test ngày 16/10/2026. Đọc [README Phase 0–5](README_PHASE_0_5.md) và [báo cáo Phase 5](../docs/PHASE_5_VERIFICATION.md). File này giữ nguyên các mốc lịch sử Phase 0–4 bên dưới; không dùng mô tả Dashboard chưa triển khai ở phần lịch sử để làm lại Phase 5.
+
 **Điều chỉnh User theo ca:** trước nghỉ trưa chỉ Nghỉ trưa/Check-out sớm; nghỉ trưa chỉ Tiếp tục Office/Remote; sau tiếp tục chỉ Check-out. Người dùng đã chọn khóa sau Check-out cuối ngày đến ngày hôm sau, được kiểm tra tại Backend bằng sự kiện nghỉ trưa trong ngày. Không migration; cần restart web và Ctrl+F5. Chi tiết tại [USER_MOBILE_UI](../docs/USER_MOBILE_UI.md), quy tắc bổ sung tại [STATE_TRANSITIONS mục 6](../docs/STATE_TRANSITIONS.md#6-điều-chỉnh-luồng-user-theo-ca-15102026). Các mô tả bắt đầu lại/chuyển chế độ cũ bên dưới là mốc lịch sử.
 
 **Giao diện User sau bàn giao:** thông tin nhân viên đầu trang; ba lựa chọn Office/Remote/Xin nghỉ; form lý do mở khi bấm, lịch sử thu gọn cuối trang và tải theo yêu cầu. Chỉ thay HTML/CSS/JS, không migration; xem [USER_MOBILE_UI](../docs/USER_MOBILE_UI.md).

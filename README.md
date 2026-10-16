@@ -2,7 +2,9 @@
 
 > **Business Requirements Document** cho hệ thống chấm công và quản lý trạng thái làm việc dựa trên GIS.
 
-Bàn giao agent tiếp theo: [README Phase 0–4 — kết quả và kế hoạch triển khai](handoff/README.md).
+Bàn giao agent tiếp theo: [README Phase 0–5 — kết quả và prompt tiếp quản](handoff/README_PHASE_0_5.md). [Bàn giao Phase 0–4 cũ](handoff/README.md) giữ chi tiết lịch sử.
+
+Phase 5 đã triển khai Dashboard/Onsite cho Admin trong worktree `.worktrees/phase-1`: đăng nhập, chọn **Dashboard** hoặc mở `/admin/dashboard`. Lần kiểm chứng mới ngày 16/10/2026 đạt **249 test**; xem [báo cáo Phase 5](docs/PHASE_5_VERIFICATION.md) và [checklist](docs/MANUAL_TEST_PHASE_5.md). Không có migration mới; production/pilot và đo hiệu năng thuộc Phase 6.
 
 Điều chỉnh theo yêu cầu người dùng 15/10/2026: giao diện chấm công đi theo ca trước nghỉ trưa → nghỉ trưa → ca sau nghỉ; CHECK-OUT cuối ngày sau khi đã tiếp tục làm việc sẽ khóa chấm công đến ngày hôm sau. CHECK-OUT SỚM trước nghỉ trưa vẫn cho bắt đầu lại trước 20:00. Quy tắc này bổ sung/ưu tiên hơn mô tả bắt đầu lại chung bên dưới; xem [STATE_TRANSITIONS mục 6](docs/STATE_TRANSITIONS.md#6-điều-chỉnh-luồng-user-theo-ca-15102026).
 

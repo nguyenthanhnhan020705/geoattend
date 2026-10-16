@@ -1,10 +1,10 @@
-# GeoAttend — Chạy và kiểm tra Phase 1–4
+# GeoAttend — Chạy và kiểm tra Phase 1–5
 
 Giao diện User đã tối ưu cho điện thoại: thông tin nhân viên ở đầu; chọn **CHECK-IN REMOTE** hoặc **XIN NGHỈ** mới hiện form lý do; **Lịch sử cá nhân** thu gọn cuối trang và chỉ tải khi mở. Xem [USER_MOBILE_UI](USER_MOBILE_UI.md). Sau cập nhật chỉ cần Ctrl+F5, không cần migration cho thay đổi giao diện này.
 
 Điều chỉnh mới theo ca: đang làm trước nghỉ trưa chỉ có **NGHỈ TRƯA / CHECK-OUT SỚM**; nghỉ trưa hiện **TIẾP TỤC OFFICE / TIẾP TỤC REMOTE**; sau tiếp tục chỉ có **CHECK-OUT** và sau đó khóa đến ngày mai. Bản này có bổ sung cờ trạng thái/kiểm tra khóa ngày ở Backend, nên cần khởi động lại web rồi Ctrl+F5; không có migration mới. Check-out sớm trước nghỉ trưa vẫn cho bắt đầu lại trước 20:00.
 
-Phase 1 cung cấp đăng nhập và quản lý tài khoản. Phase 2 bổ sung Remote, Check-out, lịch sử cá nhân và tự đóng phiên lúc 20:00. Phase 3 bổ sung bản đồ cấu hình Geofence, Office và GPS hết hạn sau 30 ngày. Phase 4 bổ sung nghỉ trưa, nghỉ sáng/cả ngày, hủy nghỉ kết hợp bắt đầu và chuyển trực tiếp Office/Remote. Dashboard thuộc Phase 5. Xem checklist [Phase 2](MANUAL_TEST_PHASE_2.md), [Phase 3](MANUAL_TEST_PHASE_3.md) và [Phase 4](MANUAL_TEST_PHASE_4.md).
+Phase 1 cung cấp đăng nhập và quản lý tài khoản. Phase 2 bổ sung Remote, Check-out, lịch sử cá nhân và tự đóng phiên lúc 20:00. Phase 3 bổ sung bản đồ cấu hình Geofence, Office và GPS hết hạn sau 30 ngày. Phase 4 bổ sung nghỉ trưa, nghỉ sáng/cả ngày, hủy nghỉ kết hợp bắt đầu và chuyển trực tiếp Office/Remote. Phase 5 bổ sung Dashboard/Onsite Admin. Xem checklist [Phase 2](MANUAL_TEST_PHASE_2.md), [Phase 3](MANUAL_TEST_PHASE_3.md), [Phase 4](MANUAL_TEST_PHASE_4.md) và [Phase 5](MANUAL_TEST_PHASE_5.md).
 
 ## 1. Chuẩn bị
 
@@ -105,7 +105,7 @@ Dữ liệu xác thực hết hạn có thể dọn bằng `.\.venv\Scripts\pyth
 
 Truy cập `http://127.0.0.1:8000/login`, đăng nhập bằng tài khoản đã tạo:
 
-- Admin đến `/admin/users`: cấp User, tải danh sách và đặt lại mật khẩu.
+- Admin đến `/admin/users`: cấp User, tải danh sách và đặt lại mật khẩu; chọn **Dashboard** để mở `/admin/dashboard` theo dõi trạng thái/Onsite/lịch sử.
 - User đến `/user`: thông tin cá nhân và liên kết đổi mật khẩu.
 - Cả hai có `/account`, đổi mật khẩu và đăng xuất.
 - `/api/health` kiểm tra database; lỗi không lộ DSN.
@@ -152,7 +152,7 @@ git diff --check
 
 ## 6. Phạm vi bàn giao
 
-Xem [roadmap](ROADMAP.md) và [báo cáo Phase 4](PHASE_4_VERIFICATION.md). Remote, Office/Geofence, lịch sử cá nhân, tác vụ 20:00, GPS hết hạn 30 ngày, nghỉ và luồng hỗn hợp đã triển khai. Dashboard/Onsite thuộc Phase 5. Supabase đã được cấu hình cho ứng dụng local; triển khai production và pilot thuộc Phase 6.
+Xem [roadmap](ROADMAP.md) và [báo cáo Phase 5](PHASE_5_VERIFICATION.md). Phase 0–5 đã triển khai, gồm Dashboard/Onsite, lịch sử/xóa ngày Admin và UI User theo ca/khóa cuối ngày. Supabase đã được cấu hình cho ứng dụng local; triển khai production, đo hiệu năng và pilot thuộc Phase 6. Không có migration mới trong Phase 5.
 
 ## 7. Hợp đồng Phase 4
 
@@ -163,3 +163,13 @@ Retry Office (gồm switch/hủy nghỉ) chỉ giữ GPS trong bộ nhớ tab; r
 ## 8. Bổ sung quyền lịch sử cho Admin
 
 Sau Phase 4, người dùng yêu cầu Admin xem và xóa vĩnh viễn lịch sử theo ngày. Áp dụng migration 004 bằng `local_run migrate`, khởi động lại web/worker rồi Ctrl+F5. Tại **Quản lý nhân viên → Lịch sử**, Admin lọc ngày, xem phiên/sự kiện và xóa từng ngày có xác nhận tên tài khoản. Chặn ngày đang làm việc/nghỉ trưa; xóa trong transaction và giữ dấu chống retry tối thiểu. Xem [ADMIN_HISTORY](ADMIN_HISTORY.md) cho hợp đồng, vận hành và kiểm thử. Migration không tự xóa dữ liệu.
+
+## 9. Dashboard và Onsite Phase 5
+
+Không có migration mới; giữ nguyên các migration 001–004 đã áp dụng. Restart web rồi Ctrl+F5, đăng nhập Admin và chọn **Dashboard** từ trang nhân viên/văn phòng. `/admin/dashboard` dùng chung dialog lịch sử/xóa ngày và liên kết đến editor `/admin/office`; không có editor thứ hai.
+
+`GET /api/admin/dashboard` trả tổng/bảy nhóm/danh sách/Onsite/văn phòng cùng `as_of` và `work_date`; `GET /api/admin/onsite` là projection từ cùng builder. Bao gồm User bị khóa/chưa bắt đầu, loại Admin. Onsite chỉ lấy vị trí đã xác minh của phiên Office đang mở; tọa độ/accuracy bị che đúng 30 ngày dù worker chưa purge. Thiếu/hết hạn vị trí không đặt Marker giả.
+
+Tab visible làm mới sau mỗi 30 giây, khi quay lại tab hoặc tải tay; không lấy GPS. Lỗi mạng giữ snapshot với nhãn cũ; lỗi map không chặn danh sách/lịch sử. Nếu browser khôi phục document từ cache mà refresh dừng, reload trang; Edge thực tế với header no-store đã tải lại đúng. Xem [báo cáo Phase 5](PHASE_5_VERIFICATION.md) cho giới hạn còn lại và [checklist](MANUAL_TEST_PHASE_5.md) để kiểm tra trên DB riêng.
+
+Full suite ngày 16/10/2026: **249 passed, 1 warning** trên PostgreSQL 17/PostGIS test local riêng ở port 55440. Không tạo/xóa dữ liệu thử hoặc chạy migration mới trên Supabase thật; production/pilot chưa thực hiện.

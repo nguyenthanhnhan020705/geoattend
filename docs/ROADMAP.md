@@ -4,7 +4,7 @@
 
 Chia phạm vi trong [BRD](../README.md) thành các phase có thứ tự phụ thuộc, công việc và điều kiện hoàn thành rõ ràng.
 
-Tại thời điểm bắt đầu dự án (14/10/2026), workspace chỉ có `README.md`. Hiện **Phase 0–4 đã triển khai** trong worktree `.worktrees/phase-1`, nhánh `feat/phase-1-foundation-auth`. Phase 3 đã qua review độc lập, đạt 119 kiểm thử; sau sửa bản đồ baseline đạt 122 kiểm thử. Phase 4 bổ sung nghỉ/hủy nghỉ/chuyển chế độ; xem [báo cáo Phase 4](PHASE_4_VERIFICATION.md). Các phase 5–6 **chưa triển khai**.
+Tại thời điểm bắt đầu dự án (14/10/2026), workspace chỉ có `README.md`. Hiện **Phase 0–5 đã triển khai** trong worktree `.worktrees/phase-1`, nhánh `feat/phase-1-foundation-auth`. Phase 3/4 và các bổ sung lịch sử Admin/UI User được giữ nguyên. Phase 5 bổ sung Dashboard/Onsite, đã review độc lập và chạy full suite **249 passed** ngày 16/10/2026; xem [báo cáo Phase 5](PHASE_5_VERIFICATION.md). Phase 6 production/pilot **chưa thực hiện**; chưa chứng nhận mục tiêu hiệu năng.
 
 Đây là roadmap cấp dự án. Thiết kế và kế hoạch triển khai chi tiết sẽ được lập theo từng phase, sau khi các quyết định nghiệp vụ liên quan đã được chốt. Roadmap không tự quyết định thay các câu hỏi mở trong BRD.
 
@@ -136,13 +136,15 @@ Thứ tự thực hiện: **0 → 1 → 2 → 3 → 4 → 5 → 6**.
 
 **Yêu cầu BRD:** FR-10 (Admin), FR-11 đến FR-13, FR-15; BR-06, BR-07.
 
-- [ ] Hiển thị tổng số và danh sách tài khoản `USER` theo trạng thái, gồm chưa bắt đầu; loại Admin khỏi tổng số nhân viên và nhóm trạng thái theo AC-07.
-- [ ] Hiển thị Geofence và Marker có tên cho nhân viên đang `WORKING_OFFICE`.
-- [ ] Dùng vị trí Check-in Office đã xác minh gần nhất; ghi rõ ý nghĩa vị trí trên giao diện.
-- [ ] Hiển thị Popup tên, trạng thái, giờ Check-in, xác minh GPS và liên kết chi tiết.
-- [x] Hiển thị lịch sử từng nhân viên cho Admin; vị trí đã hết hạn hiển thị “Dữ liệu vị trí đã hết hạn lưu” và không có tọa độ trên bản đồ theo AC-16. Đã bổ sung riêng sau Phase 4 theo yêu cầu mới, cùng quyền xóa vĩnh viễn từng ngày; xem [ADMIN_HISTORY](ADMIN_HISTORY.md). Dashboard/Onsite vẫn chưa triển khai.
-- [ ] Cập nhật danh sách/Marker khi trạng thái thay đổi bằng cơ chế làm mới đã chọn.
-- [ ] Triển khai cài đặt tên, địa chỉ văn phòng và tích hợp quản lý Geofence; giữ cố định giờ Việt Nam và mốc tự đóng 20:00, kiểm thử quyền và giới hạn cài đặt theo AC-15.
+**Đã thực hiện:** [bàn giao và Task 1–5](../handoff/README_PHASE_0_5.md), [kiểm chứng](PHASE_5_VERIFICATION.md), [checklist](MANUAL_TEST_PHASE_5.md). Không có migration hoặc editor văn phòng/lịch sử thứ hai. Minor lifecycle back/forward cache có điều kiện được ghi rõ trong báo cáo.
+
+- [x] Hiển thị tổng số và danh sách mọi tài khoản `USER`, gồm chưa bắt đầu/bị khóa; bảy nhóm trạng thái, loại Admin theo AC-07.
+- [x] Hiển thị Geofence và Marker có tên cho nhân viên đang `WORKING_OFFICE`.
+- [x] Dùng điểm đã xác minh của đúng phiên Office đang mở; ghi rõ đây là vị trí Check-in, không phải GPS trực tiếp.
+- [x] Hiển thị Popup tên, trạng thái, giờ Check-in, xác minh GPS và liên kết lịch sử dùng dialog hiện có.
+- [x] Tái sử dụng lịch sử/xóa ngày [ADMIN_HISTORY](ADMIN_HISTORY.md); GPS đủ 30 ngày bị che trước purge, không Marker giả và có thông báo hết hạn theo AC-16.
+- [x] Làm mới mỗi 30 giây khi tab visible, khi quay lại tab hoặc tải tay; bảo vệ phản hồi cũ và giữ snapshot có nhãn cũ khi mạng lỗi.
+- [x] Tái sử dụng editor tên/địa chỉ/Polygon, bổ sung điều hướng; hồi quy revision/quyền, giữ cố định giờ Việt Nam và cutoff 20:00 theo AC-15.
 
 **Đầu ra:** Admin theo dõi trạng thái, bản đồ và lịch sử từ dữ liệu thực của các phase trước.
 

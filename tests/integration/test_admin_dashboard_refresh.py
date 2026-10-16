@@ -1,4 +1,4 @@
-﻿import pytest
+import pytest
 from playwright.sync_api import sync_playwright, expect
 from tests.integration.test_browser import live_site, login
 from tests.integration.test_office_browser import office_site
@@ -130,4 +130,3 @@ def test_dashboard_refresh_removes_marker_for_expired_gps_and_checkout(office_si
         expect(page.locator('[data-status="CHECKED_OUT"] .status-count')).to_have_text('1')
         expect(page.locator('.onsite-marker')).to_have_count(0)
         browser.close()
-
