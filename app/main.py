@@ -49,7 +49,7 @@ def create_app(settings=None, pool=None):
         response.headers['X-Content-Type-Options'] = 'nosniff'
         response.headers['Referrer-Policy'] = 'same-origin'
         response.headers['Content-Security-Policy'] = "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; frame-ancestors 'none'; form-action 'self'; base-uri 'self'"
-        if request.url.path=='/admin/office':
+        if request.url.path in ('/admin/office','/admin/dashboard'):
             response.headers['Content-Security-Policy'] = "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: "+settings.map_tile_origin+' '+settings.map_style_origin+"; connect-src 'self' "+settings.map_style_origin+"; worker-src 'self' blob:; frame-ancestors 'none'; form-action 'self'; base-uri 'self'"
         return response
 
@@ -105,6 +105,10 @@ def create_app(settings=None, pool=None):
     @app.get('/admin/users',include_in_schema=False)
     def admin_users_page(request: Request):
         return protected_page(request,'admin-users.html','ADMIN')
+
+    @app.get('/admin/dashboard',include_in_schema=False)
+    def admin_dashboard_page(request: Request):
+        return protected_page(request,'admin-dashboard.html','ADMIN')
 
     @app.get('/account',include_in_schema=False)
     def account_page(request: Request):

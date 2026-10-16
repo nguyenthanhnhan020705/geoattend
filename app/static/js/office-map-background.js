@@ -1,8 +1,8 @@
 // Leaflet owns the editor. The background layer loads independently so
 // provider outages never leave the office form locked.
-export function attachBackground(map, config, notice) {
+export function attachBackground(map, config, notice, {readOnly=false}={}) {
   const container=map.getContainer();let layer=null;
-  const state=(value,text)=>{container.dataset.mapState=value;notice.textContent=text;};
+  const state=(value,text)=>{container.dataset.mapState=value;notice.textContent=readOnly ? (value==='ready'?'Bản đồ Onsite · Vị trí Check-in đã xác minh.':value==='loading'?'Đang tải bản đồ nền…':'Không tải được bản đồ nền. Bấm “Tải lại bản đồ”; danh sách và lịch sử vẫn dùng được.') : text;};
   state('loading','Đang tải bản đồ nền… Bạn vẫn có thể chỉnh sửa vùng.');
   const timer=setTimeout(()=>state('failed','Bản đồ nền quá thời gian chờ. Bấm “Tải lại bản đồ” hoặc kiểm tra kết nối; bản nháp vẫn được giữ.'),15000);
   const ready=()=>{clearTimeout(timer);state('ready','Bấm “Vẽ vùng”, sau đó bấm ít nhất 3 đỉnh quanh văn phòng và chọn “Xem trước”.');};
