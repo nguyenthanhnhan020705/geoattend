@@ -92,3 +92,48 @@ def test_onsite_geofence_edit_keeps_original_point(configured,migrated_db):
     data=onsite(client)
     assert data['items'][0]==before
     assert data['office']['revision']==2 and data['office']['name']=='Văn phòng mới'
+
+
+def test_onsite_checkout_removes_marker_projection(configured):
+    client,headers,_=configured
+    office_action(client,headers)
+    assert action(client,headers,1,'CHECK_OUT',None).status_code==200
+    signin(client)
+    assert onsite(client)['items']==[]
+    assert client.get('/api/admin/dashboard').json()['counts']['CHECKED_OUT']==1
+
+
+def test_snapshot_supports_postgis_extensions_schema(db,monkeypatch):
+    from pathlib import Path
+    from uuid import uuid4
+    from app.db.migrations import apply_migrations
+    from app.accounts.bootstrap import create_initial_admin
+    from app.accounts.service import create_user
+    from app.auth.service import login,resolve_session
+    from app.admin.service import build_snapshot
+    from app.gis.service import save_office
+    from app.gis.schemas import OfficeInput
+    from app.attendance.service import act
+    from app.attendance.schemas import ActionInput
+    from tests.integration.test_office import POLYGON
+    now=datetime(2026,10,14,2,tzinfo=timezone.utc)
+    monkeypatch.setattr('app.clock.utc_now',lambda:now)
+    db.execute('DROP EXTENSION postgis CASCADE')
+    db.execute('CREATE SCHEMA IF NOT EXISTS extensions')
+    db.execute('CREATE EXTENSION postgis WITH SCHEMA extensions');db.commit()
+    try:
+        apply_migrations(db,Path('migrations'))
+        create_initial_admin(db,'admin','Admin','Admin1234')
+        logged=login(db,'admin','Admin1234',now)
+        context=resolve_session(db,logged.raw_token,now)
+        user=create_user(db,'worker','Worker','Worker1234');db.commit()
+        save_office(db,OfficeInput(name='Office',address='HCM',geom=POLYGON,expected_revision=0),context)
+        act(db,user.id,ActionInput(request_id=uuid4(),expected_revision=0,expected_work_date='2026-10-14',action='START_OFFICE',latitude=10.5,longitude=106.5,accuracy_m=15))
+        data=build_snapshot(db,context)
+        assert data['onsite'][0]['location']['latitude']==10.5
+        assert data['office']['geom']==POLYGON
+    finally:
+        db.rollback()
+        db.execute('DROP SCHEMA IF EXISTS geoattend CASCADE')
+        db.execute('DROP EXTENSION postgis CASCADE')
+        db.execute('CREATE EXTENSION postgis WITH SCHEMA public');db.commit()

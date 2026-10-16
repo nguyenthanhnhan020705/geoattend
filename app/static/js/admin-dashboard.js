@@ -6,6 +6,7 @@ const el=id=>document.getElementById(id);
 const labels={NOT_STARTED:'Chưa bắt đầu',WORKING_OFFICE:'Đang làm tại văn phòng',WORKING_REMOTE:'Đang làm Remote',LUNCH_BREAK:'Đang nghỉ trưa',MORNING_LEAVE:'Nghỉ buổi sáng',FULL_DAY_LEAVE:'Nghỉ cả ngày',CHECKED_OUT:'Đã Check-out'};
 const time=value=>new Intl.DateTimeFormat('vi-VN',{timeZone:'Asia/Ho_Chi_Minh',hour:'2-digit',minute:'2-digit',second:'2-digit'}).format(new Date(value));
 let map,layers,detach,lastData,backgroundKey;
+let generation=0,activeRequest,timer,stopped=false;
 
 function node(tag,text,parent) {
   const child=document.createElement(tag);child.textContent=text;
@@ -81,11 +82,38 @@ function render(data) {
   el('empty-users').hidden=data.items.length>0;
   renderMap(data);
 }
+function schedule() {
+  clearTimeout(timer);
+  if(!stopped && document.visibilityState==='visible')timer=setTimeout(load,30000);
+}
 async function load() {
-  try{render(await apiFetch('/api/admin/dashboard'));el('dashboard-message').textContent='';}
-  catch(error){el('dashboard-message').textContent=error.message;}
+  if(stopped)return;
+  clearTimeout(timer);
+  const token=++generation;
+  activeRequest?.abort();activeRequest=new AbortController();
+  el('reload-dashboard').setAttribute('aria-busy','true');
+  try{
+    const data=await apiFetch('/api/admin/dashboard',{signal:activeRequest.signal});
+    if(token!==generation)return;
+    // A response from a slower server/replica must not replace newer data.
+    if(!lastData || Date.parse(data.as_of)>=Date.parse(lastData.as_of))render(data);
+    el('dashboard-message').textContent='';
+  }catch(error){
+    if(token!==generation)return;
+    if(error.code==='FORBIDDEN' || error.code==='AUTH_REQUIRED'){
+      stopped=true;el('reload-dashboard').disabled=true;
+    }
+    el('dashboard-message').textContent=(lastData?'Dữ liệu cũ · ':'Chưa tải được dữ liệu · ')+error.message;
+  }finally{
+    if(token===generation){el('reload-dashboard').setAttribute('aria-busy','false');schedule();}
+  }
 }
 el('reload-dashboard').addEventListener('click',load);
+document.addEventListener('visibilitychange',()=>{
+  clearTimeout(timer);
+  if(document.visibilityState==='visible')load();
+});
+window.addEventListener('pagehide',()=>{stopped=true;clearTimeout(timer);generation++;activeRequest?.abort();});
 el('retry-map').addEventListener('click',()=>{if(lastData){startBackground(lastData);renderMap(lastData);}});
 bindLogout('dashboard-message');
 load();

@@ -41,10 +41,12 @@ def test_dashboard_all_users_counts_and_seven_states(employee,migrated_db):
         assert len([item for item in data['items'] if item['status']==state]) == data['counts'][state]
 
 
-@pytest.mark.parametrize('hour,minute,want',[(12,59,'WORKING_REMOTE'),(13,0,'CHECKED_OUT'),(13,1,'CHECKED_OUT'),(17,0,'NOT_STARTED')])
-def test_dashboard_catches_up_without_worker(employee,migrated_db,monkeypatch,hour,minute,want):
+@pytest.mark.parametrize('lunch,hour,minute,want',[(False,12,59,'WORKING_REMOTE'),(False,13,0,'CHECKED_OUT'),(False,13,1,'CHECKED_OUT'),(False,17,0,'NOT_STARTED'),(True,12,59,'LUNCH_BREAK'),(True,13,0,'CHECKED_OUT'),(True,13,1,'CHECKED_OUT'),(True,17,0,'NOT_STARTED')])
+def test_dashboard_catches_up_without_worker(employee,migrated_db,monkeypatch,lunch,hour,minute,want):
     client, headers, _ = employee
     assert action(client,headers).status_code == 200
+    if lunch:
+        assert action(client,headers,1,'START_LUNCH',None).status_code==200
     signin(client)
     monkeypatch.setattr('app.clock.utc_now',lambda:datetime(2026,10,14,hour,minute,tzinfo=timezone.utc))
     for _ in range(2):
