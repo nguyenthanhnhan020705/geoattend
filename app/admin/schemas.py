@@ -23,10 +23,36 @@ class Employee(BaseModel):
     open_session: OpenSession | None
 
 
+class AvailableLocation(BaseModel):
+    status: Literal['available']
+    expires_at: datetime
+    latitude: float | None
+    longitude: float | None
+    accuracy_m: float | None
+
+
+class ExpiredLocation(BaseModel):
+    status: Literal['expired']
+    expires_at: datetime
+
+
+class OnsiteEmployee(Employee):
+    location_verified: bool
+    location: AvailableLocation | ExpiredLocation | None
+
+
+class Onsite(BaseModel):
+    as_of: datetime
+    work_date: date
+    items: list[OnsiteEmployee]
+    office: dict
+
+
 class Dashboard(BaseModel):
     as_of: datetime
     work_date: date
     total_users: int
     counts: dict[Status,int]
     items: list[Employee]
-    onsite: list[Employee]
+    onsite: list[OnsiteEmployee]
+    office: dict

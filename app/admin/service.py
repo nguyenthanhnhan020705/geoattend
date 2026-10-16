@@ -3,6 +3,7 @@ from app import clock
 from app.errors import ApiError
 from app.attendance.service import validate_session, reconcile_locked, snapshot, VIETNAM
 from app.admin.schemas import STATUSES
+from app.gis.service import get_location, get_office
 
 
 def lock_profiles(conn, context):
@@ -20,6 +21,7 @@ def build_snapshot(conn, context):
         now = clock.utc_now()
         validate_session(conn,context.account.id,context.session_id,now)
         items = []
+        onsite = []
         counts = dict.fromkeys(STATUSES,0)
         for profile in profiles:
             if profile['role']!='USER':
@@ -30,4 +32,9 @@ def build_snapshot(conn, context):
             item.update(status=state['status'],open_session=state['open_session'])
             items.append(item)
             counts[item['status']] += 1
-        return dict(as_of=now,work_date=now.astimezone(VIETNAM).date(),total_users=len(items),counts=counts,items=items,onsite=[])
+            opened = item['open_session']
+            if item['status']=='WORKING_OFFICE' and opened and opened['work_mode']=='OFFICE':
+                verified = conn.execute("SELECT location_verified FROM geoattend.attendance_events WHERE session_id=%s AND event_type='WORK_START'",(opened['id'],)).fetchone()
+                if verified and verified['location_verified']:
+                    onsite.append(dict(**item,location_verified=True,location=get_location(conn,opened['id'],now)))
+        return dict(as_of=now,work_date=now.astimezone(VIETNAM).date(),total_users=len(items),counts=counts,items=items,onsite=onsite,office=get_office(conn))
