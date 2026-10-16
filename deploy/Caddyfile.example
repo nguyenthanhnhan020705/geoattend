@@ -1,0 +1,7 @@
+# Preparation only. Substitute the approved public DNS name in Caddy's env.
+{$GEOATTEND_HOST} {
+    # Keep Caddy's data directory persistent for certificate renewal.
+    # Access logging intentionally disabled: URLs/query parameters may be private.
+    header Strict-Transport-Security "max-age=86400"
+    reverse_proxy 127.0.0.1:8000
+}

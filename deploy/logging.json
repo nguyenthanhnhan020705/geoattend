@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "disable_existing_loggers": false,
+  "formatters": {"safe": {"()": "app.telemetry.SafeFormatter"}},
+  "handlers": {"console": {"class": "logging.StreamHandler", "formatter": "safe", "stream": "ext://sys.stdout"}},
+  "root": {"level": "INFO", "handlers": ["console"]},
+  "loggers": {
+    "geoattend.api": {"level": "INFO", "handlers": [], "propagate": true},
+    "uvicorn": {"level": "INFO", "handlers": [], "propagate": true},
+    "uvicorn.error": {"level": "INFO", "handlers": [], "propagate": true},
+    "uvicorn.access": {"level": "CRITICAL", "handlers": [], "propagate": false},
+    "psycopg.pool": {"level": "WARNING", "handlers": [], "propagate": true}
+  }
+}

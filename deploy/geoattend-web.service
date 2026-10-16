@@ -1,0 +1,25 @@
+[Unit]
+Description=GeoAttend web API
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=geoattend
+Group=geoattend
+WorkingDirectory=/opt/geoattend/current
+EnvironmentFile=/etc/geoattend/runtime.env
+Environment=PYTHONDONTWRITEBYTECODE=1
+ExecStart=/opt/geoattend/venv/bin/python -m uvicorn app.main:app --host 127.0.0.1 --port 8000 --workers 1 --proxy-headers --forwarded-allow-ips 127.0.0.1 --no-access-log --log-config deploy/logging.json
+Restart=on-failure
+RestartSec=5
+TimeoutStopSec=30
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+UMask=0077
+
+[Install]
+WantedBy=multi-user.target

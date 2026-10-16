@@ -11,7 +11,7 @@ Phase 6 **đang thực hiện**, chưa nghiệm thu môi trường thật/pilot.
 | 1 — Baseline/ma trận | Hoàn tất local | 19 AC + 5 NFR; baseline 267 passed, 1 warning, 693.88s |
 | 2 — Hồi quy/Minor | Hoàn tất local | Lifecycle RED 1 fail/1 pass → refresh GREEN 7 pass; probe timeline 1 pass; chờ cache thực đa browser |
 | 3 — Hiệu năng | Hoàn tất local | Query bound RED 6→24 → GREEN; đo lại 3651 request, 0 lỗi; c1/c10 100%, c20 99.91783%≤2s; tải đích pending |
-| 4 — Vận hành/restore/log | Đang thực hiện | Guard DB test RED 5 fail → GREEN 5 pass; diễn tập đang chạy |
+| 4 — Vận hành/restore/log | Hoàn tất chuẩn bị/local | Guard RED → GREEN; 12 test timing/log/restore đạt; mẫu triển khai chưa chạy trên host đích |
 | 5 — Bàn giao/checklist | Chưa hoàn tất | Thiết bị thật/HTTPS đích/tải đích/pilot đều chưa chạy |
 
 ## Baseline mới
@@ -42,5 +42,15 @@ Kết quả thực tế **267 passed, 1 warning, 693.88s**; log `.local-tests/ph
 - GREEN sau tối ưu: nhóm query/Dashboard/Onsite/unit/restore **35 passed, 1 warning, 103.17s**. Tải riêng `load-measure-02` **3 passed, 164.10s**: mỗi mức 1217 request; c1 100%/p95 108.394ms, c10 100%/579.407ms, c20 99.91783%/806.608ms; 0 lỗi, max c20 2009.836ms. Đạt ngưỡng local, vẫn 1 request >2s; không chứng nhận production. Chi tiết [PERFORMANCE](PHASE_6_PERFORMANCE.md).
 
 ## Các cổng còn mở
+
+## Vận hành, dữ liệu và kiểm tra log
+
+Lượt `ops-final`: **12 passed, 1 warning, 16.30s**. Gồm 4 test timing/statistics/app metrics, 1 test subprocess nạp logging.json thật, 5 guard test DSN, 2 diễn tập restore. `SafeFormatter` không đưa message/traceback của uvicorn/psycopg ra log; sentinel mật khẩu/token/GPS/query không xuất hiện. Cấu hình web tắt Uvicorn access log, Caddy không bật access log, worker mẫu cũng nạp formatter. Chưa audit DB/proxy/APM/backup log trên provider thật.
+
+Diễn tập pg_dump/pg_restore custom thật ở DB UUID riêng: GPS-free chuẩn và legacy-with-gps. Cả hai giữ checksum 001–004, runtime không CREATE schema/DELETE profiles, lịch sử/xác minh và tombstone; replay dữ liệu đã xóa trả HISTORY_DELETED. Legacy giữ GPS chưa hết hạn, che GPS hết hạn trước worker và purge đúng một bản ghi; lần hai 0. GPS-free không khôi phục bất kỳ dữ liệu bảng office_locations (cả GPS còn hạn), mọi phiên/xác minh vẫn còn, không Marker giả. Thu hồi toàn bộ session phục hồi rồi kiểm tra 401 và login mới thành công. [Kết quả tổng hợp](evidence/phase6/restore.json).
+
+[Runbook](PHASE_6_OPERATIONS.md) và `deploy/` chuẩn bị HTTPS same-origin/cookie Secure, proxy trust loopback, role/secret riêng, release/rollback, worker/health/log/alert, backup GPS-free mã hóa mỗi ngày giữ 7 bản/7 ngày, restore purge/đối soát xóa/thu hồi session trước mở public. Chưa có host Linux/Caddy/systemd/secret store hoặc job backup/retention thật, chưa validate trên host đích. RPO24h/RTO4h là mục tiêu đề xuất cho owner duyệt, không phải SLA đã chứng minh.
+
+## Các cổng còn mở — trạng thái cuối sẽ cập nhật sau full suite/review
 
 HTTPS đích, thiết bị thật/GPS thực, đo tải trên cấu hình đích, người vận hành/owner dữ liệu và pilot khoảng 10 người/5 ngày làm việc cần quyền/điều kiện cụ thể. Không ghi completed cho toàn Phase 6 khi các cổng này còn mở.
