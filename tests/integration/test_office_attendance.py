@@ -52,13 +52,13 @@ def test_invalid_gps_rejected(configured,key,value):
     assert action(client,headers,kind='START_OFFICE',reason=None,**data).status_code==422
 
 
-def test_office_replay_checkout_and_new_verification(configured,migrated_db):
+def test_office_replay_lunch_resume_and_new_verification(configured,migrated_db):
     client,headers,_=configured
     key=str(uuid4()); first=office_action(client,headers,request_id=key)
     assert first.status_code==200
     assert office_action(client,headers,request_id=key).json()==first.json()
     assert office_action(client,headers,latitude=10.6,request_id=key).status_code==409
-    assert action(client,headers,1,'CHECK_OUT',None).status_code==200
+    assert action(client,headers,1,'START_LUNCH',None).status_code==200
     moved={'type':'Polygon','coordinates':[[[108,10],[109,10],[109,11],[108,11],[108,10]]]}
     migrated_db.execute('UPDATE geoattend.office SET geom=ST_GeomFromGeoJSON(%s),revision=2',(json.dumps(moved),)); migrated_db.commit()
     assert office_action(client,headers,2).status_code==403

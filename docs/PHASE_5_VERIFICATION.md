@@ -1,5 +1,7 @@
 # GeoAttend — Kiểm chứng Phase 5
 
+Điều chỉnh sau nghiệm thu 16/10/2026: người dùng yêu cầu CHECK-OUT SỚM có lý do bắt buộc và kết thúc ngày, không Check-in lại. Báo cáo/kiểm chứng mới ở [EARLY_CHECKOUT_VERIFICATION](EARLY_CHECKOUT_VERIFICATION.md). Các kết quả Phase 5 dưới đây là bằng chứng lịch sử trước điều chỉnh này.
+
 Ngày: 16/10/2026, giờ Việt Nam. Worktree `.worktrees/phase-1`, branch `feat/phase-1-foundation-auth`; bắt đầu từ baseline thực tế `8dd1af2`. Không reset hoặc triển khai lại Phase 0–4.
 
 ## Phạm vi

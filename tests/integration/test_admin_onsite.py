@@ -97,7 +97,7 @@ def test_onsite_geofence_edit_keeps_original_point(configured,migrated_db):
 def test_onsite_checkout_removes_marker_projection(configured):
     client,headers,_=configured
     office_action(client,headers)
-    assert action(client,headers,1,'CHECK_OUT',None).status_code==200
+    assert action(client,headers,1,'CHECK_OUT','Personal appointment').status_code==200
     signin(client)
     assert onsite(client)['items']==[]
     assert client.get('/api/admin/dashboard').json()['counts']['CHECKED_OUT']==1

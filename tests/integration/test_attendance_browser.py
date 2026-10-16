@@ -52,18 +52,18 @@ def test_remote_browser_reload_history_and_retry(remote_site,migrated_db):
         expect(page.locator('#history-list')).to_contain_text(reason)
         assert page.locator('#history-list img').count()==0
         page.locator('#check-out').click()
+        page.get_by_label('Lý do Check-out sớm').fill('Có việc gia đình')
+        page.locator('#checkout-form button').click()
         expect(page.locator('#attendance-status')).to_have_text('Đã Check-out')
-        open_remote(page)
-        page.get_by_label('Lý do làm Remote').fill('Buổi chiều')
-        page.get_by_role('button',name='Bắt đầu Remote',exact=True).click()
-        expect(page.locator('#attendance-status')).to_have_text('Đang làm Remote')
-        assert migrated_db.execute('SELECT count(*) AS n FROM geoattend.work_sessions').fetchone()['n']==2
+        expect(page.locator('#day-notice')).to_contain_text('ngày mai')
+        expect(page.locator('#attendance-choices')).to_be_hidden()
+        assert migrated_db.execute('SELECT count(*) AS n FROM geoattend.work_sessions').fetchone()['n']==1
         assert page.evaluate('document.documentElement.scrollWidth <= innerWidth')
         page.screenshot(path=str(artifacts/'remote-mobile.png'),full_page=True)
         page.get_by_label('Từ ngày').fill('2026-10-15')
         page.get_by_label('Đến ngày').fill('2026-10-14')
         page.get_by_role('button',name='Xem lịch sử').click()
         expect(page.locator('#history-message')).to_contain_text('Ngày bắt đầu')
-        expect(page.locator('#history-list')).to_contain_text('Buổi chiều')
+        expect(page.locator('#history-list')).to_contain_text(reason)
         assert errors==[]
         browser.close()

@@ -19,7 +19,7 @@ ALLOWED = {
     'LUNCH_BREAK': ['START_OFFICE','START_REMOTE'],
     'MORNING_LEAVE': ['START_OFFICE','START_REMOTE'],
     'FULL_DAY_LEAVE': ['CANCEL_LEAVE_START_OFFICE','CANCEL_LEAVE_START_REMOTE'],
-    'CHECKED_OUT': ['START_OFFICE','START_REMOTE'],
+    'CHECKED_OUT': [],
 }
 ACTIONS = ['START_OFFICE','START_REMOTE','MORNING_LEAVE','FULL_DAY_LEAVE','CHECK_OUT','START_LUNCH','SWITCH_OFFICE','SWITCH_REMOTE','CANCEL_LEAVE_START_OFFICE','CANCEL_LEAVE_START_REMOTE']
 
@@ -32,7 +32,7 @@ def test_all_forbidden_transitions_preserve_state(configured, migrated_db, state
     elif state in ('WORKING_REMOTE','LUNCH_BREAK','CHECKED_OUT'):
         assert action(client,headers).status_code == 200
         if state != 'WORKING_REMOTE':
-            assert action(client,headers,1,'START_LUNCH' if state=='LUNCH_BREAK' else 'CHECK_OUT',None).status_code == 200
+            assert action(client,headers,1,'START_LUNCH' if state=='LUNCH_BREAK' else 'CHECK_OUT','Personal appointment').status_code == 200
     elif state in ('MORNING_LEAVE','FULL_DAY_LEAVE'):
         assert action(client,headers,0,state,'Nghỉ').status_code == 200
     before = client.get('/api/attendance/status').json()

@@ -2,7 +2,9 @@
 
 Giao diện User đã tối ưu cho điện thoại: thông tin nhân viên ở đầu; chọn **CHECK-IN REMOTE** hoặc **XIN NGHỈ** mới hiện form lý do; **Lịch sử cá nhân** thu gọn cuối trang và chỉ tải khi mở. Xem [USER_MOBILE_UI](USER_MOBILE_UI.md). Sau cập nhật chỉ cần Ctrl+F5, không cần migration cho thay đổi giao diện này.
 
-Điều chỉnh mới theo ca: đang làm trước nghỉ trưa chỉ có **NGHỈ TRƯA / CHECK-OUT SỚM**; nghỉ trưa hiện **TIẾP TỤC OFFICE / TIẾP TỤC REMOTE**; sau tiếp tục chỉ có **CHECK-OUT** và sau đó khóa đến ngày mai. Bản này có bổ sung cờ trạng thái/kiểm tra khóa ngày ở Backend, nên cần khởi động lại web rồi Ctrl+F5; không có migration mới. Check-out sớm trước nghỉ trưa vẫn cho bắt đầu lại trước 20:00.
+Điều chỉnh mới theo ca: đang làm trước nghỉ trưa chỉ có **NGHỈ TRƯA / CHECK-OUT SỚM**; nghỉ trưa hiện **TIẾP TỤC OFFICE / TIẾP TỤC REMOTE**; sau tiếp tục chỉ có **CHECK-OUT**. Theo yêu cầu 16/10/2026, mọi Check-out, kể cả Check-out sớm, kết thúc ngày và khóa đến ngày mai theo giờ Việt Nam. Khởi động lại web rồi Ctrl+F5 để dùng Backend mới; không có migration mới. Replay UUID và ngoại lệ Admin xóa ngày hôm nay/reset vẫn giữ nguyên.
+
+CHECK-OUT SỚM bắt buộc nhập lý do và xác nhận; CHECK-OUT sau nghỉ trưa không yêu cầu lý do. Bằng chứng/hướng dẫn chạy: [EARLY_CHECKOUT_VERIFICATION](EARLY_CHECKOUT_VERIFICATION.md).
 
 Phase 1 cung cấp đăng nhập và quản lý tài khoản. Phase 2 bổ sung Remote, Check-out, lịch sử cá nhân và tự đóng phiên lúc 20:00. Phase 3 bổ sung bản đồ cấu hình Geofence, Office và GPS hết hạn sau 30 ngày. Phase 4 bổ sung nghỉ trưa, nghỉ sáng/cả ngày, hủy nghỉ kết hợp bắt đầu và chuyển trực tiếp Office/Remote. Phase 5 bổ sung Dashboard/Onsite Admin. Xem checklist [Phase 2](MANUAL_TEST_PHASE_2.md), [Phase 3](MANUAL_TEST_PHASE_3.md), [Phase 4](MANUAL_TEST_PHASE_4.md) và [Phase 5](MANUAL_TEST_PHASE_5.md).
 

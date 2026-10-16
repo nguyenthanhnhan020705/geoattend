@@ -13,11 +13,11 @@ LEAVE_ACTIONS = ('MORNING_LEAVE','FULL_DAY_LEAVE')
 
 
 def actions_for(state, lunch_taken=False):
-    if state == 'CHECKED_OUT' and lunch_taken:
+    if state == 'CHECKED_OUT':
         return []
     if state == 'NOT_STARTED':
         return ['START_OFFICE','START_REMOTE','MORNING_LEAVE','FULL_DAY_LEAVE']
-    if state in ('CHECKED_OUT','LUNCH_BREAK','MORNING_LEAVE'):
+    if state in ('LUNCH_BREAK','MORNING_LEAVE'):
         return ['START_OFFICE','START_REMOTE']
     if state == 'FULL_DAY_LEAVE':
         return ['CANCEL_LEAVE_START_OFFICE','CANCEL_LEAVE_START_REMOTE']
@@ -85,7 +85,7 @@ def snapshot(conn, user_id, now):
     allowed = []
     if now < cutoff(work_date):
         allowed = actions_for(state,lunch_taken)
-    return dict(work_date=work_date,status=state,revision=day['revision'] if day else 0,open_session=opened,server_time=now,allowed_actions=allowed,lunch_taken=lunch_taken,day_finished=state=='CHECKED_OUT' and lunch_taken)
+    return dict(work_date=work_date,status=state,revision=day['revision'] if day else 0,open_session=opened,server_time=now,allowed_actions=allowed,lunch_taken=lunch_taken,day_finished=state=='CHECKED_OUT')
 
 
 def status(conn, user_id, session_id=None):
@@ -139,10 +139,12 @@ def act(conn, user_id, body, session_id=None):
                 failure = ApiError(409,'DAY_CLOSED','Ngày làm việc đã kết thúc lúc 20:00 giờ Việt Nam.')
             elif revision != body.expected_revision:
                 failure = ApiError(409,'STALE_REVISION','Trạng thái đã thay đổi. Vui lòng tải lại.')
-            elif state == 'CHECKED_OUT' and has_lunch(conn,day):
-                failure = ApiError(409,'DAY_FINISHED','Bạn đã CHECK-OUT cuối ngày. Vui lòng bắt đầu lại vào ngày mai.')
+            elif state == 'CHECKED_OUT':
+                failure = ApiError(409,'DAY_FINISHED','Bạn đã CHECK-OUT. Vui lòng bắt đầu lại vào ngày mai.')
             elif body.action not in actions_for(state):
                 failure = ApiError(409,'INVALID_TRANSITION','Không thể thực hiện thao tác ở trạng thái hiện tại.')
+            elif body.action == 'CHECK_OUT' and not has_lunch(conn,day) and not body.reason:
+                failure = ApiError(422,'REASON_REQUIRED','Vui lòng nhập lý do Check-out sớm.')
             else:
                 office=None
                 if body.action in OFFICE_ACTIONS:

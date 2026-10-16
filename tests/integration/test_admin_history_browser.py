@@ -37,6 +37,8 @@ def test_admin_history_confirm_delete_retry_and_user_visibility(office_site,migr
         page.wait_for_url('**/login')
         login(page,office_site,'worker','Worker1234')
         page.locator('#check-out').click()
+        page.get_by_label('Lý do Check-out sớm').fill('Có việc gia đình')
+        page.locator('#checkout-form button').click()
         expect(page.locator('#attendance-status')).to_have_text('Đã Check-out')
         page.get_by_role('button',name='Đăng xuất',exact=True).click()
         page.wait_for_url('**/login')

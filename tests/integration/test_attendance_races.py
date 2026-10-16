@@ -68,7 +68,7 @@ def test_checkout_vs_maintenance_one_end(employee,test_dsn,migrated_db,monkeypat
         with psycopg.connect(test_dsn,row_factory=dict_row) as conn:
             gate.wait(10)
             if task=='worker': return service.maintain(conn)
-            try: return service.act(conn,uid,ActionInput(expected_work_date='2026-10-14',request_id=uuid4(),expected_revision=1,action='CHECK_OUT'))
+            try: return service.act(conn,uid,ActionInput(expected_work_date='2026-10-14',request_id=uuid4(),expected_revision=1,action='CHECK_OUT',reason='Personal appointment'))
             except ApiError as error: return error.code
     with ThreadPoolExecutor(max_workers=2) as executor:
         futures=[executor.submit(work,t) for t in ('worker','checkout')]
@@ -152,10 +152,11 @@ def test_runtime_role_can_start_checkout_and_maintain(employee,migrated_db,test_
             result=service.act(conn,uid,ActionInput(expected_work_date='2026-10-14',request_id=uuid4(),expected_revision=0,action='START_REMOTE',reason='Home'))
             assert result['status']=='WORKING_REMOTE'
             assert service.history(conn,uid,None,None,1,20)['total']==1
-            end=service.act(conn,uid,ActionInput(expected_work_date='2026-10-14',request_id=uuid4(),expected_revision=1,action='CHECK_OUT'))
+            end=service.act(conn,uid,ActionInput(expected_work_date='2026-10-14',request_id=uuid4(),expected_revision=1,action='CHECK_OUT',reason='Personal appointment'))
             assert end['status']=='CHECKED_OUT'
-            service.act(conn,uid,ActionInput(expected_work_date='2026-10-14',request_id=uuid4(),expected_revision=2,action='START_REMOTE',reason='Again'))
-            monkeypatch.setattr('app.clock.utc_now',lambda:datetime(2026,10,14,13,tzinfo=timezone.utc))
+            monkeypatch.setattr('app.clock.utc_now',lambda:datetime(2026,10,15,2,tzinfo=timezone.utc))
+            service.act(conn,uid,ActionInput(expected_work_date='2026-10-15',request_id=uuid4(),expected_revision=0,action='START_REMOTE',reason='Next day'))
+            monkeypatch.setattr('app.clock.utc_now',lambda:datetime(2026,10,15,13,tzinfo=timezone.utc))
             assert service.maintain(conn)==1
     finally:
         migrated_db.execute(sql.SQL('DROP OWNED BY {}').format(sql.Identifier(role)))

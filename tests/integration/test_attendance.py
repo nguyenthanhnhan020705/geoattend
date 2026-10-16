@@ -25,21 +25,21 @@ def action(client, headers, revision=0, kind='START_REMOTE', reason='Làm việc
     return client.post('/api/attendance/actions', headers=headers, json=body)
 
 
-def test_remote_checkout_restart_persisted(employee,migrated_db):
+def test_remote_checkout_ends_day_and_persists_closed_session(employee,migrated_db):
     client,headers,_ = employee
     first = action(client,headers)
     assert first.status_code == 200
     assert first.json()['status'] == 'WORKING_REMOTE'
     assert client.get('/api/attendance/status').json()['revision'] == 1
-    end = action(client,headers,1,'CHECK_OUT',None)
+    end = action(client,headers,1,'CHECK_OUT','Personal appointment')
     assert end.status_code == 200 and end.json()['status']=='CHECKED_OUT'
     again = action(client,headers,2)
-    assert again.status_code == 200
+    assert again.status_code == 409 and again.json()['code']=='DAY_FINISHED'
     rows = migrated_db.execute('SELECT start_reason,end_source,end_time FROM geoattend.work_sessions ORDER BY start_time,id').fetchall()
-    assert len(rows)==2
-    assert sum(r['end_time'] is None for r in rows)==1
+    assert len(rows)==1
+    assert sum(r['end_time'] is None for r in rows)==0
     assert next(r for r in rows if r['end_time'] is not None)['end_source']=='USER'
-    assert client.get('/api/attendance/status').json()['open_session']['work_mode']=='REMOTE'
+    assert client.get('/api/attendance/status').json()['open_session'] is None
 
 
 @pytest.mark.parametrize('reason',[None,'','   ','x'*1001])
@@ -65,7 +65,7 @@ def test_replay_conflict_and_stale_revision(employee,migrated_db):
     assert first.status_code==200
     assert action(client,headers,request_id=key).json()==first.json()
     assert action(client,headers,reason='Different',request_id=key).status_code==409
-    assert action(client,headers,0,'CHECK_OUT',None).status_code==409
+    assert action(client,headers,0,'CHECK_OUT','Personal appointment').status_code==409
     assert action(client,headers,1).status_code==409
     assert migrated_db.execute('SELECT count(*) AS n FROM geoattend.work_sessions').fetchone()['n']==1
 

@@ -23,9 +23,15 @@ function controls() {
   el('choose-remote').textContent = resuming?'TIẾP TỤC REMOTE':'CHECK-IN REMOTE';
   el('choose-leave').hidden = resuming;
   const leave = allowed.some(action=>['MORNING_LEAVE','FULL_DAY_LEAVE'].includes(action));
-  if ((reasonPanel==='remote' && !remote) || (reasonPanel==='leave' && !leave)) reasonPanel=null;
+  const earlyCheckout = allowed.includes('CHECK_OUT') && !current?.lunch_taken;
+  if ((reasonPanel==='remote' && !remote) || (reasonPanel==='leave' && !leave) || (reasonPanel==='checkout' && !earlyCheckout)) reasonPanel=null;
   el('reason-panel').hidden = !reasonPanel;
-  el('reason-heading').textContent = reasonPanel==='leave'?'Xin nghỉ':'Check-in Remote';
+  el('reason-heading').textContent = reasonPanel==='checkout'?'Check-out sớm':reasonPanel==='leave'?'Xin nghỉ':'Check-in Remote';
+  el('checkout-form').hidden = reasonPanel!=='checkout';
+  el('checkout-reason').disabled = busy || !!pending;
+  el('checkout-form').querySelector('button').disabled = busy || !!pending;
+  el('check-out').setAttribute('aria-expanded',String(reasonPanel==='checkout'));
+  el('check-out').setAttribute('aria-controls','reason-panel');
   el('remote-form').hidden = reasonPanel!=='remote';
   el('choose-remote').disabled = busy || !!pending || !remote;
   el('choose-leave').disabled = busy || !!pending || !leave;
@@ -76,6 +82,7 @@ async function sendPending() {
     reasonPanel = null;
     el('remote-reason').value = '';
     el('leave-reason').value = '';
+    el('checkout-reason').value = '';
     message('message','Đã ghi nhận thao tác.',true);
   } catch (error) {
     if (error.code && error.code !== 'DATABASE_UNAVAILABLE' && error.code !== 'INCONSISTENT_ATTENDANCE') {
@@ -137,15 +144,21 @@ async function loadHistory(query, page=1) {
 function openReason(panel) {
   if (!current || busy || pending) return;
   reasonPanel=panel;controls();
-  el(panel==='remote'?'remote-reason':'leave-reason').focus();
+  el(panel==='checkout'?'checkout-reason':panel==='remote'?'remote-reason':'leave-reason').focus();
 }
 el('choose-remote').addEventListener('click',()=>openReason('remote'));
 el('choose-leave').addEventListener('click',()=>openReason('leave'));
-el('close-reason').addEventListener('click',()=>{const previous=reasonPanel;reasonPanel=null;controls();el(previous==='remote'?'choose-remote':'choose-leave').focus();});
+el('close-reason').addEventListener('click',()=>{const previous=reasonPanel;reasonPanel=null;controls();el(previous==='checkout'?'check-out':previous==='remote'?'choose-remote':'choose-leave').focus();});
 el('remote-form').addEventListener('submit', event => { event.preventDefault(); const action=available(remoteActions); if(action)submit(action,el('remote-reason').value.trim()); });
 el('leave-form').addEventListener('submit', event => { event.preventDefault(); const action=event.submitter?.value; if(current?.allowed_actions.includes(action))submit(action,el('leave-reason').value.trim()); });
 el('start-lunch').addEventListener('click',()=>submit('START_LUNCH'));
-el('check-out').addEventListener('click',()=>submit('CHECK_OUT'));
+el('check-out').addEventListener('click',()=>current?.lunch_taken?submit('CHECK_OUT'):openReason('checkout'));
+el('checkout-form').addEventListener('submit',event=>{
+  event.preventDefault();
+  const reason=el('checkout-reason').value.trim();
+  if(!reason){message('message','Vui lòng nhập lý do Check-out sớm.');el('checkout-reason').focus();return;}
+  if(current?.allowed_actions.includes('CHECK_OUT') && !current.lunch_taken)submit('CHECK_OUT',reason);
+});
 el('start-office').addEventListener('click',async()=>{
   if(!current || busy || pending)return;
   const action=available(officeActions);if(!action)return;

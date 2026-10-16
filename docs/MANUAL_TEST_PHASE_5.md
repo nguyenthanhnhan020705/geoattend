@@ -27,6 +27,6 @@ $env:GEOATTEND_TEST_DATABASE_URL='postgresql://postgres@127.0.0.1:55440/postgres
 10. Chặn nguồn bản đồ: danh sách/lịch sử vẫn dùng được; hiện thông báo và **Tải lại bản đồ**, không xóa snapshot. Thử cả trường hợp thư viện map không sẵn sàng.
 11. Theo link **Văn phòng**: tên/địa chỉ/Polygon và revision vẫn dùng editor cũ. Sửa vùng không thay điểm lịch sử. Cutoff 20:00 và múi giờ không có cài đặt sửa. Theo link **Nhân viên**, **Tài khoản cá nhân** và quay lại Dashboard.
 12. Nhập tên/lý do chứa HTML trên test DB: chỉ thấy văn bản, không chạy HTML/script trong danh sách, tooltip, popup hoặc lịch sử. Kiểm tra 360px và desktop không tràn ngang.
-13. Chạy lại UI User theo ca: trước nghỉ chỉ Nghỉ trưa/Check-out sớm, nghỉ trưa chỉ hai lựa chọn tiếp tục, sau tiếp tục chỉ Check-out; Check-out cuối ngày khóa đến hôm sau. Ngoại lệ Admin xóa ngày/reset và replay UUID vẫn giữ nguyên.
+13. Chạy lại UI User theo ca: trước nghỉ chỉ Nghỉ trưa/Check-out sớm, nghỉ trưa chỉ hai lựa chọn tiếp tục, sau tiếp tục chỉ Check-out. Theo yêu cầu 16/10/2026, Check-out sớm bắt buộc lý do và xác nhận, mọi Check-out khóa đến hôm sau. Kiểm tra reload/mất phản hồi/retry, lý do trong lịch sử; ngoại lệ Admin xóa ngày/reset và replay UUID vẫn giữ nguyên.
 
 Các ca browser tự động đã kiểm tra desktop/mobile giả lập và mạng lỗi; GPS trên điện thoại thật/HTTPS, nguồn nền bản đồ Internet thực tế và pilot thuộc Phase 6, chưa được chứng nhận bởi lượt này.

@@ -78,14 +78,16 @@ Các số test là kết quả đã chạy tại từng mốc, không phải l�
 ### UI User và khóa cuối ngày — quy tắc mới nhất
 
 1. Thông tin nhân viên ở đầu; ba lựa chọn CHECK-IN OFFICE / CHECK-IN REMOTE / XIN NGHỈ. Chỉ mở lý do khi chọn Remote/nghỉ.
-2. Đang làm trước nghỉ trưa: chỉ **NGHỈ TRƯA** và **CHECK-OUT SỚM**.
+2. Đang làm trước nghỉ trưa: chỉ **NGHỈ TRƯA** và **CHECK-OUT SỚM**. Check-out sớm mở form lý do bắt buộc (1–1000 ký tự sau trim), chỉ kết thúc khi xác nhận hợp lệ; lưu lý do vào phiên/sự kiện và lịch sử.
 3. Đang nghỉ trưa: chỉ **TIẾP TỤC OFFICE** và **TIẾP TỤC REMOTE**; Remote vẫn cần lý do, Office xác minh GPS lại.
 4. Sau tiếp tục: chỉ **CHECK-OUT**. Sau Check-out cuối ngày khóa đến ngày hôm sau, kể cả reload hoặc gọi API mới.
-5. Backend xác định khóa bằng `CHECKED_OUT` và có sự kiện `LUNCH_START` trong ngày; trả `lunch_taken`, `day_finished`. Không suy ra ca bằng giờ trên đồng hồ.
-6. Check-out sớm trước nghỉ trưa vẫn cho bắt đầu lại trước 20:00. API chuyển trực tiếp Office/Remote cũ còn được giữ tương thích; UI hiện tại không hiển thị các nút đó khi đang làm. Không tự xóa API hoặc đưa nút cũ trở lại.
+5. Backend xác định khóa bằng trạng thái `CHECKED_OUT`, không phụ thuộc `LUNCH_START`; trả `lunch_taken`, `day_finished`. Không suy ra ca bằng giờ trên đồng hồ.
+6. Cập nhật theo yêu cầu 16/10/2026: **CHECK-OUT SỚM cũng kết thúc ngày, không CHECK-IN lại đến ngày hôm sau theo giờ Việt Nam**, kể cả reload hoặc gọi API mới. Replay UUID đã commit và ngoại lệ Admin xóa ngày hôm nay/reset vẫn giữ nguyên. API chuyển trực tiếp Office/Remote cũ còn được giữ tương thích; UI hiện tại không hiển thị các nút đó khi đang làm.
 7. Lịch sử cá nhân ở cuối, thu gọn, chỉ tải khi mở; phản hồi cũ không được ghi đè lịch sử mới.
 
 Chi tiết: [USER_MOBILE_UI](../docs/USER_MOBILE_UI.md), [STATE_TRANSITIONS mục 6](../docs/STATE_TRANSITIONS.md).
+
+Điều chỉnh sau Phase 5 ngày 16/10/2026 và bằng chứng mới: [EARLY_CHECKOUT_VERIFICATION](../docs/EARLY_CHECKOUT_VERIFICATION.md). Full suite sau điều chỉnh **259 passed, 1 warning** trong 469.07s; `pip check` và `git diff --check` đạt, review không có lỗi chặn. Số 249 ở mục 0 là kết quả Phase 5 trước điều chỉnh này.
 
 ### Admin lịch sử — đã có, không triển khai lại
 

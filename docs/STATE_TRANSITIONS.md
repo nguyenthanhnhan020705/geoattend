@@ -27,9 +27,8 @@ Mục 1–2 tổng hợp quy tắc đã chốt. Mục 3–4 đã được duyệ
 | `LUNCH_BREAK` | Tiếp tục Remote | `WORKING_REMOTE` | Nhập lý do và tạo phiên mới. |
 | `MORNING_LEAVE` | Bắt đầu Office | `WORKING_OFFICE` | Xác minh vị trí, tạo phiên; không phải chờ mốc bắt đầu buổi chiều. |
 | `MORNING_LEAVE` | Bắt đầu Remote | `WORKING_REMOTE` | Nhập lý do, tạo phiên; không phải chờ mốc bắt đầu buổi chiều. |
-| `WORKING_OFFICE` hoặc `WORKING_REMOTE` | Check-out | `CHECKED_OUT` | Đóng phiên hiện tại, lưu sự kiện kết thúc do nhân viên thao tác. |
-| `CHECKED_OUT` trước nghỉ trưa | Bắt đầu Office | `WORKING_OFFICE` | Xác minh vị trí, tạo phiên mới; giữ phiên cũ. |
-| `CHECKED_OUT` trước nghỉ trưa | Bắt đầu Remote | `WORKING_REMOTE` | Nhập lý do, tạo phiên mới; giữ phiên cũ. |
+| `WORKING_OFFICE` hoặc `WORKING_REMOTE` | Check-out | `CHECKED_OUT` | Trước nghỉ trưa bắt buộc lý do; đóng phiên và kết thúc ngày, lưu lý do ở phiên/sự kiện. Sau nghỉ trưa không bắt buộc lý do. |
+| `CHECKED_OUT` | Mọi thao tác mới trong cùng ngày | Không đổi | Ngày đã kết thúc, không cho Check-in lại, kể cả Check-out sớm. |
 | `FULL_DAY_LEAVE` | Hủy nghỉ và bắt đầu Office | `WORKING_OFFICE` | Giữ sự kiện đăng ký nghỉ, ghi hủy nghỉ và tạo phiên Office sau xác minh. |
 | `FULL_DAY_LEAVE` | Hủy nghỉ và bắt đầu Remote | `WORKING_REMOTE` | Giữ sự kiện đăng ký nghỉ, ghi hủy nghỉ và tạo phiên Remote có lý do. |
 | `WORKING_OFFICE` | Chuyển sang Remote | `WORKING_REMOTE` | Kiểm tra lý do rồi đóng phiên Office và tạo phiên Remote trong cùng giao dịch. |
@@ -68,6 +67,6 @@ Theo yêu cầu mới của người dùng, Admin được xóa vĩnh viễn l�
 
 ## 6. Điều chỉnh luồng User theo ca, 15/10/2026
 
-Người dùng yêu cầu chỉ hiển thị nghỉ trưa/Check-out sớm ở ca đầu, hai lựa chọn tiếp tục Office/Remote khi nghỉ trưa, và chỉ Check-out sau khi tiếp tục. Người dùng xác nhận **khóa đến ngày hôm sau** sau Check-out cuối ngày. Quy tắc mới thay thế quyền bắt đầu lại từ mọi trạng thái `CHECKED_OUT` của thiết kế ban đầu: chỉ Check-out trước khi đã nghỉ trưa còn cho bắt đầu lại trước 20:00.
+Người dùng yêu cầu chỉ hiển thị nghỉ trưa/Check-out sớm ở ca đầu, hai lựa chọn tiếp tục Office/Remote khi nghỉ trưa, và chỉ Check-out sau khi tiếp tục. Cập nhật 16/10/2026: **mọi Check-out, kể cả CHECK-OUT SỚM, đều kết thúc ngày và khóa đến ngày hôm sau theo giờ Việt Nam**. Quy tắc này thay thế quyền bắt đầu lại sau Check-out trong thiết kế cũ.
 
-Backend dùng `LUNCH_START` của ngày hiện tại để phân biệt: `CHECKED_OUT` có sự kiện này là ngày đã kết thúc (`day_finished=true`), không có action mới, API trả `DAY_FINISHED`; cùng UUID đã commit vẫn replay. Ngày mới bắt đầu `NOT_STARTED`. Admin xóa lịch sử theo mục 5 vẫn là ngoại lệ có quyền đưa ngày về chưa bắt đầu. API chuyển chế độ cũ giữ tương thích; giao diện không cung cấp nút chuyển trực tiếp khi đang làm việc.
+Backend xác định `day_finished=true` khi trạng thái là `CHECKED_OUT`, không phụ thuộc đã nghỉ trưa hay chưa. Không có action mới; API trả `DAY_FINISHED` với ngày/revision hiện hành trước cutoff, vẫn giữ thứ tự kiểm tra ngày/revision/cutoff. `LUNCH_START` chỉ xác định tiến trình nghỉ trưa. Cùng UUID đã commit vẫn replay. Ngày mới bắt đầu `NOT_STARTED`. Admin xóa lịch sử theo mục 5 vẫn là ngoại lệ có quyền đưa ngày về chưa bắt đầu. API chuyển chế độ cũ giữ tương thích; giao diện không cung cấp nút chuyển trực tiếp khi đang làm việc.

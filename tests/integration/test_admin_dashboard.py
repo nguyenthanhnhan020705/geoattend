@@ -61,7 +61,7 @@ def test_dashboard_cancelled_leave_and_deleted_today(employee):
     client, headers, uid = employee
     assert action(client,headers,0,'FULL_DAY_LEAVE','Nghỉ').status_code == 200
     assert action(client,headers,1,'CANCEL_LEAVE_START_REMOTE','Trở lại').status_code == 200
-    assert action(client,headers,2,'CHECK_OUT',None).status_code == 200
+    assert action(client,headers,2,'CHECK_OUT','Personal appointment').status_code == 200
     csrf = signin(client).json()['csrf_token']
     data=client.get('/api/admin/dashboard').json()
     assert data['counts']['FULL_DAY_LEAVE']==0 and data['counts']['CHECKED_OUT']==1
@@ -109,7 +109,7 @@ def test_dashboard_waits_for_atomic_employee_change(employee,migrated_db,test_ds
     from uuid import UUID, uuid4
     client, headers, uid = employee
     if operation=='delete':
-        action(client,headers); action(client,headers,1,'CHECK_OUT',None)
+        action(client,headers); action(client,headers,1,'CHECK_OUT','Personal appointment')
     signin(client)
     profile=migrated_db.execute("SELECT * FROM geoattend.profiles WHERE role='ADMIN'").fetchone()
     session=migrated_db.execute('SELECT * FROM geoattend.auth_sessions WHERE user_id=%s AND revoked_at IS NULL',(profile['id'],)).fetchone()

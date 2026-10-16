@@ -25,7 +25,7 @@ def test_late_read_and_rejected_action_commit_catchup(employee,migrated_db,monke
     client,headers,_=employee
     assert action(client,headers).status_code==200
     recorded=set_time(monkeypatch,14)
-    assert action(client,headers,1,'CHECK_OUT',None).status_code==409
+    assert action(client,headers,1,'CHECK_OUT','Personal appointment').status_code==409
     row=migrated_db.execute("SELECT end_time,end_source FROM geoattend.work_sessions").fetchone()
     assert row=={'end_time':datetime(2026,10,14,13,tzinfo=timezone.utc),'end_source':'SYSTEM'}
     event=migrated_db.execute("SELECT event_time,recorded_at FROM geoattend.attendance_events WHERE source='SYSTEM'").fetchone()

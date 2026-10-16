@@ -54,6 +54,10 @@ def test_account_first_reason_panels_and_lazy_history(office_site,migrated_db,wi
         page.locator('#personal-history > summary').click()
         expect(page.locator('#history-form')).to_be_hidden()
         page.locator('#check-out').click()
+        expect(page.get_by_label('Lý do Check-out sớm')).to_be_focused()
+        assert len(actions)==1
+        page.get_by_label('Lý do Check-out sớm').fill('Có việc gia đình')
+        page.locator('#checkout-form button').click()
         expect(page.locator('#attendance-status')).to_have_text('Đã Check-out')
         assert len(history_calls)==1
         page.locator('#personal-history > summary').click()

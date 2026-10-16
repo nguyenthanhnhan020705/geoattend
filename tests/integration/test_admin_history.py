@@ -20,7 +20,7 @@ def test_admin_views_other_employee_history_and_deletes_permanently(configured,m
     client, headers, uid = configured
     key = str(uuid4())
     assert office_action(client,headers,request_id=key).status_code == 200
-    assert action(client,headers,1,'CHECK_OUT',None).status_code == 200
+    assert action(client,headers,1,'CHECK_OUT','Personal appointment').status_code == 200
     admin = as_admin(client)
     url = f'/api/admin/users/{uid}/history'
     response = client.get(url)
@@ -67,7 +67,7 @@ def test_admin_cannot_delete_active_day(employee,state):
 
 def test_admin_delete_permissions_confirmation_and_target_isolation(employee,migrated_db):
     client, headers, uid = employee
-    action(client,headers); action(client,headers,1,'CHECK_OUT',None)
+    action(client,headers); action(client,headers,1,'CHECK_OUT','Personal appointment')
     personal = client.get('/api/attendance/history').json()['items'][0]
     assert client.get(f'/api/admin/users/{uid}/history').status_code == 403
     assert remove(client,headers,uid,personal).status_code == 403
@@ -86,7 +86,7 @@ def test_admin_delete_permissions_confirmation_and_target_isolation(employee,mig
 
 def test_inactive_employee_history_is_accessible_and_expired_gps_hidden(configured,migrated_db,monkeypatch):
     client, headers, uid = configured
-    office_action(client,headers); action(client,headers,1,'CHECK_OUT',None)
+    office_action(client,headers); action(client,headers,1,'CHECK_OUT','Personal appointment')
     migrated_db.execute('UPDATE geoattend.profiles SET is_active=false WHERE id=%s',(uid,)); migrated_db.commit()
     admin = as_admin(client)
     monkeypatch.setattr('app.clock.utc_now',lambda:datetime(2026,11,20,2,tzinfo=timezone.utc))
@@ -102,7 +102,7 @@ def test_inactive_employee_history_is_accessible_and_expired_gps_hidden(configur
 
 def test_delete_failure_rolls_back_history_and_replay(configured,migrated_db):
     client, headers, uid = configured
-    office_action(client,headers); action(client,headers,1,'CHECK_OUT',None)
+    office_action(client,headers); action(client,headers,1,'CHECK_OUT','Personal appointment')
     admin = as_admin(client)
     day = client.get(f'/api/admin/users/{uid}/history').json()['items'][0]
     migrated_db.execute("CREATE FUNCTION geoattend.fail_history_delete() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN RAISE EXCEPTION 'test failure' USING ERRCODE='08006'; END $$")
@@ -145,7 +145,7 @@ def test_delete_races_with_restart_or_delete(employee,migrated_db,test_dsn,same_
     from app.attendance.schemas import ActionInput
     from app.errors import ApiError
     client, headers, uid = employee
-    action(client,headers); action(client,headers,1,'CHECK_OUT',None)
+    action(client,headers); action(client,headers,1,'CHECK_OUT','Personal appointment')
     as_admin(client)
     day = client.get(f'/api/admin/users/{uid}/history').json()['items'][0]
     admin = migrated_db.execute("SELECT * FROM geoattend.profiles WHERE role='ADMIN'").fetchone()
@@ -167,9 +167,10 @@ def test_delete_races_with_restart_or_delete(employee,migrated_db,test_dsn,same_
     if same_request:
         assert all(isinstance(r,dict) and r.get('deleted') for r in results)
     else:
-        assert results.count('STALE_REVISION') == 1
+        assert isinstance(results[0],dict) and results[0]['deleted'] is True
+        assert results[1] in ('DAY_FINISHED','STALE_REVISION')
     count=migrated_db.execute('SELECT count(*) AS n FROM geoattend.work_sessions WHERE end_time IS NULL').fetchone()['n']
-    assert count == (1 if any(isinstance(r,dict) and r.get('status')=='WORKING_REMOTE' for r in results) else 0)
+    assert count == 0
 
 
 def test_admin_delete_rechecks_revocation_after_wait(employee,test_dsn,monkeypatch):
@@ -178,7 +179,7 @@ def test_admin_delete_rechecks_revocation_after_wait(employee,test_dsn,monkeypat
     import psycopg
     from app.accounts import history_service
     client, headers, uid = employee
-    action(client,headers); action(client,headers,1,'CHECK_OUT',None)
+    action(client,headers); action(client,headers,1,'CHECK_OUT','Personal appointment')
     admin = as_admin(client)
     day = client.get(f'/api/admin/users/{uid}/history').json()['items'][0]
     admin_id = client.get('/api/auth/me').json()['id']
@@ -207,7 +208,7 @@ def test_history_delete_with_runtime_role_and_migration_repeat(employee,migrated
     from app.accounts.schemas import DeleteHistoryInput
     client, headers, uid = employee
     uid = UUID(uid)
-    action(client,headers); action(client,headers,1,'CHECK_OUT',None)
+    action(client,headers); action(client,headers,1,'CHECK_OUT','Personal appointment')
     as_admin(client)
     admin_row = migrated_db.execute("SELECT * FROM geoattend.profiles WHERE role='ADMIN'").fetchone()
     auth_row = migrated_db.execute('SELECT * FROM geoattend.auth_sessions WHERE user_id=%s AND revoked_at IS NULL',(admin_row['id'],)).fetchone()
@@ -232,7 +233,7 @@ def test_deleted_replay_scrubs_action_times_and_legacy_results(employee,migrated
     client, headers, uid = employee
     key = str(uuid4())
     assert action(client,headers,request_id=key).status_code == 200
-    assert action(client,headers,1,'CHECK_OUT',None).status_code == 200
+    assert action(client,headers,1,'CHECK_OUT','Personal appointment').status_code == 200
     if legacy:
         # Simulate a valid pre-003 row: event UUIDs exist, replay columns were never backfilled.
         migrated_db.execute('UPDATE geoattend.attendance_requests SET result_work_date=NULL,result_session_id=NULL,result_status=NULL,result_revision=NULL WHERE request_id=%s',(key,)); migrated_db.commit()

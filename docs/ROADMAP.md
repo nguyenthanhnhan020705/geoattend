@@ -1,5 +1,7 @@
 # GeoAttend — Lộ trình phát triển MVP
 
+Điều chỉnh sau Phase 5, 16/10/2026: CHECK-OUT SỚM bắt buộc lý do và kết thúc ngày; mọi Check-out khóa đến ngày hôm sau. Full suite mới **259 passed, 1 warning**, `pip check`/`git diff --check` đạt. Xem [báo cáo điều chỉnh](EARLY_CHECKOUT_VERIFICATION.md); kết quả 249 test bên dưới là mốc Phase 5 trước thay đổi này.
+
 ## 1. Mục đích và hiện trạng
 
 Chia phạm vi trong [BRD](../README.md) thành các phase có thứ tự phụ thuộc, công việc và điều kiện hoàn thành rõ ràng.

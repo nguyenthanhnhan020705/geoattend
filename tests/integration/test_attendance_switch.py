@@ -117,7 +117,7 @@ def test_switch_races_keep_one_open_session(configured, migrated_db, test_dsn, m
                 return maintain(conn)
             data = dict(action='SWITCH_OFFICE',**GPS)
             if second and other == 'checkout':
-                data = dict(action='CHECK_OUT')
+                data = dict(action='CHECK_OUT',reason='Personal appointment')
             try:
                 return act(conn,uid,ActionInput(request_id=uuid4() if second and other!='same_uuid' else key,expected_revision=1,expected_work_date='2026-10-14',**data))
             except ApiError as error:
