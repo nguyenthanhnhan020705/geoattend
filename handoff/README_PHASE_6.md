@@ -1,6 +1,6 @@
 # GeoAttend — Bàn giao Phase 6
 
-**Trạng thái: local/chuẩn bị đã kiểm chứng; chờ review cuối và môi trường thật/pilot chưa thực hiện.** Làm trong `.worktrees/phase-1`, branch `feat/phase-1-foundation-auth`. Không reset, merge/push/deploy hoặc chạy test trên Supabase thật. Phase 0–5 đã hoàn thành, không triển khai lại.
+**Trạng thái: phần local/chuẩn bị hoàn tất kiểm chứng; môi trường thật/pilot chưa thực hiện, toàn Phase 6 còn mở.** Làm trong `.worktrees/phase-1`, branch `feat/phase-1-foundation-auth`. Không reset, merge/push/deploy hoặc chạy test trên Supabase thật. Phase 0–5 đã hoàn thành, không triển khai lại.
 
 ## Tài liệu hiện hành
 
@@ -18,7 +18,7 @@ Tải thật HTTP loopback/PostGIS, 10 User + Admin và lịch sử tổng hợp
 
 Restore diễn tập pg_dump/pg_restore thật vào DB UUID riêng, GPS-free và legacy-with-gps: API che quá hạn trước purge, maintenance idempotent, giữ lịch sử/xác minh/tombstone, quyền runtime/checksum; kiểm tra thu hồi session phục hồi trước mở dịch vụ. Backup chuẩn loại dữ liệu bảng GPS, giữ 7 bản ngày mã hóa; sau restore không phục hồi Marker GPS cũ, không tạo điểm giả. Owner dữ liệu/vận hành phải tiếp nhận policy và kiểm tra backup/PITR provider.
 
-Full suite cuối **286 passed, 1 warning, 499.47s**, exit0; `pip check`, `git diff --check` và kiểm tra diff từ baseline đều đạt, không đổi migration/dependency. Warning upstream Starlette/httpx. Review cuối ghi ở VERIFICATION; không lấy baseline hoặc lượt focused làm kết quả cuối.
+Full suite cuối sau sửa review **290 passed, 1 warning, 0 skipped, 586.58s**, exit0; `pip check`, `git diff --check` và kiểm tra diff từ baseline đều đạt, không đổi migration/dependency. Warning upstream Starlette/httpx. Review ba Important đã sửa: proxy log request khi 502, timing unhandled 500 trước body, thiếu diễn tập xóa sau backup. Không có vòng review độc lập thứ hai; test focused và full suite xác minh bản sửa. Không lấy baseline hoặc lượt focused làm kết quả cuối.
 
 ## Kiểm thử local an toàn
 

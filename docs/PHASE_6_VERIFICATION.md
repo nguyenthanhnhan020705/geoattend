@@ -1,6 +1,6 @@
 # Phase 6 — Kiểm chứng và sổ thực hiện
 
-Phase 6 **chưa hoàn thành toàn bộ**; phần local/chuẩn bị đang xác minh lại sau review, còn các cổng môi trường thật/pilot. Bắt đầu 16/10/2026 trong `.worktrees/phase-1`, branch `feat/phase-1-foundation-auth`, HEAD `8d96052`, Git sạch. Không reset về `2472785`; không triển khai lại Phase 0–5. Không có AGENTS.md trên đĩa tại root/worktree; áp dụng chỉ dẫn AGENTS trong yêu cầu người dùng.
+Phase 6 **chưa hoàn thành toàn bộ**; phần local/chuẩn bị đã hoàn tất kiểm chứng, còn các cổng môi trường thật/pilot. Full suite cuối **290 passed, 1 warning, 0 skipped**, **586.58s**; tải cuối **3651 request/đủ mẫu/0 lỗi/100% ≤2s** trên local. Bắt đầu 16/10/2026 trong `.worktrees/phase-1`, branch `feat/phase-1-foundation-auth`, HEAD `8d96052`, Git sạch. Không reset về `2472785`; không triển khai lại Phase 0–5. Không có AGENTS.md trên đĩa tại root/worktree; áp dụng chỉ dẫn AGENTS trong yêu cầu người dùng.
 
 ## Kế hoạch và trạng thái
 
@@ -12,7 +12,7 @@ Phase 6 **chưa hoàn thành toàn bộ**; phần local/chuẩn bị đang xác 
 | 2 — Hồi quy/Minor | Hoàn tất local | Lifecycle RED 1 fail/1 pass → refresh GREEN 7 pass; probe timeline 1 pass; chờ cache thực đa browser |
 | 3 — Hiệu năng | Hoàn tất local | Lượt cuối sau review 3651 request/đủ mẫu, 0 lỗi, cả c1/c10/c20 100%≤2s; p95 c20 606.620ms; tải đích pending |
 | 4 — Vận hành/restore/log | Hoàn tất chuẩn bị/local | Guard RED → GREEN; 12 test timing/log/restore đạt; mẫu triển khai chưa chạy trên host đích |
-| 5 — Bàn giao/checklist | Full suite đạt; chờ review cuối | 286 passed/1 warning; checklist/phiếu duyệt đích/roadmap/handoff sẵn sàng; cổng T/P chưa chạy |
+| 5 — Bàn giao/checklist | Hoàn tất local/chuẩn bị | 290 passed/1 warning/0 skipped; review Important đã xử lý, checklist/phiếu duyệt/roadmap/handoff sẵn sàng; T/P chưa chạy |
 
 ## Baseline mới
 
@@ -49,7 +49,7 @@ Diễn tập pg_dump/pg_restore custom thật ở DB UUID riêng: GPS-free chu�
 
 [Runbook](PHASE_6_OPERATIONS.md) và `deploy/` chuẩn bị HTTPS same-origin/cookie Secure, proxy trust loopback, role/secret riêng, release/rollback, worker/health/log/alert, backup GPS-free mã hóa mỗi ngày giữ 7 bản/7 ngày, restore purge/đối soát xóa/thu hồi session trước mở public. Chưa có host Linux/Caddy/systemd/secret store hoặc job backup/retention thật, chưa validate trên host đích. RPO24h/RTO4h là mục tiêu đề xuất cho owner duyệt, không phải SLA đã chứng minh.
 
-## Xác minh cuối
+## Full suite trước review — bằng chứng trung gian
 
 Ngày 16/10/2026, log `.local-tests/phase-6/full-final-01.log`: **286 passed, 1 warning, 499.47s**, exit code **0**; gồm 267 ca baseline và 19 ca thêm, không bỏ/nới test cũ. Bao gồm API/database/PostGIS, quyền, transaction/race, retry/replay legacy/tombstone, cutoff/ngày mới, retention, UI User/Admin, Dashboard/Onsite, đo tải smoke và restore thật hai chính sách. Warning duy nhất là upstream Starlette/httpx như baseline.
 
@@ -76,7 +76,25 @@ Reviewer đọc range `8d96052..6016369`, không sửa code/Git/DB. Không Criti
 2. Timing đặt trong add_middleware đứng bên trong ServerErrorMiddleware, ghi sớm khi unhandled 500. Test trên stack ứng dụng thật với final send trễ 20ms đã RED thứ tự metric→start→body. Đưa wrapper ra ngoài toàn bộ stack qua subclass FastAPI giữ interface/state; GREEN thứ tự start→body→metric, đúng một mẫu 500 có gồm thời gian send trễ. Nhóm timing/log/health **9 passed, 1 warning, 2.73s**.
 3. Restore ban đầu chỉ xóa trước dump, chưa chứng minh xóa sau backup. Bổ sung dump trước → xóa source qua Admin API → restore cô lập thấy dữ liệu sống lại → đối soát account/ngày trong sổ xóa và revision/username mới nhất qua API → không còn history/session/event/GPS, replay HISTORY_DELETED. Nhóm restore **3 passed, 1 warning, 15.35s**. Runbook dừng gate nếu ngày active/không có sổ xóa, không ép trạng thái để xóa.
 
-Trong lượt đo lại phát hiện một `/api/auth/me` warmup hoàn tất sau lúc clear collector (1218 thay vì 1217 ở c10); không dùng lượt đó làm số liệu cuối. Đã thêm collector chọn request ngay tại đầu bằng header riêng của harness, đếm request gửi độc lập, chờ callback cuối và assert không có warmup/mất mẫu. Unit RED thiếu collector → GREEN **7 passed, 1 warning, 3.17s** cho timing/log. Lượt `load-final-verified` **3 passed, 83.97s**: cả ba mức 1217 gửi/1217 mẫu, 0 thiếu/thừa, 0 lỗi, 100% ≤2s; p95 c20 **606.620ms**, max **1405.177ms**. [JSON cuối](evidence/phase6/load-final.json). Đang chạy lại full suite; 286 trước review giữ là lịch sử.
+Trong lượt đo lại phát hiện một `/api/auth/me` warmup hoàn tất sau lúc clear collector (1218 thay vì 1217 ở c10); không dùng lượt đó làm số liệu cuối. Đã thêm collector chọn request ngay tại đầu bằng header riêng của harness, đếm request gửi độc lập, chờ callback cuối và assert không có warmup/mất mẫu. Unit RED thiếu collector → GREEN **7 passed, 1 warning, 3.17s** cho timing/log. Lượt `load-final-verified` **3 passed, 83.97s**: cả ba mức 1217 gửi/1217 mẫu, 0 thiếu/thừa, 0 lỗi, 100% ≤2s; p95 c20 **606.620ms**, max **1405.177ms**. [JSON cuối](evidence/phase6/load-final.json). 286 trước review giữ là lịch sử; kết quả sau mọi sửa ở mục dưới.
+
+## Xác minh cuối sau sửa review
+
+Log `.local-tests/phase-6/full-final-02.log`, ghi xong lúc **22:50:27 ngày 16/10/2026 Việt Nam**, đã đọc và xác nhận tiến trình **exit 0**: **290 passed, 1 warning, 0 skipped**, **586.58s (9m46s)**. Gồm 267 ca baseline và 23 ca bổ sung; không bỏ/nới test cũ. Caddy proxy failure probe chạy thật, không skip. Mã được kiểm thử là bản sau các sửa trong `3500805`; thay đổi sau đó chỉ tài liệu/ledger.
+
+```powershell
+$env:GEOATTEND_TEST_DATABASE_URL='postgresql://postgres@127.0.0.1:55440/postgres'
+$env:GEOATTEND_CADDY_BINARY=(Resolve-Path .local-tests/phase-6/caddy/caddy.exe).Path
+# Xóa GEOATTEND_LOAD_ROUNDS nếu đã dùng để benchmark dài.
+./.venv/Scripts/python.exe -m pytest -q --basetemp=.local-tests/phase-6/full-final-02 -o cache_dir=.local-tests/phase-6/cache-final-02
+./.venv/Scripts/python.exe -m pip check
+git diff --check
+git diff 8d96052 --check
+```
+
+Sau suite: **No broken requirements found**, cả hai diff check đạt; không thay migration hoặc requirements/lockfile. Warning duy nhất vẫn là deprecation upstream Starlette/httpx. Git nhắc LF→CRLF theo cấu hình Windows không phải lỗi diff. Reviewer độc lập ban đầu không Critical, ba Important đã được tái hiện/sửa/kiểm chứng nêu trên; không có vòng review độc lập thứ hai, nên không quy kết reviewer đã xác nhận lại bản cuối. Minor timeline UUID còn được ghi rõ; bfcache thực đa browser vẫn cần thiết bị.
+
+Commit sửa review **3500805**; commit tài liệu bằng chứng cuối xem Git log. Giữ branch/worktree, không merge/push/deploy. `superpowers:finishing-a-development-branch` áp dụng lựa chọn giữ nguyên theo ủy quyền hiện hành, không hỏi lại phương án tích hợp. Không tự xóa scratch/log làm mất bằng chứng bàn giao.
 
 ## Các cổng còn mở — phần môi trường thật
 

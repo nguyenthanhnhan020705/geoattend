@@ -54,6 +54,7 @@ Rollback mã: maintenance proxy, drain web, dừng worker, trỏ current về re
 
 ## Worker, health, log và cảnh báo
 
+- Đồng bộ đồng hồ host bằng NTP, kiểm tra lệch giờ khi triển khai/khôi phục; log timestamp UTC, nghiệp vụ vẫn `Asia/Ho_Chi_Minh`/20:00 cố định. Không chỉnh giờ server thật để mô phỏng pilot/cutoff; clock điều khiển chỉ thuộc DB/test riêng. Owner kiểm tra ngày Việt Nam và lịch worker trước mở dịch vụ.
 - Worker riêng chạy mỗi 60 giây, restart on-failure, không gắn vào web worker hoặc phụ thuộc tab. Nếu dừng, API đối soát bù nhưng đó không thay thế vận hành worker. Log đếm đóng ngày/prune/purge và journal timestamp; không GPS/token/lý do.
 - `/api/health`: 200 DB ok hoặc 503 thông báo chung, không DSN. Không phải readiness đầy đủ cho worker/retention/checksum/backup. Monitor loopback mỗi phút; cảnh báo sau 3 lần lỗi. Sau restart đối soát ngày cũ trước mở ngày mới.
 - Alert heartbeat worker không có lượt thành công trong 3 phút; backup >26 giờ hoặc restore drill tháng chưa đạt; expired GPS chưa purge sau 3 phút; TLS còn <14 ngày; 5xx >1% trong 5 phút; API ≤2s <95% trong cửa sổ đủ ≥100 request. Owner quyết định ngưỡng/đích nhận alert trước go-live; agent chưa gửi thông báo.

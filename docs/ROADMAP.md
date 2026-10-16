@@ -160,7 +160,7 @@ Thứ tự thực hiện: **0 → 1 → 2 → 3 → 4 → 5 → 6**.
 
 **Yêu cầu BRD:** toàn bộ AC-01 đến AC-19, NFR-01 đến NFR-05 và các ngưỡng thống nhất ở Phase 0.
 
-- [x] Chạy kiểm thử hồi quy API, database, phân quyền, trạng thái và GIS trên DB test riêng: Phase 6 cuối 286 passed, 1 warning; chưa thay thế nghiệm thu đích thật.
+- [x] Chạy kiểm thử hồi quy API, database, phân quyền, trạng thái và GIS trên DB test riêng: Phase 6 cuối 290 passed, 1 warning, 0 skipped; chưa thay thế nghiệm thu đích thật.
 - [ ] Kiểm tra luồng đầu cuối trên điện thoại/máy tính và tình huống gửi lại thao tác khi mạng không ổn định.
 - [ ] Đo thời gian xử lý tại Backend và xác nhận ít nhất 95% yêu cầu API hoàn tất trong tối đa 2 giây, không tính thời gian lấy GPS; thống kê độ chính xác GPS để đánh giá, không dùng làm ngưỡng chặn Check-in.
 - [ ] Kiểm tra chính sách thu thập/lưu/xóa vị trí và nội dung log.

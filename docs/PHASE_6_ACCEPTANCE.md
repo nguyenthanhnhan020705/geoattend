@@ -33,6 +33,8 @@ Môi trường **L**: PostgreSQL 17/PostGIS riêng, pytest API/database và Edge
 
 ## Các cổng nghiệm thu
 
+Bằng chứng Phase 6 bổ sung: `test_phase6_snapshot_queries.py` bảo vệ số lượt DB dưới khóa; `test_admin_dashboard_refresh.py` bổ sung lifecycle cache; `test_phase6_readiness.py` probe timeline bằng UUID cố định; `test_phase6_load.py` (unit/integration) đo và kiểm đếm đủ request; `test_phase6_logging.py` chạy formatter thật; `test_phase6_caddy.py` probe proxy 502 thật khi cấu hình binary; `test_phase6_restore.py` (unit/integration) guard đích, hai chính sách dump/restore và đối soát xóa sau backup. Xem VERIFICATION/PERFORMANCE cho số chạy cuối, không dùng sự tồn tại của test thay kết quả chạy.
+
 1. Local: full suite mới, pip check/diff check; không lỗi mất dữ liệu/trùng phiên/sai quyền. Mọi lỗi mới phải có phân tích nguyên nhân và kiểm thử hồi quy.
 2. Vận hành: backup/restore cô lập kiểm chứng; secret/DB role/log/worker/HTTPS có cấu hình và chủ chịu trách nhiệm; chưa suy ra hạ tầng thật đã được cấu hình.
 3. Đích thật: HTTPS/GPS, bộ thiết bị, đo backend đích và rollback rehearsal được cho phép cụ thể và ghi kết quả.

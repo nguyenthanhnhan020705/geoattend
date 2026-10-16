@@ -32,53 +32,53 @@
 **Files:** `docs/PHASE_6_ACCEPTANCE.md`, kế hoạch này.
 **Interfaces:** test fixture tạo/drop database `geoattend_test_<uuid>` ở cluster local 55440; ma trận cung cấp test/gap/gate cho các task sau.
 
-- [ ] Đọc tài liệu theo thứ tự, kiểm tra Git/worktree và xác minh cluster test, không đọc `.env`.
-- [ ] Chạy full suite baseline, lưu log `.local-tests/phase-6/baseline.log`; Expected: ghi số thực tế và mọi lỗi, không mặc định 267.
-- [ ] Lập đủ 19 AC và 5 NFR với test hiện có, môi trường, tiêu chí và phần cần bằng chứng thật.
-- [ ] Kiểm tra đủ ID bằng script/assertion và `git diff --check`; commit tài liệu.
+- [x] Đọc tài liệu theo thứ tự, kiểm tra Git/worktree và xác minh cluster test, không đọc `.env`.
+- [x] Chạy full suite baseline, lưu log `.local-tests/phase-6/baseline.log`; Expected: ghi số thực tế và mọi lỗi, không mặc định 267.
+- [x] Lập đủ 19 AC và 5 NFR với test hiện có, môi trường, tiêu chí và phần cần bằng chứng thật.
+- [x] Kiểm tra đủ ID bằng script/assertion và `git diff --check`; commit tài liệu.
 
 ### Task 2: Hồi quy và Minor
 
 **Files:** `tests/integration/test_admin_dashboard_refresh.py`, `app/static/js/admin-dashboard.js`, `tests/integration/test_phase6_readiness.py`, báo cáo Phase 6.
 **Interfaces:** dùng API/clock/fixtures hiện có; không đổi payload hoặc migration.
 
-- [ ] Test `pagehide` rồi `pageshow(persisted=true)` phải tải snapshot mới và duy trì đúng một timer; test 403 không phục hồi polling. Chạy RED trước sửa JS.
-- [ ] Sửa lifecycle tối thiểu, chạy GREEN cùng toàn nhóm refresh.
-- [ ] Probe timeline bằng ID cố định có thứ tự ngược và timestamp trùng; ghi mức ảnh hưởng, giữ tương thích nếu chỉ presentation và không có thứ tự tổng quát an toàn.
-- [ ] Rà soát test quyền/GIS/concurrency/retry/cutoff/ngày mới/retention; bổ sung ca thiếu có ý nghĩa. Commit task khi focused xanh.
+- [x] Test `pagehide` rồi `pageshow(persisted=true)` phải tải snapshot mới và duy trì đúng một timer; test 403 không phục hồi polling. Chạy RED trước sửa JS.
+- [x] Sửa lifecycle tối thiểu, chạy GREEN cùng toàn nhóm refresh.
+- [x] Probe timeline bằng ID cố định có thứ tự ngược và timestamp trùng; ghi mức ảnh hưởng, giữ tương thích nếu chỉ presentation và không có thứ tự tổng quát an toàn.
+- [x] Rà soát test quyền/GIS/concurrency/retry/cutoff/ngày mới/retention; bổ sung ca thiếu có ý nghĩa. Commit task khi focused xanh.
 
 ### Task 3: Đo tải backend
 
 **Files:** `scripts/phase6_load.py`, `tests/test_phase6_load.py`, `tests/integration/test_phase6_load.py`, `docs/PHASE_6_PERFORMANCE.md`.
 **Interfaces:** đo ASGI từ request vào đến response body cuối bằng perf_counter, không body/query/secret; dữ liệu tổng hợp DB riêng, 10 User + Admin, tải bằng HTTP loopback.
 
-- [ ] RED kiểm tra thống kê nearest-rank p50/p95/p99, tỷ lệ ≤2000ms tính cả lỗi và endpoint template không chứa UUID/query; rồi code GREEN.
-- [ ] Harness tự tạo DB local riêng, migration và user tổng hợp, chạy web độc lập, warmup tách riêng; không dùng launcher `.env`.
-- [ ] Đo concurrency 1/10/20, request đọc status/history/dashboard/onsite và ghi Office/Remote/nghỉ/checkout/replay; ghi số lượng, latency, error, CPU/RAM/version/cấu hình và giới hạn.
-- [ ] Đạt local khi ≥95% mẫu hoàn tất ≤2s và không lỗi ngoài kỳ vọng; môi trường đích vẫn pending. Commit.
+- [x] RED kiểm tra thống kê nearest-rank p50/p95/p99, tỷ lệ ≤2000ms tính cả lỗi và endpoint template không chứa UUID/query; rồi code GREEN.
+- [x] Harness tự tạo DB local riêng, migration và user tổng hợp, chạy web độc lập, warmup tách riêng; không dùng launcher `.env`.
+- [x] Đo concurrency 1/10/20, request đọc status/history/dashboard/onsite và ghi Office/Remote/nghỉ/checkout/replay; ghi số lượng, latency, error, CPU/RAM/version/cấu hình và giới hạn.
+- [x] Đạt local khi ≥95% mẫu hoàn tất ≤2s và không lỗi ngoài kỳ vọng; môi trường đích vẫn pending. Commit.
 
 ### Task 4: Vận hành, backup/restore và log
 
 **Files:** `deploy/`, `scripts/phase6_restore_drill.py`, `tests/integration/test_phase6_restore.py`, `docs/PHASE_6_OPERATIONS.md`.
 **Interfaces:** dùng `scripts.maintenance.run_once`, `apply_migrations/grant_runtime`, pg_dump/pg_restore; runtime/migration role tách biệt.
 
-- [ ] Diễn tập dump/restore vào DB riêng với GPS hết hạn/chưa hết hạn và tombstone; kiểm tra API che trước purge, maintenance purge trước readiness, phiên/lịch sử/checksum/quyền còn đúng.
-- [ ] Kiểm tra log và HTTP lỗi không lộ sentinel mật khẩu/token/GPS/DSN; sửa RED/GREEN nếu gặp rò rỉ.
-- [ ] Chuẩn bị HTTPS same-origin, cookie Secure, private bind/proxy trust, worker độc lập/restart, health/log/alert, secret và quyền DB, migration/rollback.
-- [ ] Chốt chính sách backup mẫu: mã hóa, 7 bản ngày, purge tự động, không archive kéo dài; owner vận hành và owner dữ liệu phải được chỉ định trước go-live; restore phải đối soát dữ liệu xóa sau backup.
-- [ ] Chạy diễn tập thật bằng PostgreSQL tools local và lưu kết quả đã khử nhạy cảm; commit.
+- [x] Diễn tập dump/restore vào DB riêng với GPS hết hạn/chưa hết hạn và tombstone; kiểm tra API che trước purge, maintenance purge trước readiness, phiên/lịch sử/checksum/quyền còn đúng.
+- [x] Kiểm tra log và HTTP lỗi không lộ sentinel mật khẩu/token/GPS/DSN; sửa RED/GREEN nếu gặp rò rỉ.
+- [x] Chuẩn bị HTTPS same-origin, cookie Secure, private bind/proxy trust, worker độc lập/restart, health/log/alert, secret và quyền DB, migration/rollback.
+- [x] Chốt chính sách backup mẫu: mã hóa, 7 bản ngày, purge tự động, không archive kéo dài; owner vận hành và owner dữ liệu phải được chỉ định trước go-live; restore phải đối soát dữ liệu xóa sau backup.
+- [x] Chạy diễn tập thật bằng PostgreSQL tools local và lưu kết quả đã khử nhạy cảm; commit.
 
 ### Task 5: Thiết bị thật/pilot và bàn giao
 
 **Files:** `docs/PHASE_6_PILOT.md`, `docs/PHASE_6_VERIFICATION.md`, `handoff/README_PHASE_6.md`, README/ROADMAP/DEVELOPMENT/tổng kết.
 **Interfaces:** nhận bằng chứng Task 1–4; không biến mô phỏng/browser headless thành thực nghiệm thiết bị.
 
-- [ ] Checklist điện thoại/máy tính, HTTPS/GPS permission, mạng yếu/mất phản hồi/retry, cutoff và Dashboard; mẫu kết quả bỏ trống có chủ ý khi chưa chạy.
-- [ ] Pilot khoảng 10 User/5 ngày làm việc: vai trò, lịch, phản hồi ẩn danh, số đo API/GPS aggregate, tiêu chí dừng/đạt và owner ký.
-- [ ] Chuẩn bị phiếu duyệt đích triển khai: host/domain/DB, diff/migration, dữ liệu, chi phí cần báo giá, backup/rollback/xác minh; chưa xin tác động khi chưa có đích cụ thể.
-- [ ] Full suite cuối, pip check, diff --check; Expected: báo đúng số pass/fail/warning, lưu log và giới hạn.
-- [ ] Review độc lập toàn diff theo executing-plans; sửa finding quan trọng bằng RED/GREEN; cập nhật trạng thái và commit. Phase 6 vẫn chưa hoàn tất nếu thiếu HTTPS/thiết bị thật/tải đích/pilot.
+- [x] Checklist điện thoại/máy tính, HTTPS/GPS permission, mạng yếu/mất phản hồi/retry, cutoff và Dashboard; mẫu kết quả bỏ trống có chủ ý khi chưa chạy.
+- [x] Pilot khoảng 10 User/5 ngày làm việc: vai trò, lịch, phản hồi ẩn danh, số đo API/GPS aggregate, tiêu chí dừng/đạt và owner ký.
+- [x] Chuẩn bị phiếu duyệt đích triển khai: host/domain/DB, diff/migration, dữ liệu, chi phí cần báo giá, backup/rollback/xác minh; chưa xin tác động khi chưa có đích cụ thể.
+- [x] Full suite cuối, pip check, diff --check; Expected: báo đúng số pass/fail/warning, lưu log và giới hạn.
+- [x] Review độc lập toàn diff theo executing-plans; sửa finding quan trọng bằng RED/GREEN; cập nhật trạng thái và commit. Phase 6 vẫn chưa hoàn tất nếu thiếu HTTPS/thiết bị thật/tải đích/pilot.
 
 ## Trạng thái thực hiện
 
-Task 1–4 hoàn tất local/chuẩn bị; Task 5 checklist/handoff đã soạn, đang full suite/review cuối. Kết quả/commit và các quyết định phát sinh ghi trong `docs/PHASE_6_VERIFICATION.md`; scratch ledger ở `.superpowers/sdd/2026-10-16-phase-6-readiness/progress.md`. Toàn Phase 6 còn mở các cổng HTTPS/thiết bị thật/tải đích/pilot.
+Task 1–5 hoàn tất trong phạm vi local/chuẩn bị được ủy quyền; full suite sau sửa review 290 passed, 1 warning, 0 skipped, pip check/diff check đạt. Kết quả/commit và các quyết định phát sinh ghi trong `docs/PHASE_6_VERIFICATION.md`; scratch ledger ở `.superpowers/sdd/2026-10-16-phase-6-readiness/progress.md`. Toàn Phase 6 còn mở các cổng HTTPS/thiết bị thật/tải đích/pilot. Review ba Important đã sửa trong một lượt và kiểm chứng; không tự tuyên bố production sẵn sàng.
