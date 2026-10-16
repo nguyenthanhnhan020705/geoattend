@@ -59,6 +59,20 @@ Lượt `load-measure-02`: **3 passed, 164.10s**, sau tối ưu đọc snapshot;
 
 Kết quả full suite smoke không thay thế lượt dài này. Phép đo chỉ cho mô hình local/dataset/workload nêu trên; không chứng minh lịch sử lớn, nhiều công ty hoặc nhiều văn phòng.
 
+## Số đo cuối sau review — dùng khi bàn giao
+
+Review phát hiện timing unhandled 500 nằm bên trong ServerErrorMiddleware; đã đặt wrapper ngoài toàn stack FastAPI và kiểm tra final body có delay. Khi đo lại, phát hiện race collector clear lúc warmup `/auth/me` chưa hoàn tất. Lượt `load-review-final` có 1218 mẫu ở c10 nên **không dùng làm số liệu cuối**; có thêm warning cache ACL Windows, không phải lỗi HTTP. Sửa collector chọn request tại đầu bằng header chỉ của harness; count request gửi độc lập, chờ callback cuối và assert không warmup/không mất mẫu. Không sửa/ngắt profile lock hoặc ngưỡng 95%.
+
+Lượt **`load-final-verified`**, bản đã sửa review/collector: **3 passed, 83.97s**. Mỗi mức **1217 gửi / 1217 mẫu**, missing_timings **0**, workload_failures rỗng, tổng **3651 request**, **0 lỗi HTTP/transport**, **100% ≤2s** ở cả ba mức. [JSON số đo cuối](evidence/phase6/load-final.json).
+
+| Concurrency | p50 ms | p95 ms | p99 ms | max ms | Request/s | Thành công ≤2s |
+| --- | --- | --- | --- | --- | --- | --- |
+| 1 | 13.377 | 43.567 | 82.898 | 220.569 | 51.59 | 100% |
+| 10 | 107.815 | 215.304 | 430.972 | 1045.577 | 79.86 | 100% |
+| 20 | 193.972 | 606.620 | 891.801 | 1405.177 | 66.29 | 100% |
+
+Do Windows sandbox lỗi tài khoản 1909, lượt cuối chạy bằng quyền nâng được duyệt, cùng laptop/database loopback nhưng context chạy khác các lượt đầu. Không diễn giải chênh lệch latency giữa mọi lượt thành mức tăng tốc nhân quả hoặc suy rộng production; bằng chứng query bound/SQL và hồi quy bảo vệ thay đổi tối ưu. Máy vẫn có tải nền của người dùng, không host benchmark chuyên dụng.
+
 ## Cổng môi trường đích
 
 Chưa có host/domain/DB/chi phí/quyền đích. Cần chạy đo trên staging/pilot cùng CPU/RAM/pool/worker/proxy/TLS/DB network thực đã duyệt; đo server-side bằng log api_request, giữ tỷ lệ lỗi và số mẫu, xác minh clock/health/worker. Harness này chỉ cho phép DB test cô lập, không trỏ vào production để tạo/xóa dữ liệu. Muốn load staging thực phải chuẩn bị workload riêng với tài khoản/dữ liệu được duyệt, không đổi guard an toàn của fixture.

@@ -23,8 +23,7 @@ from app.accounts.service import create_user
 from app.config import Settings
 from app.db.pool import make_pool
 from app.main import create_app
-from app.telemetry import ApiTiming
-from scripts.phase6_load import summarize
+from scripts.phase6_load import summarize,MeasuredRequests
 from tests.integration.test_office import POLYGON
 
 pytestmark=pytest.mark.integration
@@ -49,12 +48,12 @@ def test_local_backend_load(migrated_db,test_dsn,monkeypatch,concurrency):
                 migrated_db.execute("INSERT INTO geoattend.attendance_events(day_id,session_id,event_type,event_time,recorded_at,source) VALUES(%s,%s,%s,%s,%s,'USER')",(day,session,kind,moment,moment))
     migrated_db.commit()
     pool=make_pool(test_dsn);pool.open()
-    samples=[];guard=threading.Lock()
+    samples=[];guard=threading.Lock();sent=[0]
     def record(sample):
         with guard:samples.append(sample)
     sock=socket.socket();sock.bind(('127.0.0.1',0))
     origin=f'http://127.0.0.1:{sock.getsockname()[1]}'
-    app=ApiTiming(create_app(Settings(origin=origin),pool),record)
+    app=MeasuredRequests(create_app(Settings(origin=origin),pool),record)
     server=uvicorn.Server(uvicorn.Config(app,log_level='critical',access_log=False))
     thread=threading.Thread(target=lambda:server.run(sockets=[sock]),daemon=True);thread.start()
     clients=[]
@@ -71,7 +70,11 @@ def test_local_backend_load(migrated_db,test_dsn,monkeypatch,concurrency):
             client.headers['X-CSRF-Token']=response.json()['csrf_token']
             clients.append(client)
             assert client.get('/api/auth/me').status_code==200
-        with guard:samples.clear()
+        def count_request(request):
+            with guard:sent[0]+=1
+        for client in clients:
+            client.headers['X-Phase6-Measure']='1'
+            client.event_hooks['request']=[count_request]
         start=time.perf_counter()
         response=clients[-1].post('/api/auth/login',json={'username':'admin','password':'Synthetic1234'})
         assert response.status_code==200
@@ -120,8 +123,15 @@ def test_local_backend_load(migrated_db,test_dsn,monkeypatch,concurrency):
                 try:future.result()
                 except Exception as error:failures.append(type(error).__name__)
         elapsed=time.perf_counter()-start
+        # A client can receive the final bytes just before ASGI's send returns.
+        # Wait for callbacks, counting all submitted HTTP requests independently.
+        deadline=time.monotonic()+5
+        while time.monotonic()<deadline:
+            with guard:complete=len(samples)==sent[0]
+            if complete:break
+            time.sleep(.01)
         result=summarize(samples)
-        result.update(concurrency=concurrency,rounds=rounds,workload_failures=failures,elapsed_seconds=round(elapsed,3),
+        result.update(concurrency=concurrency,rounds=rounds,workload_failures=failures,sent_requests=sent[0],missing_timings=sent[0]-len(samples),elapsed_seconds=round(elapsed,3),
                       requests_per_second=round(len(samples)/elapsed,2),users=10,history_days=5,
                       python=platform.python_version(),platform=platform.platform(),
                       cpu_count=os.cpu_count(),pool_max_size=5,uvicorn_workers=1,
@@ -131,6 +141,9 @@ def test_local_backend_load(migrated_db,test_dsn,monkeypatch,concurrency):
         output=Path('.local-tests/phase-6');output.mkdir(parents=True,exist_ok=True)
         (output/f'load-c{concurrency}-r{rounds}.json').write_text(json.dumps(result,indent=2),encoding='utf-8')
         assert not failures,failures
+        assert result['missing_timings']==0
+        assert result['requests']==57+116*rounds
+        assert 'GET /api/auth/me' not in result['by_endpoint']
         assert result['errors']==0
         assert result['successful_within_2s_percent']>=95,result
         assert migrated_db.execute('SELECT count(*) AS n FROM geoattend.work_sessions WHERE end_time IS NULL').fetchone()['n']==0

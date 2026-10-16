@@ -5,6 +5,19 @@ No CLI accepting application credentials or remote targets is provided.
 """
 from collections import defaultdict
 from math import ceil
+from app.telemetry import ApiTiming
+
+
+class MeasuredRequests:
+    """Select at request entry, so delayed warmup completion cannot leak in."""
+    def __init__(self,app,record):
+        self.app=app
+        self.timed=ApiTiming(app,record)
+
+    async def __call__(self,scope,receive,send):
+        measured=(scope['type']=='http' and
+                  (b'x-phase6-measure',b'1') in scope.get('headers',[]))
+        await (self.timed if measured else self.app)(scope,receive,send)
 
 
 def summarize(samples):

@@ -106,3 +106,62 @@ def test_dump_restore_purge_and_tombstone_before_reopening(configured,migrated_d
         with psycopg.connect(test_dsn,autocommit=True) as admin:
             admin.execute(sql.SQL('DROP DATABASE {} WITH (FORCE)').format(sql.Identifier(target_name)))
             admin.execute(sql.SQL('DROP ROLE {}').format(sql.Identifier(role)))
+
+
+def test_reconcile_history_deleted_after_backup_before_reopening(configured,migrated_db,test_dsn,tmp_path):
+    client,headers,user_id=configured
+    request_id=str(uuid4())
+    assert office_action(client,headers,request_id=request_id).status_code==200
+    assert action(client,headers,1,'CHECK_OUT','Synthetic end').status_code==200
+    day=migrated_db.execute('SELECT id,work_date,revision FROM geoattend.attendance_days').fetchone()
+    # This archive intentionally predates deletion and contains GPS, modeling an
+    # old archive rather than the GPS-free production backup policy.
+    backup=tmp_path/'before-deletion.dump'
+    run_pg('pg_dump',test_dsn,'--format=custom','--no-owner','--no-privileges','--file',backup)
+    csrf=signin(client).json()['csrf_token']
+    deleted=client.request('DELETE',f'/api/admin/users/{user_id}/history/{day["id"]}',headers={'X-CSRF-Token':csrf},json={'expected_revision':day['revision'],'confirm_username':'worker'})
+    assert deleted.status_code==200
+    ledger={'account_id':str(user_id),'work_date':str(day['work_date'])}
+    assert migrated_db.execute('SELECT count(*) AS n FROM geoattend.work_sessions').fetchone()['n']==0
+    target_name='geoattend_test_postdelete_'+uuid4().hex;role='postdelete_runtime_'+uuid4().hex
+    with psycopg.connect(test_dsn,autocommit=True) as admin:
+        admin.execute(sql.SQL('CREATE DATABASE {}').format(sql.Identifier(target_name)))
+        admin.execute(sql.SQL('CREATE ROLE {} LOGIN').format(sql.Identifier(role)))
+    target=make_conninfo(test_dsn,dbname=target_name)
+    try:
+        run_pg('pg_restore',target,'--no-owner','--no-privileges','--exit-on-error','--dbname',target_name,backup)
+        with psycopg.connect(target,row_factory=dict_row) as operator:
+            grant_runtime(operator,role)
+        runtime=make_conninfo(target,user=role)
+        run_once(runtime)  # Private restore gate, still no public listener.
+        pool=make_pool(runtime);pool.open()
+        try:
+            with TestClient(create_app(Settings(),pool)) as restored:
+                csrf=signin(restored).json()['csrf_token']
+                query=f'/api/admin/users/{ledger["account_id"]}/history?from={ledger["work_date"]}&to={ledger["work_date"]}'
+                resurrected=restored.get(query).json()['items']
+                assert len(resurrected)==1  # Unsafe snapshot, readiness is false.
+                assert len(resurrected[0]['sessions'])==1
+                assert resurrected[0]['sessions'][0]['location']['status']=='available'
+                # Manual runbook procedure: resolve the exact ledger target,
+                # load current revision, confirm its username, use existing API.
+                target_user=next(row for row in restored.get('/api/admin/users').json()['items'] if row['id']==ledger['account_id'])
+                current=resurrected[0]
+                assert current['status']=='CHECKED_OUT'
+                response=restored.request('DELETE',f'/api/admin/users/{ledger["account_id"]}/history/{current["id"]}',headers={'X-CSRF-Token':csrf},json={'expected_revision':current['revision'],'confirm_username':target_user['username']})
+                assert response.status_code==200
+                assert restored.get(query).json()['items']==[]
+                csrf=signin(restored,'worker','Worker1234').json()['csrf_token']
+                replay=office_action(restored,{'X-CSRF-Token':csrf},request_id=request_id)
+                assert replay.status_code==409 and replay.json()['code']=='HISTORY_DELETED'
+                assert restored.get('/api/attendance/history').json()['items']==[]
+        finally:pool.close()
+        with psycopg.connect(runtime,row_factory=dict_row) as restored:
+            for table in ('work_sessions','attendance_events','office_locations'):
+                assert restored.execute(sql.SQL('SELECT count(*) AS n FROM geoattend.{}').format(sql.Identifier(table))).fetchone()['n']==0
+            assert restored.execute('SELECT history_deleted FROM geoattend.attendance_days').fetchone()['history_deleted']
+            assert restored.execute('SELECT bool_and(history_deleted) AS deleted FROM geoattend.attendance_requests').fetchone()['deleted']
+    finally:
+        with psycopg.connect(test_dsn,autocommit=True) as admin:
+            admin.execute(sql.SQL('DROP DATABASE {} WITH (FORCE)').format(sql.Identifier(target_name)))
+            admin.execute(sql.SQL('DROP ROLE {}').format(sql.Identifier(role)))

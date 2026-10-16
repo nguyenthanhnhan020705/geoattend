@@ -21,6 +21,13 @@ from app.telemetry import ApiTiming
 STATIC = Path(__file__).parent / 'static'
 
 
+class TimedFastAPI(FastAPI):
+    async def __call__(self,scope,receive,send):
+        # FastAPI's outer ServerErrorMiddleware generates unhandled 500 bodies.
+        # Timing must surround that entire stack, not live inside add_middleware.
+        await ApiTiming(super().__call__)(scope,receive,send)
+
+
 def create_app(settings=None, pool=None):
     settings = settings or Settings.from_env()
 
@@ -34,7 +41,7 @@ def create_app(settings=None, pool=None):
         if owned:
             app.state.pool.close()
 
-    app = FastAPI(lifespan=lifespan)
+    app = TimedFastAPI(lifespan=lifespan)
     app.state.settings = settings
     app.include_router(auth_router)
     app.include_router(accounts_router)
@@ -120,7 +127,6 @@ def create_app(settings=None, pool=None):
         return protected_page(request,'admin-office.html','ADMIN')
 
     app.mount('/static', StaticFiles(directory=STATIC), name='static')
-    app.add_middleware(ApiTiming)
     return app
 
 

@@ -1,4 +1,12 @@
 # Preparation only. Substitute the approved public DNS name in Caddy's env.
+{
+    # HTTP error logs include request URI/headers even with access logs off.
+    # Backend health/metrics provide alerts without persisting those requests.
+    log default {
+        exclude http.log.error
+    }
+}
+
 {$GEOATTEND_HOST} {
     # Keep Caddy's data directory persistent for certificate renewal.
     # Access logging intentionally disabled: URLs/query parameters may be private.

@@ -1,0 +1,233 @@
+[
+  {
+    "requests": 1217,
+    "errors": 0,
+    "within_2s_percent": 100.0,
+    "successful_within_2s_percent": 100.0,
+    "p50_ms": 13.377,
+    "p95_ms": 43.567,
+    "p99_ms": 82.898,
+    "max_ms": 220.569,
+    "by_endpoint": {
+      "GET /api/admin/dashboard": {
+        "requests": 200,
+        "errors": 0,
+        "p95_ms": 21.164,
+        "max_ms": 25.154
+      },
+      "GET /api/admin/onsite": {
+        "requests": 200,
+        "errors": 0,
+        "p95_ms": 21.956,
+        "max_ms": 26.437
+      },
+      "GET /api/admin/users/{account_id}/history": {
+        "requests": 200,
+        "errors": 0,
+        "p95_ms": 50.105,
+        "max_ms": 58.634
+      },
+      "GET /api/attendance/history": {
+        "requests": 100,
+        "errors": 0,
+        "p95_ms": 68.246,
+        "max_ms": 126.111
+      },
+      "GET /api/attendance/status": {
+        "requests": 180,
+        "errors": 0,
+        "p95_ms": 26.218,
+        "max_ms": 53.265
+      },
+      "GET /api/health": {
+        "requests": 200,
+        "errors": 0,
+        "p95_ms": 8.292,
+        "max_ms": 17.115
+      },
+      "POST /api/attendance/actions": {
+        "requests": 126,
+        "errors": 0,
+        "p95_ms": 50.696,
+        "max_ms": 103.405
+      },
+      "POST /api/auth/login": {
+        "requests": 11,
+        "errors": 0,
+        "p95_ms": 220.569,
+        "max_ms": 220.569
+      }
+    },
+    "concurrency": 1,
+    "rounds": 10,
+    "workload_failures": [],
+    "sent_requests": 1217,
+    "missing_timings": 0,
+    "elapsed_seconds": 23.588,
+    "requests_per_second": 51.59,
+    "users": 10,
+    "history_days": 5,
+    "python": "3.13.3",
+    "platform": "Windows-11-10.0.26200-SP0",
+    "cpu_count": 12,
+    "pool_max_size": 5,
+    "uvicorn_workers": 1,
+    "clock": "2026-10-16 09:00 Vietnam (controlled business time; monotonic timing real)",
+    "postgres": "17.9",
+    "postgis": "3.6.1"
+  },
+  {
+    "requests": 1217,
+    "errors": 0,
+    "within_2s_percent": 100.0,
+    "successful_within_2s_percent": 100.0,
+    "p50_ms": 107.815,
+    "p95_ms": 215.304,
+    "p99_ms": 430.972,
+    "max_ms": 1045.577,
+    "by_endpoint": {
+      "GET /api/admin/dashboard": {
+        "requests": 200,
+        "errors": 0,
+        "p95_ms": 200.382,
+        "max_ms": 323.442
+      },
+      "GET /api/admin/onsite": {
+        "requests": 200,
+        "errors": 0,
+        "p95_ms": 211.268,
+        "max_ms": 349.245
+      },
+      "GET /api/admin/users/{account_id}/history": {
+        "requests": 200,
+        "errors": 0,
+        "p95_ms": 202.198,
+        "max_ms": 270.252
+      },
+      "GET /api/attendance/history": {
+        "requests": 100,
+        "errors": 0,
+        "p95_ms": 245.744,
+        "max_ms": 366.983
+      },
+      "GET /api/attendance/status": {
+        "requests": 180,
+        "errors": 0,
+        "p95_ms": 158.032,
+        "max_ms": 212.643
+      },
+      "GET /api/health": {
+        "requests": 200,
+        "errors": 0,
+        "p95_ms": 62.01,
+        "max_ms": 107.448
+      },
+      "POST /api/attendance/actions": {
+        "requests": 126,
+        "errors": 0,
+        "p95_ms": 345.387,
+        "max_ms": 557.708
+      },
+      "POST /api/auth/login": {
+        "requests": 11,
+        "errors": 0,
+        "p95_ms": 1045.577,
+        "max_ms": 1045.577
+      }
+    },
+    "concurrency": 10,
+    "rounds": 10,
+    "workload_failures": [],
+    "sent_requests": 1217,
+    "missing_timings": 0,
+    "elapsed_seconds": 15.24,
+    "requests_per_second": 79.86,
+    "users": 10,
+    "history_days": 5,
+    "python": "3.13.3",
+    "platform": "Windows-11-10.0.26200-SP0",
+    "cpu_count": 12,
+    "pool_max_size": 5,
+    "uvicorn_workers": 1,
+    "clock": "2026-10-16 09:00 Vietnam (controlled business time; monotonic timing real)",
+    "postgres": "17.9",
+    "postgis": "3.6.1"
+  },
+  {
+    "requests": 1217,
+    "errors": 0,
+    "within_2s_percent": 100.0,
+    "successful_within_2s_percent": 100.0,
+    "p50_ms": 193.972,
+    "p95_ms": 606.62,
+    "p99_ms": 891.801,
+    "max_ms": 1405.177,
+    "by_endpoint": {
+      "GET /api/admin/dashboard": {
+        "requests": 200,
+        "errors": 0,
+        "p95_ms": 754.524,
+        "max_ms": 1405.177
+      },
+      "GET /api/admin/onsite": {
+        "requests": 200,
+        "errors": 0,
+        "p95_ms": 631.661,
+        "max_ms": 749.938
+      },
+      "GET /api/admin/users/{account_id}/history": {
+        "requests": 200,
+        "errors": 0,
+        "p95_ms": 669.163,
+        "max_ms": 767.329
+      },
+      "GET /api/attendance/history": {
+        "requests": 100,
+        "errors": 0,
+        "p95_ms": 491.711,
+        "max_ms": 658.886
+      },
+      "GET /api/attendance/status": {
+        "requests": 180,
+        "errors": 0,
+        "p95_ms": 461.513,
+        "max_ms": 587.947
+      },
+      "GET /api/health": {
+        "requests": 200,
+        "errors": 0,
+        "p95_ms": 202.109,
+        "max_ms": 266.103
+      },
+      "POST /api/attendance/actions": {
+        "requests": 126,
+        "errors": 0,
+        "p95_ms": 787.34,
+        "max_ms": 1030.42
+      },
+      "POST /api/auth/login": {
+        "requests": 11,
+        "errors": 0,
+        "p95_ms": 829.284,
+        "max_ms": 829.284
+      }
+    },
+    "concurrency": 20,
+    "rounds": 10,
+    "workload_failures": [],
+    "sent_requests": 1217,
+    "missing_timings": 0,
+    "elapsed_seconds": 18.358,
+    "requests_per_second": 66.29,
+    "users": 10,
+    "history_days": 5,
+    "python": "3.13.3",
+    "platform": "Windows-11-10.0.26200-SP0",
+    "cpu_count": 12,
+    "pool_max_size": 5,
+    "uvicorn_workers": 1,
+    "clock": "2026-10-16 09:00 Vietnam (controlled business time; monotonic timing real)",
+    "postgres": "17.9",
+    "postgis": "3.6.1"
+  }
+]

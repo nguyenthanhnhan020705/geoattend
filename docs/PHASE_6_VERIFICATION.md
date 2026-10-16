@@ -1,6 +1,6 @@
 # Phase 6 — Kiểm chứng và sổ thực hiện
 
-Phase 6 **đang thực hiện**, chưa nghiệm thu môi trường thật/pilot. Bắt đầu 16/10/2026 trong `.worktrees/phase-1`, branch `feat/phase-1-foundation-auth`, HEAD `8d96052`, Git sạch. Không reset về `2472785`; không triển khai lại Phase 0–5. Không có AGENTS.md trên đĩa tại root/worktree; áp dụng chỉ dẫn AGENTS trong yêu cầu người dùng.
+Phase 6 **chưa hoàn thành toàn bộ**; phần local/chuẩn bị đang xác minh lại sau review, còn các cổng môi trường thật/pilot. Bắt đầu 16/10/2026 trong `.worktrees/phase-1`, branch `feat/phase-1-foundation-auth`, HEAD `8d96052`, Git sạch. Không reset về `2472785`; không triển khai lại Phase 0–5. Không có AGENTS.md trên đĩa tại root/worktree; áp dụng chỉ dẫn AGENTS trong yêu cầu người dùng.
 
 ## Kế hoạch và trạng thái
 
@@ -10,9 +10,9 @@ Phase 6 **đang thực hiện**, chưa nghiệm thu môi trường thật/pilot.
 | --- | --- | --- |
 | 1 — Baseline/ma trận | Hoàn tất local | 19 AC + 5 NFR; baseline 267 passed, 1 warning, 693.88s |
 | 2 — Hồi quy/Minor | Hoàn tất local | Lifecycle RED 1 fail/1 pass → refresh GREEN 7 pass; probe timeline 1 pass; chờ cache thực đa browser |
-| 3 — Hiệu năng | Hoàn tất local | Query bound RED 6→24 → GREEN; đo lại 3651 request, 0 lỗi; c1/c10 100%, c20 99.91783%≤2s; tải đích pending |
+| 3 — Hiệu năng | Hoàn tất local | Lượt cuối sau review 3651 request/đủ mẫu, 0 lỗi, cả c1/c10/c20 100%≤2s; p95 c20 606.620ms; tải đích pending |
 | 4 — Vận hành/restore/log | Hoàn tất chuẩn bị/local | Guard RED → GREEN; 12 test timing/log/restore đạt; mẫu triển khai chưa chạy trên host đích |
-| 5 — Bàn giao/checklist | Chuẩn bị xong; đang full suite/review | Checklist thiết bị/pilot, phiếu duyệt đích, roadmap/handoff; cổng T/P chưa chạy |
+| 5 — Bàn giao/checklist | Full suite đạt; chờ review cuối | 286 passed/1 warning; checklist/phiếu duyệt đích/roadmap/handoff sẵn sàng; cổng T/P chưa chạy |
 
 ## Baseline mới
 
@@ -49,6 +49,35 @@ Diễn tập pg_dump/pg_restore custom thật ở DB UUID riêng: GPS-free chu�
 
 [Runbook](PHASE_6_OPERATIONS.md) và `deploy/` chuẩn bị HTTPS same-origin/cookie Secure, proxy trust loopback, role/secret riêng, release/rollback, worker/health/log/alert, backup GPS-free mã hóa mỗi ngày giữ 7 bản/7 ngày, restore purge/đối soát xóa/thu hồi session trước mở public. Chưa có host Linux/Caddy/systemd/secret store hoặc job backup/retention thật, chưa validate trên host đích. RPO24h/RTO4h là mục tiêu đề xuất cho owner duyệt, không phải SLA đã chứng minh.
 
-## Các cổng còn mở — trạng thái cuối sẽ cập nhật sau full suite/review
+## Xác minh cuối
+
+Ngày 16/10/2026, log `.local-tests/phase-6/full-final-01.log`: **286 passed, 1 warning, 499.47s**, exit code **0**; gồm 267 ca baseline và 19 ca thêm, không bỏ/nới test cũ. Bao gồm API/database/PostGIS, quyền, transaction/race, retry/replay legacy/tombstone, cutoff/ngày mới, retention, UI User/Admin, Dashboard/Onsite, đo tải smoke và restore thật hai chính sách. Warning duy nhất là upstream Starlette/httpx như baseline.
+
+```powershell
+$env:GEOATTEND_TEST_DATABASE_URL='postgresql://postgres@127.0.0.1:55440/postgres'
+# Không đặt GEOATTEND_LOAD_ROUNDS cho full suite smoke mặc định.
+./.venv/Scripts/python.exe -m pytest -q --basetemp=.local-tests/phase-6/full-final-01 -o cache_dir=.local-tests/phase-6/cache-final
+./.venv/Scripts/python.exe -m pip check
+git diff --check
+git diff 8d96052 --check
+```
+
+Checks sau full suite lúc **22:23 Việt Nam**: `pip check` → **No broken requirements found**; cả hai diff check đạt; migration 001–004 và dependency/lockfiles không đổi. JSON load/restore đã khử nhạy cảm trong docs/evidence/phase6; các log/DB/dump/ảnh test chỉ ở thư mục ignored, không commit dữ liệu người dùng/bí mật. Đọc `.env`/DSN thật không cần cho công việc này và không thực hiện.
+
+Sandbox Windows lỗi tạo process 1909 trong giai đoạn review/checks; process pytest đã khởi chạy vẫn hoàn tất. Lệnh kiểm tra mới dùng quyền nâng được duyệt; không đổi account/credential hoặc hạ cấu hình sandbox. Không có tác động Supabase thật, deploy, merge/push hoặc gửi thông báo cho người khác.
+
+Commit theo task: `0eb1d06` baseline/ma trận; `aae1200` lifecycle/Minor; `f2614b8` đo/tối ưu/timing; `efc6e0e` runbook/log/restore; `6016369` thiết bị/pilot/handoff. Commit bằng chứng cuối theo Git log sau review.
+
+## Review độc lập và lượt sửa cuối
+
+Reviewer đọc range `8d96052..6016369`, không sửa code/Git/DB. Không Critical, có ba Important được kiểm chứng và xử lý trong một lượt sửa:
+
+1. Caddy error logger độc lập access log có thể ghi query/header khi upstream 502. Tải Caddy **2.11.7** Windows chính thức vào `.local-tests`, xác minh **SHA512** theo file checksum release trước khi chạy; không cài service. Probe HTTP loopback với upstream socket không listen đã RED vì TOKEN/GPS/PASSWORD_SENTINEL lọt log; cấu hình global default `exclude http.log.error` → GREEN **1 passed, 0.43s**. Python SafeFormatter không được dùng để che lỗ hổng proxy này; target/provider vẫn cần audit.
+2. Timing đặt trong add_middleware đứng bên trong ServerErrorMiddleware, ghi sớm khi unhandled 500. Test trên stack ứng dụng thật với final send trễ 20ms đã RED thứ tự metric→start→body. Đưa wrapper ra ngoài toàn bộ stack qua subclass FastAPI giữ interface/state; GREEN thứ tự start→body→metric, đúng một mẫu 500 có gồm thời gian send trễ. Nhóm timing/log/health **9 passed, 1 warning, 2.73s**.
+3. Restore ban đầu chỉ xóa trước dump, chưa chứng minh xóa sau backup. Bổ sung dump trước → xóa source qua Admin API → restore cô lập thấy dữ liệu sống lại → đối soát account/ngày trong sổ xóa và revision/username mới nhất qua API → không còn history/session/event/GPS, replay HISTORY_DELETED. Nhóm restore **3 passed, 1 warning, 15.35s**. Runbook dừng gate nếu ngày active/không có sổ xóa, không ép trạng thái để xóa.
+
+Trong lượt đo lại phát hiện một `/api/auth/me` warmup hoàn tất sau lúc clear collector (1218 thay vì 1217 ở c10); không dùng lượt đó làm số liệu cuối. Đã thêm collector chọn request ngay tại đầu bằng header riêng của harness, đếm request gửi độc lập, chờ callback cuối và assert không có warmup/mất mẫu. Unit RED thiếu collector → GREEN **7 passed, 1 warning, 3.17s** cho timing/log. Lượt `load-final-verified` **3 passed, 83.97s**: cả ba mức 1217 gửi/1217 mẫu, 0 thiếu/thừa, 0 lỗi, 100% ≤2s; p95 c20 **606.620ms**, max **1405.177ms**. [JSON cuối](evidence/phase6/load-final.json). Đang chạy lại full suite; 286 trước review giữ là lịch sử.
+
+## Các cổng còn mở — phần môi trường thật
 
 HTTPS đích, thiết bị thật/GPS thực, đo tải trên cấu hình đích, người vận hành/owner dữ liệu và pilot khoảng 10 người/5 ngày làm việc cần quyền/điều kiện cụ thể. Không ghi completed cho toàn Phase 6 khi các cổng này còn mở.

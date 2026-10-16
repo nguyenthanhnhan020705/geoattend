@@ -1,6 +1,6 @@
 # GeoAttend — Bàn giao Phase 6
 
-**Trạng thái: local/chuẩn bị đang hoàn thiện; môi trường thật/pilot chưa thực hiện.** Làm trong `.worktrees/phase-1`, branch `feat/phase-1-foundation-auth`. Không reset, merge/push/deploy hoặc chạy test trên Supabase thật. Phase 0–5 đã hoàn thành, không triển khai lại.
+**Trạng thái: local/chuẩn bị đã kiểm chứng; chờ review cuối và môi trường thật/pilot chưa thực hiện.** Làm trong `.worktrees/phase-1`, branch `feat/phase-1-foundation-auth`. Không reset, merge/push/deploy hoặc chạy test trên Supabase thật. Phase 0–5 đã hoàn thành, không triển khai lại.
 
 ## Tài liệu hiện hành
 
@@ -14,11 +14,11 @@
 
 Baseline mới **267 passed, 1 warning, 693.88s**, không sao chép số test lịch sử. Lifecycle Dashboard bfcache probe đỏ–xanh; không hồi sinh polling khi đã 403. Timeline trùng cả hai timestamp có thể sắp UUID đảo thứ tự, chỉ trình bày; probe giữ sự kiện/phiên/trạng thái đúng, Minor còn mở.
 
-Tải thật HTTP loopback/PostGIS, 10 User + Admin và lịch sử tổng hợp: trước tối ưu c20 dài chỉ **93.51% ≤2s** (FAIL). Gom truy vấn Dashboard để giảm giữ khóa, giữ khóa/recheck/retention. Sau sửa **3651 request, 0 lỗi**; c1/c10 **100%**, c20 **99.91783% ≤2s**, p95 c20 **806.608ms**. Chỉ chứng minh local; chưa hiệu năng đích. [Số liệu chi tiết](../docs/evidence/phase6/load-after.json).
+Tải thật HTTP loopback/PostGIS, 10 User + Admin và lịch sử tổng hợp: trước tối ưu c20 dài chỉ **93.51% ≤2s** (FAIL). Gom truy vấn Dashboard để giảm giữ khóa, giữ khóa/recheck/retention. Lượt cuối sau sửa review/collector **3651 request, đủ mẫu, 0 lỗi**; c1/c10/c20 **100% ≤2s**, p95 c20 **606.620ms**, max **1405.177ms**. Chỉ chứng minh local; chưa hiệu năng đích. [Số liệu cuối](../docs/evidence/phase6/load-final.json); giữ cả các lượt FAIL/trung gian trong PERFORMANCE.
 
 Restore diễn tập pg_dump/pg_restore thật vào DB UUID riêng, GPS-free và legacy-with-gps: API che quá hạn trước purge, maintenance idempotent, giữ lịch sử/xác minh/tombstone, quyền runtime/checksum; kiểm tra thu hồi session phục hồi trước mở dịch vụ. Backup chuẩn loại dữ liệu bảng GPS, giữ 7 bản ngày mã hóa; sau restore không phục hồi Marker GPS cũ, không tạo điểm giả. Owner dữ liệu/vận hành phải tiếp nhận policy và kiểm tra backup/PITR provider.
 
-Kết quả full suite/checks/review cuối xem báo cáo VERIFICATION; không lấy baseline hoặc lượt focused làm kết quả cuối.
+Full suite cuối **286 passed, 1 warning, 499.47s**, exit0; `pip check`, `git diff --check` và kiểm tra diff từ baseline đều đạt, không đổi migration/dependency. Warning upstream Starlette/httpx. Review cuối ghi ở VERIFICATION; không lấy baseline hoặc lượt focused làm kết quả cuối.
 
 ## Kiểm thử local an toàn
 
@@ -31,7 +31,7 @@ $env:GEOATTEND_TEST_DATABASE_URL='postgresql://postgres@127.0.0.1:55440/postgres
 git diff --check
 ```
 
-Đo tải dài chạy riêng theo PERFORMANCE, không cạnh tranh full suite/browser. Không nới assertion 95% để xanh. Giữ kết quả FAIL trước sửa; không coi c1/c10 hoặc local là chứng nhận production.
+Đo tải dài chạy riêng theo PERFORMANCE, không cạnh tranh full suite/browser. Không nới assertion 95% để xanh. Giữ kết quả FAIL trước sửa; không coi c1/c10 hoặc local là chứng nhận production. Probe proxy là test mới opt-in: đặt `GEOATTEND_CADDY_BINARY` trỏ tới binary Caddy 2.11.7 local đã xác minh checksum từ release chính thức; thiếu biến này test mới sẽ ghi skip, không phải bằng chứng log proxy đạt. Lượt cuối được cấu hình binary nên phải có kết quả thực tế, không skip.
 
 ## Việc còn chờ quyền/điều kiện
 

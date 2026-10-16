@@ -56,3 +56,54 @@ def test_app_emits_sanitized_metrics_on_validation_and_database_failure(client,c
     records=[record.api_metrics for record in caplog.records if record.name=='geoattend.api']
     assert [(row['route'],row['status']) for row in records]==[('/api/auth/login',422),('/api/health',503)]
     assert 'SENTINEL' not in json.dumps(records) and 'secret-dsn' not in json.dumps(records)
+
+
+def test_real_app_unhandled_500_is_timed_after_delayed_final_body():
+    from app.main import create_app
+    from app.config import Settings
+    app=create_app(Settings())
+    @app.get('/api/timing-failure')
+    async def fail():raise RuntimeError('synthetic failure')
+    events=[];samples=[]
+    class Observe(logging.Handler):
+        def emit(self,record):
+            if hasattr(record,'api_metrics'):
+                events.append('metric');samples.append(record.api_metrics)
+    handler=Observe();logger=logging.getLogger('geoattend.api');old=logger.level
+    logger.addHandler(handler);logger.setLevel(logging.INFO)
+    async def run():
+        incoming=asyncio.Queue()
+        await incoming.put({'type':'http.request','body':b'','more_body':False})
+        async def send(message):
+            if message['type']=='http.response.start':events.append('start')
+            if message['type']=='http.response.body' and not message.get('more_body',False):
+                await asyncio.sleep(.02)
+                events.append('final-body')
+        scope=dict(type='http',http_version='1.1',method='GET',scheme='http',
+                   path='/api/timing-failure',root_path='',query_string=b'',headers=[],
+                   server=('127.0.0.1',80),client=('127.0.0.1',1234))
+        with pytest.raises(RuntimeError,match='synthetic failure'):
+            await app(scope,incoming.get,send)
+    try:asyncio.run(run())
+    finally:logger.removeHandler(handler);logger.setLevel(old)
+    assert events==['start','final-body','metric']
+    assert len(samples)==1 and samples[0]['status']==500
+    assert samples[0]['duration_ms']>=20
+
+
+def test_load_collector_excludes_warmup_at_request_entry():
+    from scripts.phase6_load import MeasuredRequests
+    samples=[]
+    async def endpoint(scope,receive,send):
+        scope['route']=type('Route',(),{'path':'/api/probe'})()
+        await send({'type':'http.response.start','status':200,'headers':[]})
+        await send({'type':'http.response.body','body':b''})
+    async def ignore(message):pass
+    async def run():
+        app=MeasuredRequests(endpoint,samples.append)
+        scope=dict(type='http',path='/api/probe',method='GET',headers=[])
+        await app(dict(scope),None,ignore)
+        assert samples==[]
+        await app(dict(scope,headers=[(b'x-phase6-measure',b'1')]),None,ignore)
+        assert len(samples)==1 and samples[0]['route']=='/api/probe'
+    asyncio.run(run())
