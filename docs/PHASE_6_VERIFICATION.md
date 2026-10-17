@@ -4,7 +4,7 @@ Phase 6 **chưa hoàn thành toàn bộ**; phần local/chuẩn bị đã hoàn 
 
 ## Kế hoạch và trạng thái
 
-[Kế hoạch chi tiết](superpowers/plans/2026-10-16-phase-6-readiness.md), [ma trận AC/NFR](PHASE_6_ACCEPTANCE.md).
+[Kế hoạch chi tiết](archive/superpowers/plans/2026-10-16-phase-6-readiness.md), [ma trận AC/NFR](PHASE_6_ACCEPTANCE.md).
 
 | Task | Trạng thái | Bằng chứng |
 | --- | --- | --- |

@@ -1,8 +1,8 @@
-﻿# GeoAttend — Bảng chuyển trạng thái
+# GeoAttend — Bảng chuyển trạng thái
 
-Nguồn: [BRD](../README.md), các quyết định Phase 0 đã được người dùng xác nhận.
+Nguồn: [BRD](REQUIREMENTS.md), các quyết định Phase 0 đã được người dùng xác nhận.
 
-Mục 1–2 tổng hợp quy tắc đã chốt. Mục 3–4 đã được duyệt cùng [bản thiết kế Phase 0](superpowers/specs/2026-10-14-geoattend-mvp-design.md).
+Mục 1–2 tổng hợp quy tắc đã chốt. Mục 3–4 đã được duyệt cùng [bản thiết kế Phase 0](archive/superpowers/specs/2026-10-14-geoattend-mvp-design.md).
 
 ## 1. Điều kiện chung đã chốt
 
@@ -66,7 +66,7 @@ Theo yêu cầu mới của người dùng, Admin được xóa vĩnh viễn l�
 
 ## 6. Điều chỉnh luồng User theo ca, 15/10/2026
 
-Cập nhật Xin nghỉ 16/10/2026: chọn buổi rồi lý do; nghỉ sáng hiện hai lựa chọn tiếp tục buổi chiều và sau tiếp tục chỉ CHECK-OUT cuối ngày. Nghỉ cả ngày khóa ngày, không hủy nghỉ để làm tiếp. Chi tiết/bằng chứng: [LEAVE_FLOW_VERIFICATION](LEAVE_FLOW_VERIFICATION.md). Cờ `morning_leave` từ sự kiện ngày hiện tại phân biệt ca sau nghỉ sáng; `lunch_taken` giữ nghĩa nghỉ trưa. `FULL_DAY_LEAVE` cũng trả `day_finished=true`.
+Cập nhật Xin nghỉ 16/10/2026: chọn buổi rồi lý do; nghỉ sáng hiện hai lựa chọn tiếp tục buổi chiều và sau tiếp tục chỉ CHECK-OUT cuối ngày. Nghỉ cả ngày khóa ngày, không hủy nghỉ để làm tiếp. Chi tiết/bằng chứng: [LEAVE_FLOW_VERIFICATION](archive/LEAVE_FLOW_VERIFICATION.md). Cờ `morning_leave` từ sự kiện ngày hiện tại phân biệt ca sau nghỉ sáng; `lunch_taken` giữ nghĩa nghỉ trưa. `FULL_DAY_LEAVE` cũng trả `day_finished=true`.
 
 Người dùng yêu cầu chỉ hiển thị nghỉ trưa/Check-out sớm ở ca đầu, hai lựa chọn tiếp tục Office/Remote khi nghỉ trưa, và chỉ Check-out sau khi tiếp tục. Cập nhật 16/10/2026: **mọi Check-out, kể cả CHECK-OUT SỚM, đều kết thúc ngày và khóa đến ngày hôm sau theo giờ Việt Nam**. Quy tắc này thay thế quyền bắt đầu lại sau Check-out trong thiết kế cũ.
 

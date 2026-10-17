@@ -1,27 +1,19 @@
-# GeoAttend — Chạy và kiểm tra Phase 1–5
+# GeoAttend — Cài đặt và phát triển
 
-Cập nhật Phase 6: [báo cáo local](PHASE_6_VERIFICATION.md), [đo tải](PHASE_6_PERFORMANCE.md), [runbook HTTPS/secret/worker/backup/restore](PHASE_6_OPERATIONS.md), [checklist thiết bị/pilot](PHASE_6_PILOT.md). Các mẫu `deploy/` chỉ là chuẩn bị, chưa cài lên môi trường thật. Vận hành dùng `deploy/logging.json` và tắt access/body/query logs như runbook.
+Chạy các lệnh tại thư mục chứa `app/`, `scripts/` và `requirements.lock.txt`. Sau khi clone, đây là thư mục `geoattend`; trên máy phát triển hiện tại là `.worktrees/phase-1`.
 
-Điều chỉnh Xin nghỉ: chọn buổi trước lý do; sau nghỉ sáng là ca chiều với CHECK-OUT cuối ngày, nghỉ cả ngày khóa đến ngày mai. Khởi động lại web và Ctrl+F5, không cần migration. Bằng chứng mới: [LEAVE_FLOW_VERIFICATION](LEAVE_FLOW_VERIFICATION.md).
-
-Giao diện User đã tối ưu cho điện thoại: thông tin nhân viên ở đầu; chọn **CHECK-IN REMOTE** hoặc **XIN NGHỈ** mới hiện form lý do; **Lịch sử cá nhân** thu gọn cuối trang và chỉ tải khi mở. Xem [USER_MOBILE_UI](USER_MOBILE_UI.md). Sau cập nhật chỉ cần Ctrl+F5, không cần migration cho thay đổi giao diện này.
-
-Điều chỉnh mới theo ca: đang làm trước nghỉ trưa chỉ có **NGHỈ TRƯA / CHECK-OUT SỚM**; nghỉ trưa hiện **TIẾP TỤC OFFICE / TIẾP TỤC REMOTE**; sau tiếp tục chỉ có **CHECK-OUT**. Theo yêu cầu 16/10/2026, mọi Check-out, kể cả Check-out sớm, kết thúc ngày và khóa đến ngày mai theo giờ Việt Nam. Khởi động lại web rồi Ctrl+F5 để dùng Backend mới; không có migration mới. Replay UUID và ngoại lệ Admin xóa ngày hôm nay/reset vẫn giữ nguyên.
-
-CHECK-OUT SỚM bắt buộc nhập lý do và xác nhận; CHECK-OUT sau nghỉ trưa không yêu cầu lý do. Bằng chứng/hướng dẫn chạy: [EARLY_CHECKOUT_VERIFICATION](EARLY_CHECKOUT_VERIFICATION.md).
-
-Phase 1 cung cấp đăng nhập và quản lý tài khoản. Phase 2 bổ sung Remote, Check-out, lịch sử cá nhân và tự đóng phiên lúc 20:00. Phase 3 bổ sung bản đồ cấu hình Geofence, Office và GPS hết hạn sau 30 ngày. Phase 4 bổ sung nghỉ trưa, nghỉ sáng/cả ngày, hủy nghỉ kết hợp bắt đầu và chuyển trực tiếp Office/Remote. Phase 5 bổ sung Dashboard/Onsite Admin. Xem checklist [Phase 2](MANUAL_TEST_PHASE_2.md), [Phase 3](MANUAL_TEST_PHASE_3.md), [Phase 4](MANUAL_TEST_PHASE_4.md) và [Phase 5](MANUAL_TEST_PHASE_5.md).
+Cài nhanh theo [README](../README.md). Thao tác nghiệp vụ xem [USAGE](USAGE.md); quy tắc hiện hành xem [STATE_TRANSITIONS](STATE_TRANSITIONS.md). Triển khai HTTPS, log, backup/restore và worker xem [runbook](PHASE_6_OPERATIONS.md).
 
 ## 1. Chuẩn bị
 
 ### Chạy local với Supabase đã cấu hình
 
-Trong worktree `.worktrees/phase-1`, file `.env` có `SUPABASE_DB_HOST/PORT/NAME/USER/PASSWORD/SSLMODE` và `GEOATTEND_RUNTIME_DB_USER/PASSWORD`. User qua session pooler có dạng `role.projectref`, port 5432. Không gửi mật khẩu vào chat hay commit `.env`.
+File `.env` tại thư mục dự án có `SUPABASE_DB_HOST/PORT/NAME/USER/PASSWORD/SSLMODE` và `GEOATTEND_RUNTIME_DB_USER/PASSWORD`. User qua session pooler có dạng `role.projectref`, port 5432. Không gửi mật khẩu vào chat hay commit `.env`.
 
 Không cần nạp biến môi trường thủ công mỗi lần mở Terminal. Launcher local đọc `.env`, escape mật khẩu qua Psycopg và chỉ truyền DSN phù hợp cho tiến trình con:
 
 ```powershell
-# Migration bằng tài khoản quản trị; không tạo lại Admin/User.
+# Chỉ khi cần thiết lập/cập nhật schema: migration bằng tài khoản quản trị.
 .\.venv\Scripts\python.exe -m scripts.local_run migrate
 
 # Terminal 1: web/API.
@@ -40,7 +32,7 @@ User bắt đầu Remote có lý do hoặc Office có GPS; mọi Check-out kết
 
 Maintenance đóng phiên còn mở tại 20:00 giờ Việt Nam và xóa tọa độ/accuracy hết hạn 30 ngày. Nếu máy/tác vụ tắt lúc đó, lần chạy lại xử lý bù; API luôn che GPS hết hạn dù worker chưa chạy. Muốn tác vụ chạy đúng phút khi không ai mở web cần máy chạy maintenance liên tục; production cần worker độc lập. Nghỉ trưa lúc 20:00 chỉ ghi kết thúc ngày, giữ giờ đóng phiên trước nghỉ; nghỉ sáng/cả ngày giữ nguyên trạng thái.
 
-Bản đồ nền mặc định OpenFreeMap (vector), không cần API key; Leaflet, MapLibre và thư viện kết nối được phục vụ local. `GEOATTEND_MAP_BACKGROUND=auto` chọn nền vector mặc định, hoặc raster nếu đã cấu hình URL tile khác. Có thể chọn rõ `vector`/`raster`; nền raster dùng `GEOATTEND_MAP_TILE_URL` (HTTPS, có `{z}/{x}/{y}`) và `GEOATTEND_MAP_ATTRIBUTION`. `GEOATTEND_MAP_STYLE_URL` cấu hình style vector HTTPS; các tài nguyên của style cần cùng origin để phù hợp CSP. Lỗi tải nền không ngăn chỉnh/sửa vùng. GPS chỉ lấy khi User bấm Office; Check-out/Remote không lấy vị trí. Sau khôi phục backup, chạy `local_run maintenance --once` trước khi mở dịch vụ để dọn GPS hết hạn.
+Bản đồ nền mặc định OpenFreeMap (vector), không cần API key; Leaflet, MapLibre và thư viện kết nối được phục vụ local. `GEOATTEND_MAP_BACKGROUND=auto` chọn nền vector mặc định, hoặc raster nếu đã cấu hình URL tile khác. Có thể chọn rõ `vector`/`raster`; nền raster dùng `GEOATTEND_MAP_TILE_URL` (HTTPS, có `{z}/{x}/{y}`) và `GEOATTEND_MAP_ATTRIBUTION`. `GEOATTEND_MAP_STYLE_URL` cấu hình style vector HTTPS; các tài nguyên của style cần cùng origin để phù hợp CSP. Lỗi tải nền không ngăn chỉnh/sửa vùng. GPS chỉ lấy khi User bấm Office; Check-out/Remote không lấy vị trí. Sau khôi phục backup, thực hiện đủ quy trình trong [runbook](PHASE_6_OPERATIONS.md), gồm dọn GPS hết hạn, đối soát lịch sử đã xóa và thu hồi phiên đăng nhập trước khi mở dịch vụ.
 
 - Python 3.13; PostgreSQL có PostGIS và tài khoản migration có quyền tạo schema/extension.
 - Một tài khoản database runtime riêng, không phải superuser hoặc owner schema; database thử nghiệm khác database dùng ứng dụng.
@@ -81,7 +73,7 @@ Chạy migration với hai DSN đã cấu hình:
 .\.venv\Scripts\python.exe -m scripts.migrate
 ```
 
-Migration tạo schema `geoattend`, tìm extension PostGIS hiện có (hỗ trợ schema `public` hoặc `extensions`), hoặc tạo extension mới tại `public` nếu được phép. Tạo đủ 9 bảng, ghi version/checksum và cấp quyền runtime theo user trong DSN ứng dụng. Runtime có DML cần thiết, chỉ DELETE các bảng xác thực cần dọn, không ALTER/CREATE schema. Không dùng cùng database role cho runtime và migration.
+Migration tạo schema `geoattend`, tìm extension PostGIS hiện có (hỗ trợ schema `public` hoặc `extensions`), hoặc tạo extension mới tại `public` nếu được phép. Tạo đủ 9 bảng, ghi version/checksum và cấp quyền runtime theo user trong DSN ứng dụng. Runtime có DML cần thiết, quyền DELETE các bảng xác thực cần dọn và ba bảng con chấm công `work_sessions`, `attendance_events`, `office_locations` phục vụ xóa lịch sử; không DELETE `profiles` hoặc ALTER/CREATE schema. Không dùng cùng database role cho runtime và migration.
 
 Schema `geoattend` không được thêm vào danh sách exposed schemas/API dữ liệu Supabase. Frontend không kết nối trực tiếp database. Migration chạy lại không xóa bảng hoặc dữ liệu; thay đổi migration đã áp dụng sẽ bị từ chối theo checksum, thay vào đó thêm file migration mới.
 
@@ -156,26 +148,20 @@ Khi có test DSN và browser phù hợp, chạy toàn bộ:
 git diff --check
 ```
 
-## 6. Phạm vi bàn giao
+## 6. Kiểm chứng và trạng thái hiện hành
 
-Xem [roadmap](ROADMAP.md) và [báo cáo Phase 5](PHASE_5_VERIFICATION.md). Phase 0–5 đã triển khai, gồm Dashboard/Onsite, lịch sử/xóa ngày Admin và UI User theo ca/khóa cuối ngày. Supabase đã được cấu hình cho ứng dụng local; triển khai production, đo hiệu năng và pilot thuộc Phase 6. Không có migration mới trong Phase 5.
+Full suite gồm cả kiểm tra Caddy. Để chạy ca proxy thay vì skip, đặt `GEOATTEND_CADDY_BINARY` trỏ tới binary Caddy đã xác minh theo [báo cáo Phase 6](PHASE_6_VERIFICATION.md). Diễn tập restore dùng `pg_dump`/`pg_restore` và chỉ chấp nhận database test local. Các binary, database test, `.env` và ảnh/log local không nằm trên GitHub; cần chuẩn bị trên máy mới.
 
-## 7. Hợp đồng Phase 4
+Kết quả kiểm thử, đo tải và giới hạn nằm trong [PHASE_6_VERIFICATION](PHASE_6_VERIFICATION.md), [PHASE_6_PERFORMANCE](PHASE_6_PERFORMANCE.md) và [ma trận nghiệm thu](PHASE_6_ACCEPTANCE.md). Checklist thiết bị thật/pilot tại [PHASE_6_PILOT](PHASE_6_PILOT.md); tiến độ tại [ROADMAP](ROADMAP.md).
 
-Cùng endpoint `POST /api/attendance/actions`: `START_LUNCH`, `MORNING_LEAVE`, `FULL_DAY_LEAVE`, `CANCEL_LEAVE_START_OFFICE`, `CANCEL_LEAVE_START_REMOTE`, `SWITCH_OFFICE`, `SWITCH_REMOTE`; tiếp tục sau nghỉ dùng `START_OFFICE`/`START_REMOTE`. Dùng `allowed_actions`, revision và work date mới từ server. Mỗi thao tác tăng revision một lần, có thể trả nhiều event IDs; cùng UUID/payload replay kết quả cũ. Không có hủy nghỉ độc lập. Tên nghỉ trong OpenAPI là `MORNING_LEAVE`/`FULL_DAY_LEAVE` theo kế hoạch Phase 4.
+## 7. Các hợp đồng cần giữ khi phát triển
 
-Retry Office (gồm switch/hủy nghỉ) chỉ giữ GPS trong bộ nhớ tab; reload đọc lại trạng thái server. Các thao tác không GPS dùng pending sessionStorage hiện có, cùng UUID sau reload. Lịch sử giữ phiên, sự kiện nghỉ/hủy và nhãn tự đóng hệ thống. Kiểm thử toàn suite trên database riêng; không tạo dữ liệu thử trên Supabase thật. Không có migration mới cho Phase 4.
+- Ghi phiên, sự kiện, trạng thái và mã yêu cầu trong cùng transaction; khóa profile trước các khóa ngày/phiên.
+- Action dùng `request_id`, `expected_revision`, `expected_work_date`. Cùng UUID/nội dung trả lại kết quả cũ; màn hình cũ hoặc UUID khác nội dung bị từ chối.
+- Retry Office giữ GPS trong bộ nhớ tab; các action không GPS có thể giữ pending trong sessionStorage. Không lưu GPS vào storage/log.
+- Check-out và nghỉ cả ngày khóa ngày; action hủy nghỉ cũ chỉ còn phục vụ replay dữ liệu đã commit. API chuyển trực tiếp Office/Remote giữ tương thích, UI theo ca không có nút chuyển trực tiếp khi đang làm việc.
+- `GET /api/admin/dashboard` trả số lượng/danh sách/Onsite/văn phòng cùng snapshot; refresh 30 giây khi trang hiển thị. Onsite chỉ dùng vị trí của phiên Office đang mở đã xác minh và còn hạn lưu.
+- Chỉnh Geofence không xác minh lại phiên cũ. Các migration 001–004 đã áp dụng phải giữ checksum; thay đổi schema cần migration mới.
+- Xóa lịch sử Admin theo [ADMIN_HISTORY](ADMIN_HISTORY.md); giữ dấu revision/UUID để chặn retry phục hồi dữ liệu đã xóa.
 
-## 8. Bổ sung quyền lịch sử cho Admin
-
-Sau Phase 4, người dùng yêu cầu Admin xem và xóa vĩnh viễn lịch sử theo ngày. Áp dụng migration 004 bằng `local_run migrate`, khởi động lại web/worker rồi Ctrl+F5. Tại **Quản lý nhân viên → Lịch sử**, Admin lọc ngày, xem phiên/sự kiện và xóa từng ngày có xác nhận tên tài khoản. Chặn ngày đang làm việc/nghỉ trưa; xóa trong transaction và giữ dấu chống retry tối thiểu. Xem [ADMIN_HISTORY](ADMIN_HISTORY.md) cho hợp đồng, vận hành và kiểm thử. Migration không tự xóa dữ liệu.
-
-## 9. Dashboard và Onsite Phase 5
-
-Không có migration mới; giữ nguyên các migration 001–004 đã áp dụng. Restart web rồi Ctrl+F5, đăng nhập Admin và chọn **Dashboard** từ trang nhân viên/văn phòng. `/admin/dashboard` dùng chung dialog lịch sử/xóa ngày và liên kết đến editor `/admin/office`; không có editor thứ hai.
-
-`GET /api/admin/dashboard` trả tổng/bảy nhóm/danh sách/Onsite/văn phòng cùng `as_of` và `work_date`; `GET /api/admin/onsite` là projection từ cùng builder. Bao gồm User bị khóa/chưa bắt đầu, loại Admin. Onsite chỉ lấy vị trí đã xác minh của phiên Office đang mở; tọa độ/accuracy bị che đúng 30 ngày dù worker chưa purge. Thiếu/hết hạn vị trí không đặt Marker giả.
-
-Tab visible làm mới sau mỗi 30 giây, khi quay lại tab hoặc tải tay; không lấy GPS. Lỗi mạng giữ snapshot với nhãn cũ; lỗi map không chặn danh sách/lịch sử. Nếu browser khôi phục document từ cache mà refresh dừng, reload trang; Edge thực tế với header no-store đã tải lại đúng. Xem [báo cáo Phase 5](PHASE_5_VERIFICATION.md) cho giới hạn còn lại và [checklist](MANUAL_TEST_PHASE_5.md) để kiểm tra trên DB riêng.
-
-Full suite ngày 16/10/2026: **249 passed, 1 warning** trên PostgreSQL 17/PostGIS test local riêng ở port 55440. Không tạo/xóa dữ liệu thử hoặc chạy migration mới trên Supabase thật; production/pilot chưa thực hiện.
+Các kế hoạch và số liệu từng phase trước được giữ riêng trong [archive](archive/README.md).
