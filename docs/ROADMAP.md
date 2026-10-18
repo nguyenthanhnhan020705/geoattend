@@ -39,6 +39,8 @@ Theo dõi bằng [ma trận AC/NFR](PHASE_6_ACCEPTANCE.md), [runbook vận hành
 
 ## Sau MVP
 
+Yêu cầu bổ sung ngày 18/10/2026: [báo cáo tuần PDF](features/WEEKLY_REPORTS.md) cho User/Admin đã chốt thiết kế trong hội thoại; đặc tả chờ duyệt, chưa triển khai. Phần này là yêu cầu chức năng riêng, không đánh dấu hoàn tất các cổng Phase 6 còn mở.
+
 PWA, thông báo, xuất báo cáo, AI/RAG, QR, nhiều văn phòng/phòng ban và ứng dụng mobile thuộc định hướng sau MVP. Tính lương và đánh giá năng suất nằm ngoài phạm vi MVP.
 
 Các định hướng được phân tích tại [FUTURE_DEVELOPMENT](FUTURE_DEVELOPMENT.md); những bổ sung đã triển khai tại [features](features/README.md).

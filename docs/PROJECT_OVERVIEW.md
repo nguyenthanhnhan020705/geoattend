@@ -68,6 +68,8 @@ API chuyển trực tiếp Office/Remote còn được giữ tương thích, UI 
 
 Các bổ sung được ghi riêng tại [features](features/README.md): lịch sử Admin, UI theo ca, khóa ngày và khôi phục bản đồ. Các đề xuất chưa triển khai ở [FUTURE_DEVELOPMENT](FUTURE_DEVELOPMENT.md).
 
+Ngày 18/10/2026: chức năng [báo cáo tuần PDF](features/WEEKLY_REPORTS.md) đã chốt thiết kế trong hội thoại, bản đặc tả chờ duyệt trước triển khai. Mỗi User một PDF/tuần thứ Hai–Chủ nhật, thay thế trong hạn; Admin xem/tải, User được nhắc hạn và thông báo tuần trước chưa nộp. Chưa có mã/migration được áp dụng hoặc kết quả kiểm thử mới cho chức năng này.
+
 ## 7. Kiểm chứng và giới hạn
 
 Báo cáo Phase 6 ghi nhận 290 test đạt, một cảnh báo thư viện. Lượt chạy lại trước push ngày 17/10/2026 cũng đạt **290 passed, 1 warning**, 416,67 giây; log local `.local-tests/phase-6/github-publish-tests.log`. Đây là kết quả tại các mốc chạy đó; lần tổ chức tài liệu này không chạy lại bộ kiểm thử ứng dụng.
