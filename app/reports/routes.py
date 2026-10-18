@@ -7,9 +7,10 @@ from app.auth.dependencies import require_user, require_admin
 from app.errors import ApiError
 from app.reports import service
 from app.reports.policy import MAX_PDF_BYTES, validate_pdf, validate_week
+from app.reports.readiness import require_reports_ready
 
-router = APIRouter(prefix='/api/weekly-reports', dependencies=[Depends(require_user)])
-admin_router = APIRouter(prefix='/api/admin/weekly-reports', dependencies=[Depends(require_admin)])
+router = APIRouter(prefix='/api/weekly-reports', dependencies=[Depends(require_user),Depends(require_reports_ready)])
+admin_router = APIRouter(prefix='/api/admin/weekly-reports', dependencies=[Depends(require_admin),Depends(require_reports_ready)])
 
 
 def call_service(request, function, *args):

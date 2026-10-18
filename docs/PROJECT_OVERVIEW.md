@@ -70,6 +70,8 @@ Các bổ sung được ghi riêng tại [features](features/README.md): lịch 
 
 Ngày 18/10/2026: đã triển khai và kiểm chứng local [báo cáo tuần PDF](features/WEEKLY_REPORTS.md). Mỗi User một PDF tối đa 10 MB/tuần thứ Hai–Chủ nhật, thay thế trong hạn; sang thứ Hai khóa tuần cũ. Admin xem/tải; User nhận nhắc Chủ nhật và thông báo tuần trước chưa nộp. Module riêng dùng bảng `weekly_reports` (migration 005); các nghiệp vụ chấm công/GPS/tài khoản và snapshot Dashboard giữ nguyên. Full suite sau bổ sung đạt **318 passed, 1 warning**, 557,59 giây, không skip; migration chỉ áp dụng trên DB test, chưa tác động DB ứng dụng.
 
+Sau phản hồi lỗi mở báo cáo/upload 4,35 MB, kiểm tra chỉ đọc xác nhận database ứng dụng chưa có schema/quyền mới. Đã thêm kiểm tra sẵn sàng riêng cho API báo cáo và khóa chọn file khi chức năng chưa kích hoạt; test TCP upload 4,35 MB trên database riêng thành công. Xem [sổ xử lý lỗi](features/WEEKLY_REPORTS.md#11-sửa-lỗi-khi-mở-báo-cáo-trên-database-chưa-kích-hoạt); áp dụng migration vào DB ứng dụng và khởi động lại web vẫn chờ quyền người dùng.
+
 ## 7. Kiểm chứng và giới hạn
 
 Báo cáo Phase 6 ghi nhận 290 test đạt, một cảnh báo thư viện. Lượt chạy lại trước push ngày 17/10/2026 cũng đạt **290 passed, 1 warning**, 416,67 giây; log local `.local-tests/phase-6/github-publish-tests.log`. Đây là kết quả tại các mốc chạy đó; lần tổ chức tài liệu này không chạy lại bộ kiểm thử ứng dụng.

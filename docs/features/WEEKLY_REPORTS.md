@@ -118,3 +118,13 @@ Kiểm thử tập trung cho chức năng trước, rồi hồi quy phù hợp c
 - Ảnh giao diện với dữ liệu tổng hợp ở 360px/1280px nằm trong `.local-tests/weekly-reports/screenshots/`; đã xem ảnh User/Admin, không tràn ngang. Đây là browser local, không chứng nhận điện thoại/HTTPS đích hoặc PDF từ mọi phần mềm.
 - Cluster test local có sẵn chạy tại `127.0.0.1:55441` do cổng 55440 bị từ chối bind; không khởi tạo lại cluster, không dùng `.env` hoặc Supabase thật.
 - Windows phát sinh lỗi tạo tiến trình sandbox 1909 trong lúc full suite đang chạy; tiến trình pytest đã khởi chạy vẫn hoàn tất. Đọc kết quả/check Git bằng quyền nâng được cho phép, không đổi credential hoặc cấu hình bảo mật máy.
+
+## 11. Sửa lỗi khi mở báo cáo trên database chưa kích hoạt
+
+Người dùng báo thông tin báo cáo bị lỗi kết nối và thao tác file 4,35 MB trông như treo. Khảo sát chỉ đọc trên cấu hình đang chạy xác nhận `/api/health` trả 200, route báo cáo tồn tại; database runtime chưa có bảng `weekly_reports`, chưa có quyền đọc `name/applied_at` của migration ledger. Vì vậy lỗi SQL trả 500 không phải JSON bị frontend hiện thành lỗi mạng. Đây là thiếu bước kích hoạt database của môi trường ứng dụng, không phải file 4,35 MB vượt giới hạn 10 MB.
+
+Bổ sung dependency riêng `app/reports/readiness.py` trước mọi API báo cáo: kiểm tra schema/quyền và migration 005, trả JSON 503 `REPORTS_NOT_READY` với thông báo chưa kích hoạt trước khi nhận/kiểm tra PDF. Không thay error handler hoặc client API dùng chung của các chức năng cũ. Trang nộp không cho chọn file cho đến khi tải được trạng thái hợp lệ.
+
+Test mới ở `tests/integration/test_weekly_reports_readiness.py`: runtime cũ thực tế (thiếu bảng/quyền) đã tái hiện RED 500 rồi GREEN 503; browser đã tái hiện file input vẫn enabled rồi sửa thành disabled. Upload/download 4.350.000 byte qua TCP/Uvicorn thật trên DB test thành công, health vẫn trả 200. Bộ test tập trung báo cáo/readiness/race/browser đạt **21 passed, 1 warning**, 53,68s; `.local-tests/weekly-reports/readiness-green-2.log`. Có thêm dữ liệu PDF tổng hợp khó nén để kiểm tra truyền binary/bytea ở dung lượng thực; không dùng file cá nhân hoặc tạo dữ liệu thử trong database ứng dụng.
+
+Toàn suite sau sửa đang chạy. Để sửa môi trường đang dùng vẫn cần được phép áp dụng migration 005/cấp runtime grants và khởi động lại web; chưa tự thực hiện khi chưa được người dùng đồng ý theo quy tắc bàn giao.

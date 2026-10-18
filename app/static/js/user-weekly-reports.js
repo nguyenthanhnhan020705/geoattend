@@ -20,7 +20,7 @@ function render(data) {
 function controls() {
   el('submit-report').disabled=busy || !!pending || !current || !accountId;
   el('submit-report').textContent=current?.report?'Thay thế báo cáo':'Nộp báo cáo';
-  el('report-file').disabled=busy || !!pending;
+  el('report-file').disabled=busy || !!pending || !current || !accountId;
   el('retry-report').hidden=!pending;el('retry-report').disabled=busy;
   el('report-form').setAttribute('aria-busy',String(busy));
 }
