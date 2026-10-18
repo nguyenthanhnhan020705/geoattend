@@ -1,11 +1,11 @@
 <!doctype html>
-<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Tài khoản · GeoAttend</title><link rel="stylesheet" href="/static/css/app.css"><script type="module" src="/static/js/user.js"></script></head><body>
-<header class="topbar"><a class="brand" href="/user"><span class="brand-mark">G</span>GeoAttend</a><nav aria-label="Điều hướng"><a href="/account">Đổi mật khẩu</a><button id="logout" class="text-button">Đăng xuất</button></nav></header>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Tài khoản · GeoAttend</title><link rel="stylesheet" href="/static/css/app.css"><link rel="stylesheet" href="/static/css/reports.css"><script type="module" src="/static/js/user.js"></script><script type="module" src="/static/js/report-home.js"></script></head><body>
+<header class="topbar report-topbar"><a class="brand" href="/user"><span class="brand-mark">G</span>GeoAttend</a><nav aria-label="Điều hướng"><a href="/account">Đổi mật khẩu</a><a href="/user/weekly-reports">NỘP BÁO CÁO TUẦN</a><button id="logout" class="text-button">Đăng xuất</button></nav></header>
 <main class="workspace user-workspace">
 <section id="employee-account" class="panel employee-account" aria-labelledby="employee-heading">
   <span class="eyebrow green">THÔNG TIN NHÂN VIÊN</span>
   <h1 id="employee-heading">Xin chào, <span id="full-name">bạn</span>.</h1>
-  <dl><dt>Tài khoản</dt><dd id="account-username">—</dd><dt>Vai trò</dt><dd>Nhân viên</dd></dl>
+  <dl><dt>Tài khoản</dt><dd id="account-username">—</dd><dt>Vai trò</dt><dd>Nhân viên</dd></dl><div data-report-notices aria-live="polite"></div><p id="notice-error" class="message" role="status"></p>
 </section>
 <section class="panel attendance-panel" aria-labelledby="attendance-heading">
   <div class="section-heading"><h2 id="attendance-heading">Hôm nay</h2><button id="refresh-status" class="secondary" type="button">Làm mới</button></div>

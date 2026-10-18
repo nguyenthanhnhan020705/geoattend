@@ -47,6 +47,13 @@ def test_dump_restore_purge_and_tombstone_before_reopening(configured,migrated_d
     event=migrated_db.execute("INSERT INTO geoattend.attendance_events(day_id,session_id,event_type,event_time,recorded_at,source,location_verified) VALUES(%s,%s,'WORK_START',%s,%s,'USER',true) RETURNING id",(other_day,session,now,now)).fetchone()['id']
     migrated_db.execute('INSERT INTO geoattend.office_locations(session_id,start_event_id,point,accuracy_m,recorded_at,expires_at) VALUES(%s,%s,ST_SetSRID(ST_MakePoint(106.5,10.5),4326),42,%s,%s)',(session,event,now,now+timedelta(days=30)))
     migrated_db.commit()
+    # Weekly PDF is ordinary application data, including in GPS-free backups.
+    from tests.integration.test_weekly_reports import upload, PDF
+    report=upload(client,headers,week='2026-10-12',filename='Synthetic weekly.pdf')
+    assert report.status_code==200,report.text
+    report_id=report.json()['id']
+    enabled_at=migrated_db.execute("SELECT applied_at FROM geoattend.schema_migrations WHERE name='005_weekly_reports.sql'").fetchone()['applied_at']
+    migrated_db.commit()
     backup=tmp_path/'synthetic.dump'
     exclude=('--exclude-table-data=geoattend.office_locations',) if backup_policy=='gps-free' else ()
     run_pg('pg_dump',test_dsn,'--format=custom','--no-owner','--no-privileges',*exclude,'--file',backup)
@@ -61,6 +68,7 @@ def test_dump_restore_purge_and_tombstone_before_reopening(configured,migrated_d
         run_pg('pg_restore',target,'--no-owner','--no-privileges','--exit-on-error','--dbname',target_name,backup)
         with psycopg.connect(target,row_factory=dict_row) as restored:
             assert apply_migrations(restored,Path('migrations'))==[]
+            assert restored.execute("SELECT applied_at FROM geoattend.schema_migrations WHERE name='005_weekly_reports.sql'").fetchone()['applied_at']==enabled_at
             grant_runtime(restored,role);restored.commit()
             assert restored.execute('SELECT count(*) AS n FROM geoattend.office_locations WHERE point IS NOT NULL').fetchone()['n']==(0 if backup_policy=='gps-free' else 2)
             assert restored.execute("SELECT count(*) AS n FROM geoattend.attendance_events WHERE reason='Synthetic deleted reason'").fetchone()['n']==0
@@ -69,6 +77,7 @@ def test_dump_restore_purge_and_tombstone_before_reopening(configured,migrated_d
         try:
             with TestClient(create_app(Settings(),pool)) as restored_client:
                 csrf=signin(restored_client,'worker','Worker1234').json()['csrf_token']
+                assert restored_client.get('/api/weekly-reports/'+report_id+'/file').content==PDF
                 history=restored_client.get('/api/attendance/history?from=2026-10-14&to=2026-10-14')
                 assert history.status_code==200
                 location=history.json()['items'][0]['sessions'][0]['location']

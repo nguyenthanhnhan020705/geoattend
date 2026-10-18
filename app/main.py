@@ -17,6 +17,7 @@ from app.gis.routes import router as office_router
 from app.admin.routes import router as admin_router
 from app.auth.dependencies import get_auth_context
 from app.telemetry import ApiTiming
+from app.reports.routes import router as reports_router, admin_router as admin_reports_router
 
 STATIC = Path(__file__).parent / 'static'
 
@@ -48,11 +49,13 @@ def create_app(settings=None, pool=None):
     app.include_router(attendance_router)
     app.include_router(office_router)
     app.include_router(admin_router)
+    app.include_router(reports_router)
+    app.include_router(admin_reports_router)
 
     @app.middleware('http')
     async def auth_cache(request, call_next):
         response = await call_next(request)
-        if request.url.path.startswith(('/api/auth','/api/admin','/api/attendance')):
+        if request.url.path.startswith(('/api/auth','/api/admin','/api/attendance','/api/weekly-reports')):
             response.headers['Cache-Control'] = 'no-store'
         response.headers['X-Content-Type-Options'] = 'nosniff'
         response.headers['Referrer-Policy'] = 'same-origin'
@@ -121,6 +124,14 @@ def create_app(settings=None, pool=None):
     @app.get('/account',include_in_schema=False)
     def account_page(request: Request):
         return protected_page(request,'account.html')
+
+    @app.get('/user/weekly-reports',include_in_schema=False)
+    def user_reports_page(request: Request):
+        return protected_page(request,'user-weekly-reports.html','USER')
+
+    @app.get('/admin/weekly-reports',include_in_schema=False)
+    def admin_reports_page(request: Request):
+        return protected_page(request,'admin-weekly-reports.html','ADMIN')
 
     @app.get('/admin/office',include_in_schema=False)
     def office_page(request: Request):

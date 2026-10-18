@@ -7,7 +7,7 @@ Các tài liệu này mô tả phần bổ sung hoặc thay đổi so với thi�
 | Admin xem và xóa lịch sử từng ngày | Đã triển khai, migration 004 | [ADMIN_HISTORY](../ADMIN_HISTORY.md) |
 | Check-out sớm có lý do, khóa ngày, xin nghỉ và tiếp tục buổi chiều | Đã triển khai | [USER_FLOW](USER_FLOW.md) |
 | UI User ưu tiên điện thoại và khôi phục nền bản đồ | Đã triển khai, còn nghiệm thu thiết bị thật | [UI_AND_MAP](UI_AND_MAP.md) |
-| User nộp PDF báo cáo tuần, Admin xem/tải và nhắc hạn | Thiết kế hội thoại đã đồng ý; đặc tả chờ duyệt, chưa triển khai | [WEEKLY_REPORTS](WEEKLY_REPORTS.md) |
+| User nộp PDF báo cáo tuần, Admin xem/tải và nhắc hạn | Đã triển khai/kiểm chứng local, full suite 318 test đạt; migration 005 chưa áp dụng DB ứng dụng | [WEEKLY_REPORTS](WEEKLY_REPORTS.md) |
 
 ADMIN_HISTORY giữ ở vị trí hiện có để dùng chung cho tài liệu nghiệp vụ, phase và vận hành; không tạo bản sao nội dung trong thư mục này. Dashboard cache/tối ưu snapshot được phân tích trong [Phase 6](../phases/PHASE_6_KIEM_THU_VAN_HANH_VA_PILOT.md).
 

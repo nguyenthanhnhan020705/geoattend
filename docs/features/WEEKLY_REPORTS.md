@@ -1,6 +1,6 @@
 # Báo cáo tuần — Đặc tả chức năng
 
-**Ngày:** 18/10/2026. **Trạng thái:** thiết kế trong hội thoại đã được người dùng đồng ý; bản đặc tả này chờ duyệt trước khi lập kế hoạch triển khai. Chưa có mã chức năng, migration được áp dụng hoặc kết quả kiểm thử mới.
+**Ngày:** 18/10/2026. **Trạng thái:** đã triển khai và kiểm chứng local theo [kế hoạch](../superpowers/plans/2026-10-18-weekly-reports.md); full suite **318 passed, 1 warning**, 557,59 giây, không skip. Chỉ áp dụng migration trên database test riêng; database ứng dụng chưa được thay đổi. Người dùng yêu cầu giữ nguyên nghiệp vụ các phần trước.
 
 ## 1. Mục tiêu và phạm vi
 
@@ -66,7 +66,7 @@ Lựa chọn đã đồng ý trong hội thoại: lưu PDF trong PostgreSQL. Ph�
 - Mốc bật chức năng lấy từ `schema_migrations.applied_at` của migration 005; khi restore giữ nguyên mốc này để không đổi lịch sử trách nhiệm nộp.
 - Runtime chỉ được SELECT/INSERT/UPDATE bảng mới. Không bổ sung quyền xóa tài khoản hoặc thay quyền các bảng chấm công.
 - Router riêng cho báo cáo User và Admin; trang riêng `/user/weekly-reports` và `/admin/weekly-reports`. API dưới `/api/weekly-reports` và `/api/admin/weekly-reports`, gồm trạng thái/danh sách, upload User và xem/tải PDF có quyền.
-- Upload truyền binary PDF có giới hạn kích thước, kèm tuần, request UUID và expected revision; không cần thêm dependency multipart. Backend kiểm tra số byte thực dù thiếu hoặc giả Content-Length và dừng đọc khi quá giới hạn.
+- Upload truyền binary PDF có giới hạn kích thước, kèm tuần, request UUID và expected revision; tên file được encode UTF-8 trong header `X-Report-Filename`, tránh đưa vào URL/access log mặc định. Không cần thêm dependency multipart. Backend kiểm tra số byte thực dù thiếu hoặc giả Content-Length và dừng đọc khi quá giới hạn.
 - Kiểm tra đuôi `.pdf`, media type và cấu trúc nhận diện PDF (header/kết thúc), từ chối file rỗng hoặc giả định dạng rõ ràng. Đây là kiểm tra định dạng cơ bản, không tuyên bố diệt mã độc hoặc chứng nhận mọi cấu trúc PDF; không chạy nội dung, trích xuất hay xử lý AI.
 - Upload hoàn tất mới mở transaction ngắn: khóa profile User trước bản ghi báo cáo, kiểm tra lại tài khoản/session và thời hạn, rồi ghi nguyên tử metadata + PDF. Không giữ connection/khóa trong lúc nhận file từ mạng.
 - Cùng request UUID và nội dung của lần ghi gần nhất trả lại xác nhận cũ mà không ghi lại, kể cả retry sau deadline. UUID gần nhất khác nội dung bị từ chối. Retry cũ sau một lần thay thế mới bị từ chối bởi revision, không phục hồi PDF cũ.
@@ -96,3 +96,25 @@ Lựa chọn đã đồng ý trong hội thoại: lưu PDF trong PostgreSQL. Ph�
 8. Browser ở 360px và desktop; lỗi mạng, trạng thái gửi, xác nhận thay thế, trở lại tab và đổi tuần không để UI cũ vượt hạn.
 
 Kiểm thử tập trung cho chức năng trước, rồi hồi quy phù hợp các phần auth/migration/pages/database và suite hiện có. Không dùng kết quả 290 test lịch sử làm kết quả của thay đổi này. GPS/thiết bị thật/HTTPS và pilot Phase 6 vẫn còn mở.
+
+## 9. Mã nguồn và sử dụng
+
+- Backend: `app/reports/policy.py`, `service.py`, `routes.py`; FastAPI kiểm tra kiểu query trực tiếp tại route, không thêm dependency hoặc lớp schema riêng không cần thiết.
+- Trang User `/user/weekly-reports`, Admin `/admin/weekly-reports`; API `/api/weekly-reports` và `/api/admin/weekly-reports`. Liên kết mở/tải PDF được kiểm tra quyền mỗi lần.
+- JS/CSS mới đặt riêng trong `app/static/js/*report*.js` và `app/static/css/reports.css`. Trang User cũ chỉ thêm link, script khởi động nhắc báo cáo và vùng nhắc trong thông tin nhân viên; `user.js` và `app.css` giữ nguyên. Các trang Admin cũ chỉ thêm điều hướng và CSS cho liên kết.
+- Migration `005_weekly_reports.sql` bổ sung bảng `weekly_reports`. Khi triển khai vào database ứng dụng, operator phải được cho phép chạy migration bằng công cụ hiện có và khởi động lại web; không sửa SQL 001–004. Nếu chưa áp dụng 005, chức năng báo cáo chưa dùng được trên database đó.
+- Runtime được cấp SELECT riêng hai cột `name, applied_at` của `schema_migrations` để tính mốc bắt đầu có trách nhiệm nộp, không cấp quyền sửa migration ledger.
+- PDF được chọn và mã gửi chưa rõ kết quả chỉ giữ trong bộ nhớ tab; retry giữ nguyên tuần/file/UUID/revision. Reload phải đọc trạng thái server và chọn lại file cho yêu cầu mới; đổi tuần không tự gửi file đã chọn cho tuần cũ sang tuần mới.
+- Thay PDF không giữ bản cũ trong ứng dụng; bản backup trước đó có thể còn bản cũ theo vòng đời backup. Chưa có job tự xóa báo cáo.
+
+## 10. Sổ kiểm chứng local
+
+- Baseline mới trước sửa sản phẩm: **290 passed, 1 warning**, 433,56 giây; `.local-tests/weekly-reports/baseline.log`.
+- Policy/schema/API/race/runtime grant: RED khi chưa có module/API/migration, sau triển khai **25 passed, 1 warning**, 15,93 giây; `.local-tests/weekly-reports/backend.log`.
+- Browser đã phát hiện và sửa lỗi nhãn Unicode, harness dialog/session clock và giữ file qua đổi tuần. Nhóm browser/protected pages/restore sau sửa đạt **10 passed, 1 warning**, 34,56 giây; `.local-tests/weekly-reports/ui-restore-3.log`.
+- Một reviewer độc lập chỉ đọc tìm hai Important, không Critical: runtime thiếu quyền đọc mốc migration và file pending còn giữ sau khi retry bị từ chối qua đổi tuần/tài khoản. Đã tái hiện RED rồi sửa bằng grant SELECT riêng `name, applied_at` và xóa file chờ khi yêu cầu bị từ chối dứt khoát. Không có lượt review độc lập thứ hai, không quy kết reviewer đã xác nhận lại bản cuối.
+- Kiểm tra bổ sung tên file qua header đã RED (422) rồi GREEN, không đưa tên PDF lên URL/access log. Nhóm sau sửa review gồm policy/API/runtime/race/browser/migration/restore **35 passed, 2 warnings**, 62,06 giây; `.local-tests/weekly-reports/review-green.log`. Cảnh báo thứ hai là cache ACL Windows khi dùng lại cache được tạo bằng quyền nâng, không phải lỗi test.
+- Full suite cuối dùng cache riêng mới: **318 passed, 1 warning**, **557,59 giây**, không skip, tiến trình exit 0; `.local-tests/weekly-reports/full.log`. Caddy probe chạy thật, cùng bộ test chấm công/quyền/GIS/race/browser/restore hiện có và 28 ca mới. Warning duy nhất là Starlette/httpx có sẵn. `pip check` và `git diff --check` đạt; requirements/lockfiles và migration 001–004 không đổi.
+- Ảnh giao diện với dữ liệu tổng hợp ở 360px/1280px nằm trong `.local-tests/weekly-reports/screenshots/`; đã xem ảnh User/Admin, không tràn ngang. Đây là browser local, không chứng nhận điện thoại/HTTPS đích hoặc PDF từ mọi phần mềm.
+- Cluster test local có sẵn chạy tại `127.0.0.1:55441` do cổng 55440 bị từ chối bind; không khởi tạo lại cluster, không dùng `.env` hoặc Supabase thật.
+- Windows phát sinh lỗi tạo tiến trình sandbox 1909 trong lúc full suite đang chạy; tiến trình pytest đã khởi chạy vẫn hoàn tất. Đọc kết quả/check Git bằng quyền nâng được cho phép, không đổi credential hoặc cấu hình bảo mật máy.

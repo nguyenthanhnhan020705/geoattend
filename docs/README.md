@@ -15,6 +15,7 @@ Bắt đầu từ [tổng hợp toàn dự án](PROJECT_OVERVIEW.md) để nắm
 | [Phase 5](phases/PHASE_5_DASHBOARD_VA_BAN_DO_ADMIN.md) | Dashboard và bản đồ Admin |
 | [Phase 6](phases/PHASE_6_KIEM_THU_VAN_HANH_VA_PILOT.md) | Kiểm thử tổng thể, vận hành và pilot |
 | [Chức năng bổ sung](features/README.md) | Các điều chỉnh đã triển khai và quy ước tài liệu cho chức năng mới |
+| [Báo cáo tuần PDF](features/WEEKLY_REPORTS.md) | User nộp/thay PDF trong tuần, nhắc hạn; Admin xem/tải và lọc tuần/nhân viên |
 | [Hướng phát triển](FUTURE_DEVELOPMENT.md) | Ý tưởng sau MVP, chưa cam kết triển khai |
 
 Các file phase mô tả mục tiêu, phạm vi, phân tích/triển khai, mã nguồn liên quan, kiểm chứng và giới hạn. Số test ở từng mốc là snapshot của toàn suite, không cộng các mốc thành tổng số test.

@@ -68,7 +68,7 @@ API chuyển trực tiếp Office/Remote còn được giữ tương thích, UI 
 
 Các bổ sung được ghi riêng tại [features](features/README.md): lịch sử Admin, UI theo ca, khóa ngày và khôi phục bản đồ. Các đề xuất chưa triển khai ở [FUTURE_DEVELOPMENT](FUTURE_DEVELOPMENT.md).
 
-Ngày 18/10/2026: chức năng [báo cáo tuần PDF](features/WEEKLY_REPORTS.md) đã chốt thiết kế trong hội thoại, bản đặc tả chờ duyệt trước triển khai. Mỗi User một PDF/tuần thứ Hai–Chủ nhật, thay thế trong hạn; Admin xem/tải, User được nhắc hạn và thông báo tuần trước chưa nộp. Chưa có mã/migration được áp dụng hoặc kết quả kiểm thử mới cho chức năng này.
+Ngày 18/10/2026: đã triển khai và kiểm chứng local [báo cáo tuần PDF](features/WEEKLY_REPORTS.md). Mỗi User một PDF tối đa 10 MB/tuần thứ Hai–Chủ nhật, thay thế trong hạn; sang thứ Hai khóa tuần cũ. Admin xem/tải; User nhận nhắc Chủ nhật và thông báo tuần trước chưa nộp. Module riêng dùng bảng `weekly_reports` (migration 005); các nghiệp vụ chấm công/GPS/tài khoản và snapshot Dashboard giữ nguyên. Full suite sau bổ sung đạt **318 passed, 1 warning**, 557,59 giây, không skip; migration chỉ áp dụng trên DB test, chưa tác động DB ứng dụng.
 
 ## 7. Kiểm chứng và giới hạn
 

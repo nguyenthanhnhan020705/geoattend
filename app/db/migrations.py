@@ -33,7 +33,9 @@ def apply_migrations(conn, directory):
 def grant_runtime(conn, role):
     identifier = sql.Identifier(role)
     conn.execute(sql.SQL('GRANT USAGE ON SCHEMA geoattend TO {}').format(identifier))
-    tables = ('profiles','auth_sessions','auth_attempts','office','attendance_days','work_sessions','attendance_events','office_locations','attendance_requests')
+    # Reporting eligibility reads only the migration name and activation time.
+    conn.execute(sql.SQL('GRANT SELECT (name, applied_at) ON geoattend.schema_migrations TO {}').format(identifier))
+    tables = ('profiles','auth_sessions','auth_attempts','office','attendance_days','work_sessions','attendance_events','office_locations','attendance_requests','weekly_reports')
     for table in tables:
         conn.execute(sql.SQL('GRANT SELECT, INSERT, UPDATE ON geoattend.{} TO {}').format(sql.Identifier(table), identifier))
     conn.execute(sql.SQL('GRANT DELETE ON geoattend.auth_sessions, geoattend.auth_attempts TO {}').format(identifier))

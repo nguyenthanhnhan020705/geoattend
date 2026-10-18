@@ -25,6 +25,16 @@ Mở **Lịch sử cá nhân** ở cuối trang, chọn khoảng ngày để xem
 
 Marker Onsite là vị trí Check-in Office gần nhất đã xác minh của phiên đang mở. Ứng dụng không theo dõi GPS liên tục. Nhân viên rời trạng thái Office sẽ không còn Marker sau khi dữ liệu được làm mới.
 
+## Nộp và xem báo cáo tuần
+
+User bấm **NỘP BÁO CÁO TUẦN** cạnh **Đổi mật khẩu**, chọn một PDF tổng hợp nội dung tuần hiện tại (thứ Hai–Chủ nhật), tối đa 10 MB, rồi **Nộp báo cáo**. Muốn sửa file, chọn PDF mới và **Thay thế báo cáo**, xác nhận trước khi ghi đè. Sau hết Chủ nhật theo giờ Việt Nam, tuần cũ chỉ xem/tải và không nộp hoặc thay thế được; hạn báo cáo độc lập với cutoff chấm công 20:00.
+
+Chủ nhật chưa nộp sẽ được nhắc **“BẠN CÒN 1 NGÀY ĐỂ NỘP BÁO CÁO NHÉ!!”**. Nếu tuần liền trước chưa nộp, tuần này hiện **“TUẦN VỪA RỒI BẠN CHƯA NỘP BÁO CÁO. HÃY TRÌNH BÀY NỘI DUNG ĐÓ GỘP VỚI TUẦN NÀY NHÉ!”**; tự gộp nội dung vào PDF tuần hiện tại. Thông báo nằm cả trên trang User và trang báo cáo khi đăng nhập.
+
+Admin bấm **BÁO CÁO TUẦN** cạnh **Dashboard**, chọn tuần/nhân viên rồi **Xem báo cáo**; danh sách cho biết ai đã nộp/chưa nộp/quá hạn hoặc tuần chưa áp dụng. Dùng **Xem PDF** để mở tab mới hoặc **Tải PDF**. User chỉ xem file của mình; Admin xem báo cáo nhân viên, không nộp thay.
+
+Nếu mất phản hồi, giữ tab và dùng **Gửi lại báo cáo**, không tạo yêu cầu mới khi chưa rõ kết quả. Sau reload phải kiểm tra trạng thái server trước khi chọn lại file; PDF không được lưu trong browser storage. Cần migration 005 trên môi trường đang dùng trước khi sử dụng chức năng này; chi tiết tại [báo cáo tuần](features/WEEKLY_REPORTS.md).
+
 ## Khi gặp lỗi
 
 | Tình huống | Cách xử lý |

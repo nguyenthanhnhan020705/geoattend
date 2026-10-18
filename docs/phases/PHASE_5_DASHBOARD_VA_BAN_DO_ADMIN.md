@@ -26,3 +26,5 @@ API `GET /api/admin/dashboard`, `GET /api/admin/onsite`. Trang `/admin/dashboard
 Test kiểm tra tổng/danh sách/bảy trạng thái, quyền, snapshot khi thay đổi đồng thời, retention, Marker rời Onsite, XSS, layout và refresh. [Báo cáo Phase 5](../archive/PHASE_5_VERIFICATION.md) ghi **249 test toàn suite đạt** tại mốc đó; đây không phải số test hiện tại.
 
 Phase 6 đã bổ sung xử lý khôi phục trang từ browser cache và tối ưu truy vấn snapshot. Vẫn cần kiểm tra browser/thiết bị thực và hiệu năng trên môi trường đích. Xem [Phase 6](PHASE_6_KIEM_THU_VAN_HANH_VA_PILOT.md); [ADMIN_HISTORY](../ADMIN_HISTORY.md) mô tả quyền lịch sử.
+
+Bổ sung độc lập ngày 18/10/2026: [báo cáo tuần PDF](../features/WEEKLY_REPORTS.md) có trang Admin xem/tải và liên kết cạnh Dashboard. Không thêm dữ liệu PDF vào snapshot/truy vấn Dashboard hoặc thay nghiệp vụ Onsite/lịch sử chấm công. Chức năng mới dùng migration 005 riêng, đã kiểm chứng local cùng toàn suite 318 test đạt; đây không phải thay đổi migration của Phase 5 lịch sử và chưa áp dụng vào database ứng dụng.

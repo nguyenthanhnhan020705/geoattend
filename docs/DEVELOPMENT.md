@@ -156,6 +156,10 @@ Kết quả kiểm thử, đo tải và giới hạn nằm trong [PHASE_6_VERIFI
 
 ## 7. Các hợp đồng cần giữ khi phát triển
 
+Bổ sung báo cáo tuần ngày 18/10/2026 dùng migration `005_weekly_reports.sql` và bảng `weekly_reports`, nâng số bảng nghiệp vụ từ 9 lên 10 (không tính schema_migrations). Công cụ migration cấp runtime SELECT/INSERT/UPDATE bảng mới, không cấp DELETE. Chỉ áp dụng migration vào database ứng dụng khi operator được cho phép; lần triển khai chức năng chỉ kiểm thử trên database riêng, chưa migrate Supabase thật. Các migration 001–004 và dependency giữ nguyên.
+
+Mã báo cáo tách tại `app/reports/`, frontend có CSS/JS riêng. API User `/api/weekly-reports`, Admin `/api/admin/weekly-reports`; PDF tối đa 10.000.000 byte lưu trong PostgreSQL, không cần thư mục upload hoặc dependency multipart. Backend giới hạn byte thực, khóa profile trước report, kiểm tra session/thời hạn sau khi chờ khóa; retry UUID và expected revision ngăn ghi đè/trùng. Xem [đặc tả và bằng chứng báo cáo tuần](features/WEEKLY_REPORTS.md).
+
 - Ghi phiên, sự kiện, trạng thái và mã yêu cầu trong cùng transaction; khóa profile trước các khóa ngày/phiên.
 - Action dùng `request_id`, `expected_revision`, `expected_work_date`. Cùng UUID/nội dung trả lại kết quả cũ; màn hình cũ hoặc UUID khác nội dung bị từ chối.
 - Retry Office giữ GPS trong bộ nhớ tab; các action không GPS có thể giữ pending trong sessionStorage. Không lưu GPS vào storage/log.
