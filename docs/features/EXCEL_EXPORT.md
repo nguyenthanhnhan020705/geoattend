@@ -4,21 +4,24 @@ Yêu cầu được duyệt ngày 20/10/2026: Admin xuất lịch sử chấm c�
 
 ## Cách dùng
 
-Vào **Dashboard → Xuất Excel chấm công**, chọn **Từ ngày**, **Đến ngày**, **Nhân viên** rồi bấm **Xuất Excel**. Mặc định là 7 ngày gần nhất theo giờ Việt Nam và tất cả nhân viên; cho phép tối đa 366 ngày trong một file. Bộ lọc được giữ khi Dashboard tự làm mới.
+Vào **Quản lý nhân viên → Xuất Excel chấm công**, chọn **Từ ngày**, **Đến ngày**, **Nhân viên** rồi bấm **Xuất Excel**. Mặc định là 7 ngày gần nhất theo giờ Việt Nam và tất cả nhân viên; cho phép tối đa 366 ngày trong một file. Bộ lọc được giữ khi tải lại danh sách nhân viên.
 
 File `geoattend_YYYY-MM-DD_YYYY-MM-DD.xlsx` có sheet **Chấm công** với các cột:
 
 | Cột | Nội dung |
 | --- | --- |
 | Ngày | Ngày làm việc theo giờ Việt Nam, kiểu ngày Excel |
-| Tài khoản / Họ tên | Nhân viên tương ứng, kể cả tài khoản đã khóa còn lịch sử |
-| Hình thức | Office, Remote, nghỉ buổi sáng hoặc nghỉ cả ngày |
-| Check-in / Kết thúc | Giờ Việt Nam, kiểu giờ Excel; để trống với lần nghỉ hoặc phiên chưa kết thúc |
-| Loại kết thúc | Nghỉ trưa, Check-out, chuyển hình thức, hệ thống tự đóng hoặc đang làm việc |
+| Họ tên | Nhân viên tương ứng, kể cả tài khoản đã khóa còn lịch sử |
+| Hình thức | Tổng hợp Office, Remote, nghỉ buổi sáng hoặc nghỉ cả ngày |
+| Check-in sáng | Lần bắt đầu phiên sáng đầu tiên |
+| Nghỉ trưa | Mốc bắt đầu nghỉ trưa |
+| Check-in chiều | Lần bắt đầu đầu tiên sau nghỉ trưa/nghỉ sáng; nếu không có sự kiện nghỉ, phân buổi theo 12:00 giờ Việt Nam |
+| Check-out | Mốc kết thúc phiên cuối; trống khi còn làm việc hoặc mới nghỉ trưa |
+| Lý do | Tổng hợp lý do nghỉ và Remote, ghi rõ hình thức |
 
-Mỗi phiên làm việc một dòng. Ngày có cả Office/Remote có các dòng tương ứng; lần nghỉ sáng/cả ngày có dòng riêng. File có tiêu đề cố định khi cuộn, bộ lọc và độ rộng cột. Khoảng không có ghi nhận trả file có tiêu đề; ngày chưa bắt đầu không được suy ra thành nghỉ/vắng.
+Mỗi nhân viên trong một ngày có một dòng, kể cả khi đổi Office/Remote hoặc nghỉ sáng rồi làm chiều. Nhân viên trùng họ tên vẫn có các dòng riêng. Ngày nghỉ không có giờ chấm công được để trống. File có tiêu đề cố định khi cuộn, bộ lọc và độ rộng cột; ngày/giờ dùng kiểu Excel. Khoảng không có ghi nhận trả file có tiêu đề, không tự suy ra nghỉ/vắng.
 
-Không xuất GPS, độ chính xác, lý do, thông tin đăng nhập hoặc lịch sử đã xóa. Mốc hệ thống đóng chỉ là mốc tự kết thúc phiên, không xác nhận giờ nhân viên thực tế ngừng làm việc. Tên nhập bởi người dùng được ghi dưới dạng văn bản, không thực thi thành công thức Excel.
+Mốc hệ thống tự đóng ghi kèm “hệ thống tự đóng” trong ô Check-out, không xác nhận giờ nhân viên thực tế ngừng làm việc. Không xuất GPS, độ chính xác, thông tin đăng nhập hoặc lịch sử đã xóa. Họ tên và lý do được ghi dưới dạng văn bản, không thực thi thành công thức Excel.
 
 ## Triển khai và quyền
 
@@ -26,7 +29,7 @@ Không xuất GPS, độ chính xác, lý do, thông tin đăng nhập hoặc l�
 - Tối đa 366 ngày, kiểm tra kiểu ngày, thứ tự khoảng ngày và nhân viên đích. Mặc định 7 ngày nếu không truyền khoảng.
 - Dùng chung khóa profile với Dashboard/chấm công; kiểm tra lại quyền và phiên đăng nhập sau chờ khóa. Đối soát ngày quá hạn trước khi xuất. Dữ liệu được đọc trong cùng transaction; tạo workbook sau khi nhả khóa.
 - Phản hồi `Cache-Control: no-store`; file tải xuống nằm trên máy Admin, không lưu bản xuất trên server.
-- Mã: `app/admin/export.py`, `xlsx.py`, endpoint ở `routes.py`, `app/static/js/admin-export.js` và Dashboard. Dùng thư viện chuẩn Python để tạo OOXML; không thêm dependency hoặc migration.
+- Mã: `app/admin/export.py`, `xlsx.py`, endpoint ở `routes.py`, `app/static/js/admin-export.js` và trang Quản lý nhân viên. Dùng thư viện chuẩn Python để tạo OOXML; không thêm dependency hoặc migration.
 - Khi web đang chạy phiên bản cũ, cần khởi động lại tiến trình web để nạp endpoint Python mới. Không cần khởi động lại maintenance hoặc sửa database.
 
 ## Kiểm chứng

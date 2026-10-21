@@ -5,9 +5,8 @@ await requirePageAccount();
 bindLogout();
 try {
   const account = await loadAccount();
-  const home = pageUrl(account.role === 'ADMIN' ? '/admin/users' : '/user');
+  const home = pageUrl(account.role === 'ADMIN' ? '/admin/dashboard' : '/user');
   document.getElementById('home').href = home;
-  document.getElementById('back').href = home;
 } catch (error) { message('message',error.message); }
 bindForm('password-form','message',async (data, form) => {
   if (data.get('new_password') !== data.get('confirm')) throw new Error('Mật khẩu xác nhận không khớp.');

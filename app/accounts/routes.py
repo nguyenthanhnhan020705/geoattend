@@ -7,6 +7,8 @@ from app.accounts import history_service
 from app.errors import ApiError
 from app.accounts.service import create_user, list_users, reset_user_password
 from app.clock import utc_now
+from app import clock
+from app.attendance.service import VIETNAM
 
 router = APIRouter(prefix='/api/admin/users',dependencies=[Depends(require_admin)])
 
@@ -18,7 +20,8 @@ def public_account(account):
 @router.get('')
 def users(request: Request):
     with request.app.state.pool.connection() as conn:
-        return {'items':[public_account(a) for a in list_users(conn)]}
+        return {'items':[public_account(a) for a in list_users(conn)],
+                'work_date':clock.utc_now().astimezone(VIETNAM).date().isoformat()}
 
 
 @router.post('',status_code=201)

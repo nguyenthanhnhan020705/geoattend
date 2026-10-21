@@ -1,0 +1,39 @@
+.app-layout{--sidebar-width:248px;padding-left:var(--sidebar-width);min-height:100dvh}
+.app-sidebar{position:fixed;inset:0 auto 0 0;width:var(--sidebar-width);padding:28px 16px;background:#fff;border-right:1px solid var(--line);z-index:100;overflow-y:auto}
+.app-sidebar .brand{padding:0 12px 28px}
+.app-sidebar nav{display:flex;flex-direction:column;gap:8px}
+.app-sidebar nav a,.app-sidebar #logout{display:block;width:100%;padding:13px 14px;border-radius:10px;font-size:15px;font-weight:600;line-height:1.5;text-align:left;overflow-wrap:anywhere;color:var(--ink);background:transparent}
+.app-sidebar nav a:hover,.app-sidebar #logout:hover{background:#eef5f0}
+.app-sidebar nav a[aria-current=page]{background:#18786a;color:#fff;font-weight:800;box-shadow:0 4px 12px #18786a24}
+.attendance-choices.is-resuming .attendance-choice{font-size:18px;font-weight:750;line-height:1.4}
+.app-sidebar #logout{margin-top:18px;border-top:1px solid var(--line);border-radius:0;color:#a33939}
+.app-layout>.workspace{width:100%;min-width:0;padding:32px 28px}
+.app-layout .page-heading{flex-wrap:wrap}
+.app-layout .personal-history{margin-top:0}
+@media(max-width:1050px){.app-layout .dashboard-grid,.app-layout .admin-grid,.app-layout .office-grid{grid-template-columns:1fr}.app-layout .admin-grid .panel:nth-child(2){order:initial}}
+@media(max-width:700px){
+  .app-layout{--sidebar-width:112px}
+  .app-sidebar{padding:20px 8px}
+  .app-sidebar .brand{font-size:13px;gap:5px;padding:0 0 22px;letter-spacing:-.4px}
+  .app-sidebar .brand-mark{width:23px;height:25px;font-size:17px;border-radius:7px;flex-shrink:0}
+  .app-sidebar nav{gap:6px}
+  .app-sidebar nav a,.app-sidebar #logout{font-size:12px;padding:11px 8px}
+  .app-layout>.workspace{padding:20px 10px}
+  .app-layout .panel{padding:16px 12px}
+  .app-layout h1{font-size:25px}
+  .app-layout h2{font-size:19px}
+  .app-layout .section-heading{flex-wrap:wrap;gap:10px}
+  .app-layout .attendance-choices,.app-layout .attendance-choices.is-resuming{grid-template-columns:1fr;gap:10px}
+  .app-layout .attendance-choices:not(.is-resuming) .attendance-choice{font-size:16px;min-height:60px}
+  .app-layout .attendance-choices.is-resuming .attendance-choice{font-size:16px;min-height:60px}
+  .app-layout .employee-account h1{font-size:21px}
+  .app-layout .employee-account dl{grid-template-columns:1fr;gap:3px}
+  .app-layout .employee-account dd{margin-bottom:8px}
+  .app-layout .work-scenes{grid-template-columns:1fr}
+  .app-layout .illustrated-heading{grid-template-columns:1fr}
+  .app-layout .dashboard-workspace .status-cards{grid-template-columns:1fr}
+  .app-layout .office-map{height:300px}
+  .app-layout .pagination{flex-wrap:wrap}
+  .app-layout .export-controls{grid-template-columns:1fr}
+  .app-layout .report-summary{flex-wrap:wrap}
+}

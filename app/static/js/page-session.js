@@ -1,5 +1,6 @@
 import {loadAccount} from './api.js';
 import {isPages, sessionToken, pageUrl, clearSession, redirectToLogin} from './transport.js';
+import {configureNavigation, configureAttendanceViews} from './navigation.js';
 
 let checking;
 function navigate(path) {
@@ -7,11 +8,18 @@ function navigate(path) {
   return new Promise(()=>{});
 }
 export async function requirePageAccount(role=null) {
-  if (!isPages) return null;
+  if (!isPages) {
+    const account = role ? null : await loadAccount();
+    configureNavigation(role || account.role);
+    configureAttendanceViews();
+    return account;
+  }
   try {
     sessionToken();
     const account = await (checking ||= loadAccount());
     if (role && account.role!==role) return navigate(account.role==='ADMIN'?'/admin/users':'/user');
+    configureNavigation(account.role);
+    configureAttendanceViews();
     document.body.removeAttribute('data-session-pending');
     return account;
   } catch (error) {

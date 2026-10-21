@@ -5,7 +5,7 @@ import pytest
 from playwright.sync_api import sync_playwright,expect
 from tests.integration.test_browser import live_site,login
 from tests.integration.test_office import POLYGON
-from tests.browser_attendance import open_history
+from tests.browser_attendance import open_history, open_attendance
 
 pytestmark=[pytest.mark.integration,pytest.mark.browser]
 
@@ -28,7 +28,7 @@ def test_admin_map_and_user_gps_flow(office_site,migrated_db):
         admin.route('https://tile.openstreetmap.org/**',lambda route:route.abort())
         admin.route('https://tiles.openfreemap.org/**',lambda route:route.abort())
         login(admin,office_site,'admin','Admin1234')
-        admin.get_by_role('link',name='Văn phòng').click()
+        admin.get_by_role('link',name='Vùng văn phòng').click()
         expect(admin.locator('#office-revision')).to_contain_text('0')
         admin.get_by_label('Tên văn phòng').fill('Văn phòng kiểm thử')
         admin.get_by_label('Địa chỉ').fill('TP.HCM')
@@ -59,6 +59,7 @@ def test_admin_map_and_user_gps_flow(office_site,migrated_db):
         expect(user.locator('#history-list')).to_contain_text('Đang làm việc')
         expect(user.locator('#history-list')).not_to_contain_text('GPS')
         expect(user.locator('#history-list')).not_to_contain_text('50000')
+        open_attendance(user)
         user.locator('#start-lunch').click()
         expect(user.locator('#attendance-status')).to_have_text('Đang nghỉ trưa')
         assert user.evaluate('gpsCalls')==0

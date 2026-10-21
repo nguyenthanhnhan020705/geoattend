@@ -29,57 +29,74 @@ def export_attendance(conn, context, start=None, end=None, user_id=None):
             ORDER BY user_id""", (user_ids, now)).fetchall()
         for row in overdue:
             reconcile_locked(conn, row['user_id'], now)
-        # Never read GPS, reasons, auth data or request payloads into this projection.
-        rows = conn.execute("""SELECT d.id AS day_id,d.work_date,p.username,p.full_name,
-            s.id AS session_id,s.work_mode,s.start_time,s.end_time,s.end_source
+        # Read only attendance fields needed by this Admin report, never GPS or auth payloads.
+        params = (user_ids, start, end)
+        days = conn.execute("""SELECT d.id AS day_id,d.work_date,d.status,p.username,p.full_name
             FROM geoattend.attendance_days d JOIN geoattend.profiles p ON p.id=d.user_id
-            JOIN geoattend.work_sessions s ON s.day_id=d.id
             WHERE d.user_id=ANY(%s) AND d.work_date BETWEEN %s AND %s AND NOT d.history_deleted
-            ORDER BY d.work_date,p.full_name,p.username,s.start_time,s.id""", (user_ids, start, end)).fetchall()
-        events = conn.execute("""SELECT d.id AS day_id,d.work_date,p.username,p.full_name,
-            e.event_type,e.event_time FROM geoattend.attendance_days d
-            JOIN geoattend.profiles p ON p.id=d.user_id
-            JOIN geoattend.attendance_events e ON e.day_id=d.id
+            ORDER BY d.work_date,p.full_name,p.username""", params).fetchall()
+        sessions = conn.execute("""SELECT s.day_id,s.work_mode,s.start_time,s.end_time,s.end_source,
+            CASE WHEN s.work_mode='REMOTE' THEN s.start_reason END AS reason
+            FROM geoattend.work_sessions s JOIN geoattend.attendance_days d ON d.id=s.day_id
+            WHERE d.user_id=ANY(%s) AND d.work_date BETWEEN %s AND %s AND NOT d.history_deleted
+            ORDER BY s.start_time,s.id""", params).fetchall()
+        events = conn.execute("""SELECT e.day_id,e.event_type,e.event_time,
+            CASE WHEN e.event_type IN ('MORNING_LEAVE','FULL_DAY_LEAVE') THEN e.reason END AS reason
+            FROM geoattend.attendance_events e JOIN geoattend.attendance_days d ON d.id=e.day_id
             WHERE d.user_id=ANY(%s) AND d.work_date BETWEEN %s AND %s AND NOT d.history_deleted
             AND e.event_type IN ('LUNCH_START','MORNING_LEAVE','FULL_DAY_LEAVE')
-            ORDER BY e.event_time,e.recorded_at,e.id""", (user_ids, start, end)).fetchall()
-        lunches = [(e['day_id'], e['event_time']) for e in events if e['event_type'] == 'LUNCH_START']
-        starts = {}
-        for row in rows:
-            starts.setdefault((row['day_id'], row['start_time']), set()).add(row['session_id'])
-        output = []
-        for row in rows:
-            key = (row['day_id'], row['end_time'])
-            if row['end_time'] is None:
-                ending = 'Đang làm việc'
-            elif row['end_source'] == 'SYSTEM':
-                ending = 'Hệ thống tự đóng'
-            elif key in lunches:
-                ending = 'Nghỉ trưa'
-                lunches.remove(key)
-            elif starts.get(key, set()) - {row['session_id']}:
-                ending = 'Chuyển hình thức'
-            else:
-                ending = 'Check-out'
-            output.append((row['work_date'], row['username'], row['full_name'],
-                           'Office' if row['work_mode'] == 'OFFICE' else 'Remote',
-                           row['start_time'], row['end_time'], ending))
-        # Full-day leave may also exist in imported/setup data without an event.
-        leaves = conn.execute("""SELECT d.work_date,p.username,p.full_name,d.status
-            FROM geoattend.attendance_days d JOIN geoattend.profiles p ON p.id=d.user_id
-            WHERE d.user_id=ANY(%s) AND d.work_date BETWEEN %s AND %s AND NOT d.history_deleted
-            AND d.status IN ('MORNING_LEAVE','FULL_DAY_LEAVE')""", (user_ids, start, end)).fetchall()
-        leave_keys = set()
-        for event in events:
-            if event['event_type'] not in ('MORNING_LEAVE','FULL_DAY_LEAVE'):
-                continue
-            kind = 'Nghỉ buổi sáng' if event['event_type'] == 'MORNING_LEAVE' else 'Nghỉ cả ngày'
-            output.append((event['work_date'], event['username'], event['full_name'], kind, None, None, ''))
-            leave_keys.add((event['work_date'], event['username'], event['event_type']))
-        for row in leaves:
-            if (row['work_date'], row['username'], row['status']) not in leave_keys:
-                kind = 'Nghỉ buổi sáng' if row['status'] == 'MORNING_LEAVE' else 'Nghỉ cả ngày'
-                output.append((row['work_date'], row['username'], row['full_name'], kind, None, None, ''))
-        output.sort(key=lambda row: (row[0], row[2], row[1], row[4].timestamp() if row[4] else float('-inf')))
+            ORDER BY e.event_time,e.recorded_at,e.id""", params).fetchall()
+        output = daily_rows(days, sessions, events)
         validate_session(conn, context.account.id, context.session_id, clock.utc_now())
     return attendance_workbook(output), f'geoattend_{start}_{end}.xlsx'
+
+
+def daily_rows(days, sessions, events):
+    """One row per employee-day; missing times are never inferred as attendance."""
+    grouped_sessions, grouped_events = {}, {}
+    for session in sessions:
+        grouped_sessions.setdefault(session['day_id'], []).append(session)
+    for event in events:
+        grouped_events.setdefault(event['day_id'], []).append(event)
+    output = []
+    leave_labels = {'MORNING_LEAVE': 'Nghỉ buổi sáng', 'FULL_DAY_LEAVE': 'Nghỉ cả ngày'}
+    for day in days:
+        work = sorted(grouped_sessions.get(day['day_id'], []), key=lambda row: row['start_time'])
+        day_events = grouped_events.get(day['day_id'], [])
+        leave = [e for e in day_events if e['event_type'] in leave_labels]
+        if not work and not leave and day['status'] not in leave_labels:
+            continue
+        modes, reasons = [], []
+        def add(values, value):
+            if value and value not in values:
+                values.append(value)
+        for event in leave:
+            label = leave_labels[event['event_type']]
+            add(modes, label)
+            if event['reason']:
+                add(reasons, label + ': ' + event['reason'])
+        if day['status'] in leave_labels:
+            add(modes, leave_labels[day['status']])
+        lunches = [e['event_time'] for e in day_events if e['event_type'] == 'LUNCH_START']
+        lunch = min(lunches) if lunches else None
+        morning_leave = any(e['event_type'] == 'MORNING_LEAVE' for e in leave) or day['status'] == 'MORNING_LEAVE'
+        morning = afternoon = checkout = None
+        for session in work:
+            add(modes, 'Office' if session['work_mode'] == 'OFFICE' else 'Remote')
+            if session['work_mode'] == 'REMOTE' and session['reason']:
+                add(reasons, 'Remote: ' + session['reason'])
+            started = session['start_time']
+            is_afternoon = morning_leave or (started >= lunch if lunch else started.astimezone(VIETNAM).hour >= 12)
+            if is_afternoon:
+                afternoon = afternoon or started
+            else:
+                morning = morning or started
+        if work:
+            last = work[-1]
+            if last['end_time'] and last['end_time'] not in lunches:
+                checkout = last['end_time']
+                if last['end_source'] == 'SYSTEM':
+                    checkout = checkout.astimezone(VIETNAM).strftime('%H:%M:%S') + ' (hệ thống tự đóng)'
+        output.append((day['work_date'], day['full_name'], ' / '.join(modes),
+                       morning, lunch, afternoon, checkout, '\n'.join(reasons)))
+    return output

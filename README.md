@@ -9,7 +9,7 @@
 - Check-out và lịch sử cá nhân; tự kết thúc phiên lúc 20:00 giờ Việt Nam.
 - Dashboard, bản đồ Onsite, quản lý Geofence và lịch sử nhân viên cho Admin.
 - Xóa lịch sử từng ngày theo quyền Admin; xóa tọa độ và độ chính xác GPS sau 30 ngày.
-- [Xuất Excel chấm công](docs/features/EXCEL_EXPORT.md) cho Admin: chọn khoảng ngày, tất cả hoặc một nhân viên; mỗi phiên/lần nghỉ một dòng, không xuất GPS/sai số.
+- [Xuất Excel chấm công](docs/features/EXCEL_EXPORT.md) cho Admin: chọn khoảng ngày, tất cả hoặc một nhân viên; tại Quản lý nhân viên, mỗi nhân viên/ngày một dòng với giờ sáng–chiều và lý do nghỉ/Remote, không xuất GPS/sai số.
 - [Báo cáo tuần PDF](docs/features/WEEKLY_REPORTS.md): User nộp/thay một PDF trong tuần, Admin xem/tải; nhắc Chủ nhật và khóa tuần cũ. Đã kiểm chứng local (318 test toàn suite đạt), dùng migration 005 chưa áp dụng vào database ứng dụng.
 
 Mọi Check-out và nghỉ cả ngày đều kết thúc ngày; ngày hôm sau mới bắt đầu lại, trừ ngoại lệ Admin xóa lịch sử hôm nay hợp lệ. Chi tiết tại [quy tắc trạng thái](docs/STATE_TRANSITIONS.md).

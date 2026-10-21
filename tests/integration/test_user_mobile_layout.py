@@ -50,10 +50,10 @@ def test_account_first_reason_panels_and_lazy_history(office_site,migrated_db,wi
         expect(page.locator('#attendance-status')).to_have_text('Đang làm Remote')
         expect(page.get_by_label('Lý do làm Remote')).to_be_hidden()
         assert history_calls==[] and len(actions)==1
-        page.locator('#personal-history > summary').click()
+        page.get_by_role('link',name='Lịch sử cá nhân',exact=True).click()
         expect(page.locator('#history-list h3')).to_contain_text('GHI NHẬN ĐÃ LÀM VIỆC REMOTE')
         assert len(history_calls)==1
-        page.locator('#personal-history > summary').click()
+        page.get_by_role('link',name='Trang chủ chấm công',exact=True).click()
         expect(page.locator('#history-form')).to_be_hidden()
         page.locator('#check-out').click()
         expect(page.get_by_label('Lý do Check-out sớm')).to_be_focused()
@@ -62,11 +62,11 @@ def test_account_first_reason_panels_and_lazy_history(office_site,migrated_db,wi
         page.locator('#checkout-form button').click()
         expect(page.locator('#attendance-status')).to_have_text('Đã Check-out')
         assert len(history_calls)==1
-        page.locator('#personal-history > summary').click()
+        page.get_by_role('link',name='Lịch sử cá nhân',exact=True).click()
         expect(page.locator('#history-list li')).to_have_text(['09:00 · Check-in','09:00 · Check-out'])
         assert len(history_calls)==2
         assert page.evaluate('document.documentElement.scrollWidth<=innerWidth')
-        page.locator('#personal-history > summary').click()
+        page.get_by_role('link',name='Trang chủ chấm công',exact=True).click()
         artifacts=Path('.local-tests/user-mobile/artifacts');artifacts.mkdir(parents=True,exist_ok=True)
         page.screenshot(path=str(artifacts/f'user-{width}.png'),full_page=True)
         assert errors==[]
@@ -89,14 +89,14 @@ def test_reopening_history_ignores_older_inflight_response(office_site):
                 page.evaluate("document.documentElement.dataset.historyHeld='yes'")
             else:route.continue_()
         page.route('**/api/attendance/history?*',delay_first)
-        page.locator('#personal-history > summary').click()
+        page.get_by_role('link',name='Lịch sử cá nhân',exact=True).click()
         expect(page.locator('html')).to_have_attribute('data-history-held','yes')
-        page.locator('#personal-history > summary').click()
+        page.get_by_role('link',name='Trang chủ chấm công',exact=True).click()
         page.get_by_role('button',name='CHECK-IN REMOTE',exact=True).click()
         page.get_by_label('Lý do làm Remote').fill('Phiên mới sau phản hồi cũ')
         page.get_by_role('button',name='Bắt đầu Remote',exact=True).click()
         expect(page.locator('#attendance-status')).to_have_text('Đang làm Remote')
-        page.locator('#personal-history > summary').click()
+        page.get_by_role('link',name='Lịch sử cá nhân',exact=True).click()
         expect(page.locator('#history-list h3')).to_contain_text('GHI NHẬN ĐÃ LÀM VIỆC REMOTE')
         route,response=held[0];route.fulfill(response=response)
         # All transport responses have settled before checking the rendered result.

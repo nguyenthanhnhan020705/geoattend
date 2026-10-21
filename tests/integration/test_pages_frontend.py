@@ -167,7 +167,7 @@ def test_office_geofence_and_ambiguous_retry_then_remote(pages_site,migrated_db,
     errors=[]
     admin.on('pageerror',lambda error:errors.append(str(error)))
     login_pages(admin,site,'admin','Admin1234')
-    admin.get_by_role('link',name='Văn phòng',exact=True).click()
+    admin.get_by_role('link',name='Vùng văn phòng',exact=True).click()
     expect(admin.locator('#office-name')).to_be_enabled()
     admin.get_by_label('Tên văn phòng').fill('Pages Office')
     admin.get_by_label('Địa chỉ',exact=True).fill('HCM')

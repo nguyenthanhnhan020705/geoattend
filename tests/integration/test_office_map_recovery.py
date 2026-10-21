@@ -35,7 +35,7 @@ def test_map_click_draws_region_without_typing_coordinates(office_site,migrated_
         page.route('https://tiles.openfreemap.org/**',lambda route:route.fulfill(json={'version':8,'sources':{},'layers':[{'id':'land','type':'background','paint':{'background-color':'#dde6d5'}}]}))
         page.route('https://tile.openstreetmap.org/**',lambda route:route.abort())
         login(page,office_site,'admin','Admin1234')
-        page.get_by_role('link',name='Văn phòng').click()
+        page.get_by_role('link',name='Vùng văn phòng').click()
         expect(page.locator('#office-revision')).to_contain_text('0')
         expect(page.locator('#office-map')).to_have_attribute('data-map-state','ready')
         expect(page.locator('.leaflet-control-attribution')).to_contain_text('OpenFreeMap')

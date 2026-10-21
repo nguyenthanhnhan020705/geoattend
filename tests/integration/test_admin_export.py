@@ -38,7 +38,7 @@ def test_export_permissions(employee):
     signin(client)
     _, rows = sheet(client.get(URL))
     assert len(rows) == 1
-    assert rows[0] == ['Ngày', 'Tài khoản', 'Họ tên', 'Hình thức', 'Check-in', 'Kết thúc', 'Loại kết thúc']
+    assert rows[0] == ['Ngày', 'Họ tên', 'Hình thức', 'Check-in sáng', 'Nghỉ trưa', 'Check-in chiều', 'Check-out', 'Lý do']
 
 
 def test_export_sessions_dates_filter_and_safe_text(employee, migrated_db):
@@ -50,16 +50,13 @@ def test_export_sessions_dates_filter_and_safe_text(employee, migrated_db):
     migrated_db.commit()
     signin(client)
     root, rows = sheet(client.get(URL, params={'from': '2026-10-14', 'to': '2026-10-14', 'user_id': uid}))
-    assert len(rows) == 3
-    assert rows[1][1:4] == ['worker', '=SUM(1,2) <Nhân viên>', 'Office']
-    assert rows[2][3] == 'Remote'
-    assert [r[6] for r in rows[1:]] == ['Nghỉ trưa', 'Check-out']
+    assert len(rows) == 2
+    assert rows[1][1:3] == ['=SUM(1,2) <Nhân viên>', 'Office / Remote']
     # Native Excel dates/times, not strings: 2026-10-14, 08:00/12:00, 13:00/17:00 VN.
-    assert [r[0] for r in rows[1:]] == ['46309', '46309']
-    assert [float(rows[1][4]), float(rows[1][5])] == pytest.approx([8/24, 12/24])
-    assert [float(rows[2][4]), float(rows[2][5])] == pytest.approx([13/24, 17/24])
-    assert all(c.get('t') == 'inlineStr' for c in root.findall('s:sheetData/s:row', NS)[1].findall('s:c', NS)[1:4])
-    assert 'private reason' not in str(rows) and 'GPS' not in str(rows)
+    assert rows[1][0] == '46309'
+    assert [float(value) for value in rows[1][3:7]] == pytest.approx([8/24, 12/24, 13/24, 17/24])
+    assert all(c.get('t') == 'inlineStr' for c in root.findall('s:sheetData/s:row', NS)[1].findall('s:c', NS)[1:3])
+    assert rows[1][7] == 'Remote: private reason' and 'GPS' not in str(rows)
     assert len(sheet(client.get(URL, params={'from': '2026-10-15', 'to': '2026-10-15'}))[1]) == 1
 
 
@@ -74,12 +71,15 @@ def test_export_leave_and_deleted_history(employee, migrated_db):
     migrated_db.commit()
     signin(client)
     _, rows = sheet(client.get(URL))
-    assert len(rows) == 4
-    assert {r[3] for r in rows[1:]} == {'Nghỉ buổi sáng', 'Remote', 'Nghỉ cả ngày'}
-    assert any(r[6] == 'Đang làm việc' for r in rows[1:])
-    assert all('private' not in value for r in rows for value in r)
+    assert len(rows) == 3
+    assert {r[2] for r in rows[1:]} == {'Nghỉ buổi sáng / Remote', 'Nghỉ cả ngày'}
+    worker = next(row for row in rows[1:] if row[1] == 'Nhân viên')
+    assert worker[3:5] == ['', ''] and worker[6] == ''
+    assert float(worker[5]) == pytest.approx(9/24)
+    assert 'Nghỉ buổi sáng: private leave' in worker[7]
+    assert 'Remote: Làm việc tại nhà' in worker[7]
     filtered = sheet(client.get(URL, params={'user_id': str(other.id)}))[1]
-    assert len(filtered) == 2 and filtered[1][1] == 'other'
+    assert len(filtered) == 2 and filtered[1][1] == 'Người khác'
 
 
 @pytest.mark.parametrize('params', [
@@ -106,8 +106,7 @@ def test_export_reconciles_system_end(employee, monkeypatch):
     monkeypatch.setattr('app.clock.utc_now', lambda: datetime(2026, 10, 14, 13, tzinfo=timezone.utc))
     signin(client)
     _, rows = sheet(client.get(URL))
-    assert rows[1][6] == 'Hệ thống tự đóng'
-    assert float(rows[1][5]) == pytest.approx(20/24)
+    assert rows[1][6] == '20:00:00 (hệ thống tự đóng)'
 
 
 def test_export_rechecks_revoked_admin_session_after_wait(employee, test_dsn, monkeypatch):
@@ -131,3 +130,37 @@ def test_export_rechecks_revoked_admin_session_after_wait(employee, test_dsn, mo
             blocker.execute('UPDATE geoattend.auth_sessions SET revoked_at=now() WHERE user_id=%s', (admin_id,))
             blocker.commit()
             assert future.result(15).status_code == 401
+
+
+def test_export_same_name_employees_and_literal_leave_reason(employee, migrated_db):
+    from app.accounts.service import create_user
+    client, headers, uid = employee
+    assert action(client, headers, kind='FULL_DAY_LEAVE', reason='=SUM(1,2) <nghỉ>').status_code == 200
+    other = create_user(migrated_db, 'other', 'Nhân viên', 'Worker1234')
+    day = migrated_db.execute("INSERT INTO geoattend.attendance_days(user_id,work_date,status) VALUES(%s,'2026-10-14','CHECKED_OUT') RETURNING id", (other.id,)).fetchone()['id']
+    migrated_db.execute("INSERT INTO geoattend.work_sessions(day_id,work_mode,start_time,end_time,end_source) VALUES(%s,'OFFICE','2026-10-14 06:00+00','2026-10-14 10:00+00','USER')", (day,))
+    migrated_db.commit()
+    signin(client)
+    _, rows = sheet(client.get(URL))
+    assert len(rows) == 3 and rows[1][1] == rows[2][1] == 'Nhân viên'
+    leave = next(row for row in rows[1:] if row[2] == 'Nghỉ cả ngày')
+    office = next(row for row in rows[1:] if row[2] == 'Office')
+    assert leave[3:7] == ['', '', '', '']
+    assert leave[7] == 'Nghỉ cả ngày: =SUM(1,2) <nghỉ>'
+    assert office[3:5] == ['', '']
+    assert [float(value) for value in office[5:7]] == pytest.approx([13/24, 17/24])
+
+
+def test_export_lunch_is_not_checkout_even_after_system_day_end(employee, monkeypatch):
+    client, headers, _ = employee
+    assert action(client, headers).status_code == 200
+    monkeypatch.setattr('app.clock.utc_now', lambda: datetime(2026, 10, 14, 5, tzinfo=timezone.utc))
+    assert action(client, headers, 1, 'START_LUNCH', None).status_code == 200
+    signin(client)
+    _, rows = sheet(client.get(URL))
+    assert float(rows[1][4]) == pytest.approx(12/24)
+    assert rows[1][5:7] == ['', '']
+    monkeypatch.setattr('app.clock.utc_now', lambda: datetime(2026, 10, 14, 13, tzinfo=timezone.utc))
+    _, rows = sheet(client.get(URL))
+    assert float(rows[1][4]) == pytest.approx(12/24)
+    assert rows[1][5:7] == ['', '']

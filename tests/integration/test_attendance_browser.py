@@ -3,7 +3,7 @@ from pathlib import Path
 import pytest
 from playwright.sync_api import sync_playwright,expect
 from tests.integration.test_browser import live_site,login
-from tests.browser_attendance import open_remote,open_history
+from tests.browser_attendance import open_remote,open_history,open_attendance
 
 pytestmark=[pytest.mark.integration,pytest.mark.browser]
 
@@ -53,6 +53,7 @@ def test_remote_browser_reload_history_and_retry(remote_site,migrated_db):
         expect(page.locator('#history-list li')).to_have_text(['09:00 · Check-in'])
         expect(page.locator('#history-list')).not_to_contain_text(reason)
         assert page.locator('#history-list img').count()==0
+        open_attendance(page)
         page.locator('#check-out').click()
         page.get_by_label('Lý do Check-out sớm').fill('Có việc gia đình')
         page.locator('#checkout-form button').click()
@@ -62,6 +63,7 @@ def test_remote_browser_reload_history_and_retry(remote_site,migrated_db):
         assert migrated_db.execute('SELECT count(*) AS n FROM geoattend.work_sessions').fetchone()['n']==1
         assert page.evaluate('document.documentElement.scrollWidth <= innerWidth')
         page.screenshot(path=str(artifacts/'remote-mobile.png'),full_page=True)
+        open_history(page)
         page.get_by_label('Từ ngày').fill('2026-10-15')
         page.get_by_label('Đến ngày').fill('2026-10-14')
         page.get_by_role('button',name='Xem lịch sử').click()

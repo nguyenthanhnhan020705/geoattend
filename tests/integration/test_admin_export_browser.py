@@ -19,7 +19,7 @@ def test_admin_download_excel_filters_error_and_retry(office_site, migrated_db, 
         errors = []
         page.on('pageerror', lambda error: errors.append(str(error)))
         login(page, office_site, 'admin', 'Admin1234')
-        page.get_by_role('link', name='Dashboard', exact=True).click()
+        page.get_by_role('link', name='Quản lý nhân viên', exact=True).click()
         expect(page.locator('#export-attendance')).to_be_enabled()
         expect(page.locator('#export-from')).to_have_value('2026-10-08')
         expect(page.locator('#export-to')).to_have_value('2026-10-14')
@@ -41,7 +41,7 @@ def test_admin_download_excel_filters_error_and_retry(office_site, migrated_db, 
         download.save_as(artifacts/f'attendance-{width}.xlsx')
         assert (artifacts/f'attendance-{width}.xlsx').read_bytes().startswith(b'PK')
         expect(page.locator('#export-message')).to_have_text('Đã tải file Excel.')
-        page.locator('#reload-dashboard').click()
+        page.locator('#reload').click()
         expect(page.locator('#export-from')).to_have_value('2026-10-14')
         expect(page.locator('#export-user')).to_have_value(str(uid))
         page.locator('#export-from').fill('2026-10-15')

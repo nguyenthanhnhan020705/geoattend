@@ -156,7 +156,7 @@ function historyDay(day) {
 }
 
 async function loadHistory(query, page=1) {
-  if (!query || !el('personal-history').open) return;
+  if (!query || el('personal-history').hidden) return;
   const generation=++historyGeneration;
   if (query.from > query.to) throw new Error('Ngày bắt đầu phải trước hoặc bằng ngày kết thúc.');
   historyQuery = query; historyPage = page;
@@ -164,8 +164,8 @@ async function loadHistory(query, page=1) {
   message('history-message','Đang tải…');
   let data;
   try { data = await apiFetch('/api/attendance/history?'+params); }
-  catch (error) { if (generation===historyGeneration && el('personal-history').open) throw error; return; }
-  if (generation!==historyGeneration || !el('personal-history').open) return;
+  catch (error) { if (generation===historyGeneration && !el('personal-history').hidden) throw error; return; }
+  if (generation!==historyGeneration || el('personal-history').hidden) return;
   el('history-list').replaceChildren();
   if (!data.items.length) line('p','Chưa có lịch sử trong khoảng ngày này.',el('history-list'),'muted');
   for (const day of data.items) el('history-list').append(historyDay(day));
@@ -220,8 +220,8 @@ el('refresh-status').addEventListener('click',()=>refreshAll().catch(error=>mess
 el('history-form').addEventListener('submit',event=>{event.preventDefault(); loadHistory({from:el('history-from').value,to:el('history-to').value}).catch(error=>message('history-message',error.message));});
 el('history-prev').addEventListener('click',()=>loadHistory(historyQuery,historyPage-1).catch(error=>message('history-message',error.message)));
 el('history-next').addEventListener('click',()=>loadHistory(historyQuery,historyPage+1).catch(error=>message('history-message',error.message)));
-el('personal-history').addEventListener('toggle',()=>{
-  if (el('personal-history').open) loadHistory(historyQuery,historyPage).catch(error=>message('history-message',error.message));
+window.addEventListener('hashchange',()=>{
+  if (!el('personal-history').hidden) loadHistory(historyQuery,historyPage).catch(error=>message('history-message',error.message));
   else historyGeneration++;
 });
 try {

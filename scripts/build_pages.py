@@ -61,10 +61,11 @@ def build_pages(output: Path, *, base_path: str, api_origin: str, version: str,
 
     def rewrite(match):
         attr, quote, url = match.groups()
+        route, separator, fragment = url.partition('#')
         if url.startswith('/static/'):
             url = base_path + url[1:]
-        elif url.lstrip('/') in ROUTES:
-            url = base_path + url.lstrip('/') + '/'
+        elif route.lstrip('/') in ROUTES:
+            url = base_path + route.lstrip('/') + '/' + separator + fragment
         return f'{attr}={quote}{url}{quote}'
 
     for route, filename in ROUTES.items():

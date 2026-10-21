@@ -8,7 +8,7 @@ from playwright.sync_api import sync_playwright, expect
 from tests.integration.test_browser import live_site, login
 from tests.integration.test_office_browser import office_site
 from tests.integration.test_office import POLYGON
-from tests.browser_attendance import open_remote,open_leave,open_history
+from tests.browser_attendance import open_remote,open_leave,open_history,open_attendance
 
 pytestmark = [pytest.mark.integration, pytest.mark.browser]
 
@@ -48,6 +48,7 @@ def test_lunch_resume_and_checkout_timeline(phase4_page,migrated_db,monkeypatch)
     expect(page.locator('#attendance-status')).to_have_text('Đang nghỉ trưa')
     open_history(page)
     expect(page.locator('#history-list')).to_contain_text('Nghỉ trưa')
+    open_attendance(page)
     monkeypatch.setattr('app.clock.utc_now',lambda:datetime(2026,10,14,6,tzinfo=timezone.utc))
     page.locator('#start-office').click()
     expect(page.locator('#attendance-status')).to_have_text('Đang làm tại văn phòng')
@@ -55,6 +56,7 @@ def test_lunch_resume_and_checkout_timeline(phase4_page,migrated_db,monkeypatch)
     monkeypatch.setattr('app.clock.utc_now',lambda:datetime(2026,10,14,10,tzinfo=timezone.utc))
     page.locator('#check-out').click()
     expect(page.locator('#attendance-status')).to_have_text('Đã Check-out')
+    open_history(page)
     expect(page.locator('#history-list h3')).to_have_text('2026-10-14 · GHI NHẬN ĐÃ LÀM VIỆC OFFICE VÀ REMOTE')
     expect(page.locator('#history-list li')).to_have_text([
         '09:00 · Check-in Remote', '12:00 · Nghỉ trưa',

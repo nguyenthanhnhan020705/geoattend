@@ -2,6 +2,7 @@ import {apiFetch, loadAccount, bindForm, bindLogout, message} from './api.js';
 import {requirePageAccount} from './page-session.js';
 await requirePageAccount('ADMIN');
 import {openEmployeeHistory} from './admin-history.js';
+import {updateExportFilters} from './admin-export.js';
 const dialog = document.getElementById('reset-dialog');
 let selected = null;
 bindLogout('list-message');
@@ -13,6 +14,7 @@ function openReset(account) {
 document.getElementById('close-reset').addEventListener('click',() => dialog.close());
 async function refresh() {
   const result = await apiFetch('/api/admin/users');
+  updateExportFilters(result);
   const list = document.getElementById('users'); list.replaceChildren();
   document.getElementById('empty').hidden = result.items.length > 0;
   for (const account of result.items) {

@@ -16,7 +16,7 @@ def test_user_submit_replace_and_admin_view(live_site,reports,width):
         page=browser.new_page(viewport={'width':width,'height':850})
         errors=[];page.on('pageerror',lambda e:errors.append(str(e)))
         login(page,live_site,'worker','Worker1234')
-        page.get_by_role('link',name='NỘP BÁO CÁO TUẦN',exact=True).click()
+        page.get_by_role('link',name='Nộp báo cáo tuần',exact=True).click()
         expect(page.locator('#report-week')).to_contain_text('19/10/2026')
         page.get_by_label('File PDF báo cáo tuần').set_input_files({'name':'Báo cáo.pdf','mimeType':'application/pdf','buffer':PDF})
         page.get_by_role('button',name='Nộp báo cáo',exact=True).click()
@@ -40,7 +40,7 @@ def test_user_submit_replace_and_admin_view(live_site,reports,width):
         assert Path(download.value.path()).read_bytes()==PDF2
         admin=browser.new_page(viewport={'width':width,'height':850})
         login(admin,live_site,'admin','Admin1234')
-        admin.get_by_role('link',name='BÁO CÁO TUẦN',exact=True).click()
+        admin.get_by_role('link',name='Nhân viên báo cáo tuần',exact=True).click()
         expect(admin.locator('#reports-list')).to_contain_text('Bản mới.pdf')
         expect(admin.locator('#reports-list')).to_contain_text('Chưa nộp')
         admin.get_by_label('Nhân viên').select_option(label='Nhân viên worker · worker')
@@ -63,7 +63,7 @@ def test_home_reminders_and_week_rollover(live_site,reports,migrated_db):
         login(page,live_site,'worker','Worker1234')
         expect(page.locator('[data-report-notices]')).to_contain_text('BẠN CÒN 1 NGÀY ĐỂ NỘP BÁO CÁO NHÉ!!')
         expect(page.locator('[data-report-notices]')).to_contain_text('TUẦN VỪA RỒI BẠN CHƯA NỘP BÁO CÁO.')
-        page.get_by_role('link',name='NỘP BÁO CÁO TUẦN',exact=True).click()
+        page.get_by_role('link',name='Nộp báo cáo tuần',exact=True).click()
         expect(page.locator('#report-week')).to_contain_text('19/10/2026')
         page.get_by_label('File PDF báo cáo tuần').set_input_files({'name':'Old week.pdf','mimeType':'application/pdf','buffer':PDF})
         # Keep auth stable while this test changes only the reporting clock.
@@ -82,7 +82,7 @@ def test_ambiguous_upload_retries_same_request(live_site,reports,migrated_db):
         browser=p.chromium.launch(channel='msedge' if Path('C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe').exists() else None,headless=True)
         page=browser.new_page()
         login(page,live_site,'worker','Worker1234')
-        page.get_by_role('link',name='NỘP BÁO CÁO TUẦN',exact=True).click()
+        page.get_by_role('link',name='Nộp báo cáo tuần',exact=True).click()
         expect(page.locator('#report-week')).to_contain_text('19/10/2026')
         requests=[]
         def lose_response(route):
@@ -113,7 +113,7 @@ def test_rejected_pending_requires_file_reselection(live_site,reports,migrated_d
         browser=p.chromium.launch(channel='msedge' if Path('C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe').exists() else None,headless=True)
         page=browser.new_page()
         login(page,live_site,'worker','Worker1234')
-        page.get_by_role('link',name='NỘP BÁO CÁO TUẦN',exact=True).click()
+        page.get_by_role('link',name='Nộp báo cáo tuần',exact=True).click()
         expect(page.locator('#report-week')).to_contain_text('19/10/2026')
         def fail_before_commit(route):
             if route.request.method=='PUT':route.abort()

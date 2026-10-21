@@ -1,6 +1,6 @@
 <!doctype html>
-<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Tài khoản · GeoAttend</title><link rel="stylesheet" href="/static/css/app.css?v=personal-history-20261020"><link rel="stylesheet" href="/static/css/reports.css"><script type="module" src="/static/js/user.js?v=personal-history-20261020"></script><script type="module" src="/static/js/report-home.js"></script><link rel="stylesheet" href="/static/css/illustrations.css"></head><body class="illustrated-page">
-<header class="topbar report-topbar"><a class="brand" href="/user"><span class="brand-mark">G</span>GeoAttend</a><nav aria-label="Điều hướng"><a href="/account">Đổi mật khẩu</a><a href="/user/weekly-reports">NỘP BÁO CÁO TUẦN</a><button id="logout" class="text-button">Đăng xuất</button></nav></header>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Tài khoản · GeoAttend</title><link rel="stylesheet" href="/static/css/app.css?v=personal-history-20261020"><link rel="stylesheet" href="/static/css/reports.css"><script type="module" src="/static/js/user.js?v=user-menu-20261021"></script><script type="module" src="/static/js/report-home.js"></script><link rel="stylesheet" href="/static/css/illustrations.css"><link rel="stylesheet" href="/static/css/navigation.css?v=persistent-menu-20261021"><link rel="stylesheet" href="/static/css/brand.css?v=20261021-transparent-logo"></head><body class="app-layout illustrated-page">
+<aside class="app-sidebar" aria-label="Điều hướng chính"><a id="home" class="brand" href="/user"><img class="brand-logo" src="/static/images/logo-geoattend.png" alt="GeoAttend" width="1024" height="434"></a><nav aria-label="Điều hướng"><a href="/user" aria-current="page">Trang chủ chấm công</a><a href="/user#history">Lịch sử cá nhân</a><a href="/user/weekly-reports">Nộp báo cáo tuần</a><a href="/account">Đổi mật khẩu</a><button id="logout" class="text-button" type="button">Đăng xuất</button></nav></aside>
 <main class="workspace user-workspace">
 <section id="employee-account" class="panel employee-account illustrated-account" aria-labelledby="employee-heading">
   <span class="eyebrow green">THÔNG TIN NHÂN VIÊN</span>
@@ -26,8 +26,8 @@
   <p id="message" class="message" role="status" aria-live="polite"></p><button id="retry-action" class="secondary" type="button" hidden>Gửi lại thao tác</button>
   <p class="help">Hệ thống tự đóng phiên còn mở lúc 20:00; đây không phải giờ kết thúc thực tế.</p>
 </section>
-<details id="personal-history" class="panel personal-history">
-  <summary>Lịch sử cá nhân<span class="history-toggle-hint" aria-hidden="true">Bấm để mở / thu gọn</span></summary>
+<section id="personal-history" class="panel personal-history" aria-labelledby="history-heading" hidden>
+  <h1 id="history-heading">Lịch sử cá nhân</h1>
   <div class="personal-history-content"><form id="history-form"><div class="date-range"><div><label for="history-from">Từ ngày</label><input id="history-from" type="date" name="from" required></div><div><label for="history-to">Đến ngày</label><input id="history-to" type="date" name="to" required></div></div><button class="secondary" type="submit">Xem lịch sử</button></form><p id="history-message" class="message" role="status" aria-live="polite"></p><div id="history-list"></div><div class="pagination"><button id="history-prev" class="secondary" type="button" disabled>Trang trước</button><span id="history-page"></span><button id="history-next" class="secondary" type="button" disabled>Trang sau</button></div></div>
-</details>
+</section>
 </main></body></html>

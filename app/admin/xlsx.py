@@ -8,7 +8,7 @@ from zipfile import ZIP_DEFLATED, ZipFile
 from app.attendance.service import VIETNAM
 
 NS = 'http://schemas.openxmlformats.org/spreadsheetml/2006/main'
-HEADERS = ('Ngày', 'Tài khoản', 'Họ tên', 'Hình thức', 'Check-in', 'Kết thúc', 'Loại kết thúc')
+HEADERS = ('Ngày', 'Họ tên', 'Hình thức', 'Check-in sáng', 'Nghỉ trưa', 'Check-in chiều', 'Check-out', 'Lý do')
 
 
 def attendance_workbook(rows):
@@ -20,7 +20,7 @@ def attendance_workbook(rows):
     view = ET.SubElement(views, tag('sheetView'), workbookViewId='0')
     ET.SubElement(view, tag('pane'), ySplit='1', topLeftCell='A2', activePane='bottomLeft', state='frozen')
     cols = ET.SubElement(sheet, tag('cols'))
-    for index, width in enumerate((15, 22, 30, 22, 16, 16, 28), 1):
+    for index, width in enumerate((15, 30, 30, 18, 18, 18, 32, 60), 1):
         ET.SubElement(cols, tag('col'), min=str(index), max=str(index), width=str(width), customWidth='1')
     data = ET.SubElement(sheet, tag('sheetData'))
     for index, values in enumerate([HEADERS, *rows], 1):
@@ -30,7 +30,7 @@ def attendance_workbook(rows):
             row.set('customHeight', '1')
         for col, value in enumerate(values):
             cell = ET.SubElement(row, tag('c'), r=f'{chr(65+col)}{index}')
-            if index > 1 and value is not None and col in (0, 4, 5):
+            if index > 1 and value is not None and (col == 0 or (col in (3, 4, 5, 6) and not isinstance(value, str))):
                 cell.set('s', '2' if col == 0 else '3')
                 if col == 0:
                     number = str((value-date(1899, 12, 30)).days)
@@ -45,7 +45,7 @@ def attendance_workbook(rows):
                 text.set('{http://www.w3.org/XML/1998/namespace}space', 'preserve')
                 # XML 1.0 cannot represent these controls; text stays literal, never a formula.
                 text.text = re.sub('[\x00-\x08\x0b\x0c\x0e-\x1f\ud800-\udfff\ufffe\uffff]', '', '' if value is None else str(value))
-    ET.SubElement(sheet, tag('autoFilter'), ref=f'A1:G{len(rows)+1}')
+    ET.SubElement(sheet, tag('autoFilter'), ref=f'A1:H{len(rows)+1}')
     ET.SubElement(sheet, tag('pageSetup'), orientation='landscape', paperSize='9')
     styles = f'''<styleSheet xmlns="{NS}">
       <numFmts count="2"><numFmt numFmtId="164" formatCode="yyyy-mm-dd"/><numFmt numFmtId="165" formatCode="hh:mm:ss"/></numFmts>
