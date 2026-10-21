@@ -61,6 +61,8 @@ Các test mới: `test_pages_build.py`, `test_pages_artifact.py`, `integration/t
 
 ## Bằng chứng triển khai
 
-Kết quả trước hồi quy cuối: 17 test builder; 37 test auth/config/cookie/health/timing; 5 test Pages ban đầu; 19 test builder/browser cũ; 2 test PDF/Excel khác origin và 8 test PDF/Excel cũ đạt. Những nhóm này có trùng lặp, không cộng làm số test độc lập. Ca hết hạn phiên trên trang đang mở đã được tái hiện trước khi sửa transport. Kết quả full suite và review cuối được bổ sung sau khi có đầu ra thực tế.
+Ngày 21/10/2026, full suite sau sửa review đạt **380 passed, 1 warning, 0 skipped**, **595,64 giây**, exit 0. Gồm API, PostgreSQL/PostGIS, Edge headless ở các kích thước màn hình, Caddy thật, đo tải và backup/restore cô lập. Log local: `.local-tests/pages-full-reviewed.log`. `pip check` không có dependency hỏng; `git diff --check` đạt. Warning duy nhất là Starlette deprecation về httpx TestClient có từ trước.
+
+Lượt full trước sửa review đạt 377 test; các nhóm kiểm tra trong quá trình triển khai có trùng lặp nên không cộng thành số test độc lập. Không chạy migration hoặc tạo dữ liệu thử trên database ứng dụng.
 
 Review độc lập toàn nhánh không tìm thấy Critical; hai Important về mất UUID khi hết phiên và PDF không giới hạn thời gian đã được tái hiện RED rồi sửa, 3 test hồi quy mới GREEN. Tạm hoãn cải thiện nhỏ về thông báo riêng khi JavaScript không tải được (CSP vẫn chặn native form submit); kiểm thử preview PDF thành công chưa có ca riêng, hiện đã kiểm tra tải đúng byte, fallback popup bị chặn và timeout phục hồi. Bộ kiểm tra artifact bằng `python -S -m unittest tests.test_pages_artifact -v` đạt khi không nạp site-packages.
