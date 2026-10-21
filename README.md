@@ -45,6 +45,8 @@ Mở **http://127.0.0.1:8000/login**. Khi bật máy lại, chạy lại hai l�
 
 ## Chuẩn bị triển khai từ main
 
+Đã có phương án [giao diện GitHub Pages](docs/GITHUB_PAGES.md), tự build/publish khi cập nhật `main`. Giao diện Pages dùng API FastAPI độc lập; khi chưa cấu hình backend, trang khóa đăng nhập và thông báo chưa kết nối. Chi tiết cấu hình public API origin, xác thực và kiểm chứng tại tài liệu liên kết.
+
 Ứng dụng cần máy chủ chạy Python/FastAPI và PostgreSQL/PostGIS; GitHub Pages chỉ phục vụ nội dung tĩnh nên không chạy được ứng dụng này. Giao diện và API hiện dùng chung origin, cookie phiên và CSRF.
 
 Trước khi mở cho người dùng, làm theo [hướng dẫn vận hành](docs/PHASE_6_OPERATIONS.md): cài dependency từ `requirements.lock.txt`, cấu hình bí mật ngoài Git, áp dụng migration bằng tài khoản operator (gồm `005_weekly_reports.sql` cho báo cáo tuần), cấp quyền runtime, chạy web và maintenance riêng, cấu hình domain/HTTPS qua Caddy. Các mẫu nằm trong `deploy/`; không dùng giá trị `CHANGE_ME` cho môi trường thật.
