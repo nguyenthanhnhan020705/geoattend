@@ -54,7 +54,13 @@ export async function requestApi(path, options={}) {
   const headers = new Headers(options.headers);
   if (isPages) {
     checkSessionStorage();
-    if (path !== '/api/auth/token') headers.set('Authorization','Bearer '+sessionToken());
+    if (path !== '/api/auth/token') {
+      try { headers.set('Authorization','Bearer '+sessionToken()); }
+      catch(error) {
+        if(error.code==='AUTH_REQUIRED') window.location.assign(pageUrl('/login'));
+        throw error;
+      }
+    }
   }
   const response = await fetch(url, {...options, headers, credentials:isPages?'omit':'same-origin', redirect:'error'});
   if (isPages && response.status===401 && path!=='/api/auth/token') {

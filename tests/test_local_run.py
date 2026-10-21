@@ -62,3 +62,9 @@ def test_launcher_preserves_public_map_config(tmp_path):
     env=local_environment(path,'serve',{})
     assert env['GEOATTEND_MAP_BACKGROUND']=='vector'
     assert env['GEOATTEND_MAP_STYLE_URL']=='https://tiles.openfreemap.org/styles/liberty'
+def test_local_frontend_origin_is_forwarded(tmp_path):
+    from scripts.local_run import local_environment
+    envfile=tmp_path/'.env'
+    envfile.write_text('GEOATTEND_DATABASE_URL=postgresql://test@127.0.0.1/test\nGEOATTEND_FRONTEND_ORIGIN=https://owner.github.io\n',encoding='utf-8')
+    assert local_environment(envfile,'serve',{})['GEOATTEND_FRONTEND_ORIGIN']=='https://owner.github.io'
+

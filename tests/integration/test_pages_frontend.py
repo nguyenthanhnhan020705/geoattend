@@ -77,3 +77,72 @@ def test_transport_rejects_external_paths_and_network_keeps_token(pages_site):
     page.reload()
     expect(page.locator('#message')).to_contain_text('kết nối')
     assert page.evaluate('JSON.stringify(sessionStorage)')==saved
+
+
+def test_expired_session_on_active_page_redirects_without_sending_request(pages_site):
+    site=pages_site
+    page=site['browser'].new_page()
+    login_pages(page,site)
+    expect(page.locator('#attendance-status')).to_contain_text('Chưa bắt đầu')
+    page.evaluate("""() => {
+        for(const key of Object.keys(sessionStorage)) {
+            if(key.endsWith(':session')) {
+                const value=JSON.parse(sessionStorage.getItem(key));
+                value.expiresAt='2000-01-01T00:00:00Z';
+                sessionStorage.setItem(key,JSON.stringify(value));
+            }
+        }
+        document.getElementById('refresh-status').click();
+    }""")
+    page.wait_for_url('**/login/',timeout=5000)
+
+
+@pytest.mark.parametrize('width',[360,1280])
+def test_office_geofence_and_ambiguous_retry_then_remote(pages_site,migrated_db,width):
+    site=pages_site
+    admin=site['browser'].new_page(viewport={'width':width,'height':900})
+    errors=[]
+    admin.on('pageerror',lambda error:errors.append(str(error)))
+    login_pages(admin,site,'admin','Admin1234')
+    admin.get_by_role('link',name='Văn phòng',exact=True).click()
+    expect(admin.locator('#office-name')).to_be_enabled()
+    admin.get_by_label('Tên văn phòng').fill('Pages Office')
+    admin.get_by_label('Địa chỉ',exact=True).fill('HCM')
+    for lat,lon in [(10,106),(10,107),(11,107),(11,106)]:
+        admin.get_by_label('Vĩ độ mới').fill(str(lat))
+        admin.get_by_label('Kinh độ mới').fill(str(lon))
+        admin.get_by_role('button',name='Thêm đỉnh',exact=True).click()
+    admin.get_by_role('button',name='Xem trước',exact=True).click()
+    admin.get_by_role('button',name='Lưu vùng văn phòng',exact=True).click()
+    expect(admin.locator('#message')).to_contain_text('Đã lưu')
+    user=site['browser'].new_page(viewport={'width':width,'height':900})
+    user.on('pageerror',lambda error:errors.append(str(error)))
+    user.add_init_script("navigator.geolocation.getCurrentPosition=ok=>ok({coords:{latitude:10.5,longitude:106.5,accuracy:12}})")
+    login_pages(user,site)
+    calls=[]
+    def lose_first(route):
+        if route.request.method=='OPTIONS':
+            route.continue_();return
+        calls.append(route.request.post_data_json)
+        if len(calls)==1:
+            route.fetch();route.abort('failed')
+        else:
+            route.continue_()
+    user.route(site['api']+'/api/attendance/actions',lose_first)
+    user.get_by_role('button',name='CHECK-IN OFFICE',exact=True).click()
+    expect(user.locator('#retry-action')).to_be_visible()
+    assert 'latitude' not in user.evaluate('JSON.stringify(sessionStorage)')
+    user.locator('#retry-action').click()
+    expect(user.locator('#attendance-status')).to_have_text('Đang làm tại văn phòng')
+    assert calls[0]==calls[1]
+    user.get_by_role('button',name='NGHỈ TRƯA',exact=True).click()
+    expect(user.locator('#attendance-status')).to_have_text('Đang nghỉ trưa')
+    user.get_by_role('button',name='TIẾP TỤC REMOTE',exact=True).click()
+    user.locator('#remote-reason').fill('Pages remote test')
+    user.locator('#remote-form button[type="submit"]').click()
+    expect(user.locator('#attendance-status')).to_have_text('Đang làm Remote')
+    user.reload()
+    expect(user.locator('#attendance-status')).to_have_text('Đang làm Remote')
+    assert migrated_db.execute('SELECT count(*) AS n FROM geoattend.work_sessions').fetchone()['n']==2
+    assert user.evaluate('document.documentElement.scrollWidth<=innerWidth')
+    assert not errors

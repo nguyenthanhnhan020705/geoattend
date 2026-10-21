@@ -14,7 +14,8 @@ export async function apiFetch(path, options = {}) {
   try {
     response = await requestApi(path, {...options, headers,signal});
     data = response.status === 204 ? null : await response.json();
-  } catch {
+  } catch (error) {
+    if (error.code==='AUTH_REQUIRED') throw error;
     // Keep network/timeout errors without a definitive API code: attendance
     // retries must preserve the UUID when a server may have committed.
     throw new Error(controller.signal.aborted ? 'Yêu cầu quá thời gian chờ. Kiểm tra kết nối và thử tải lại; thao tác vừa lưu có thể đã được ghi nhận.' : 'Không thể kết nối. Kiểm tra mạng và thử lại.');
