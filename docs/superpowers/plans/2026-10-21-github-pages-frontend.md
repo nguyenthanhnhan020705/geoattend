@@ -93,11 +93,11 @@
 
 **Interfaces:** repo variable `GEOATTEND_API_ORIGIN` (rỗng cho trạng thái chưa kết nối). Workflow `.github/workflows/pages.yml` chạy main/workflow_dispatch, build bằng Python 3.13, base path `/geoattend/`, version github.sha; không cài dependency backend để build HTML.
 
-- [ ] Viết workflow build/test artifact trước deploy. Dùng official checkout/setup-python/configure-pages/upload-pages-artifact/deploy-pages, xác minh phiên bản action hiện hành từ tài liệu chính thức trước viết; pin SHA nếu repo có quy ước. Tách quyền build contents:read và deploy pages:write/id-token:write, environment github-pages, concurrency theo Pages; không deploy pull request.
-- [ ] Cập nhật README và docs/GITHUB_PAGES.md: API origin public config, frontend origin backend, maintenance/migration vận hành độc lập; cách bật Pages source Actions và backend chưa kết nối. Ghi lệnh build/serve local và luồng cập nhật giữ link cũ. Không gọi link dự kiến là link đang chạy.
-- [ ] Build artifact local và chạy kiểm tra Task 1; kiểm tra workflow chỉ upload output build. Commit `ci: publish GeoAttend frontend with GitHub Pages`.
-- [ ] Theo quyền đã có trong phiên, tích hợp nhánh triển khai vào main sau kiểm chứng; push main không force. Kiểm tra quyền GitHub CLI/API sẵn có, không in credentials. Bật Pages source Actions qua công cụ được hỗ trợ nếu đủ quyền; thiếu quyền thì báo đúng thao tác cần người dùng thực hiện.
-- [ ] Theo dõi workflow và GET URL Pages/root/trang con/assets, xác nhận version build. Nếu chưa có API, chỉ kết luận giao diện public + trạng thái chưa kết nối; không tuyên bố chấm công đã dùng được. Không tự tạo tài khoản hosting hoặc dịch vụ trả phí để vượt điều kiện này.
+- [x] Viết workflow build/test artifact trước deploy. Dùng official checkout/setup-python/configure-pages/upload-pages-artifact/deploy-pages, xác minh phiên bản action hiện hành từ tài liệu chính thức trước viết; pin SHA nếu repo có quy ước. Tách quyền build contents:read và deploy pages:write/id-token:write, environment github-pages, concurrency theo Pages; không deploy pull request.
+- [x] Cập nhật README và docs/GITHUB_PAGES.md: API origin public config, frontend origin backend, maintenance/migration vận hành độc lập; cách bật Pages source Actions và backend chưa kết nối. Ghi lệnh build/serve local và luồng cập nhật giữ link cũ. Không gọi link dự kiến là link đang chạy.
+- [x] Build artifact local và chạy kiểm tra Task 1; kiểm tra workflow chỉ upload output build. Commit `ci: publish GeoAttend frontend with GitHub Pages`.
+- [x] Theo quyền đã có trong phiên, tích hợp nhánh triển khai vào main sau kiểm chứng; push main không force. Kiểm tra quyền GitHub CLI/API sẵn có, không in credentials. Bật Pages source Actions qua công cụ được hỗ trợ nếu đủ quyền; thiếu quyền thì báo đúng thao tác cần người dùng thực hiện.
+- [x] Theo dõi workflow và GET URL Pages/root/trang con/assets, xác nhận version build. Nếu chưa có API, chỉ kết luận giao diện public + trạng thái chưa kết nối; không tuyên bố chấm công đã dùng được. Không tự tạo tài khoản hosting hoặc dịch vụ trả phí để vượt điều kiện này.
 
 ## Execution Handoff
 

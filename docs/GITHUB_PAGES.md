@@ -2,7 +2,7 @@
 
 ## Phạm vi
 
-Giao diện được build từ `app/static/`, xuất bản dưới `/geoattend/` bằng workflow `Publish GeoAttend frontend`. Địa chỉ dự kiến: `https://nguyenthanhnhan020705.github.io/geoattend/`. Chỉ coi link đang hoạt động sau khi workflow deploy thành công và kiểm tra HTTP thực tế. Trạng thái triển khai được báo trong lần bàn giao, không suy ra từ địa chỉ dự kiến.
+Giao diện được build từ `app/static/`, xuất bản dưới `/geoattend/` bằng workflow `Publish GeoAttend frontend`. Đã xuất bản và kiểm tra thực tế ngày 21/10/2026 tại **https://nguyenthanhnhan020705.github.io/geoattend/**.
 
 Hiện chưa có backend HTTPS công khai được cấu hình. Khi biến `GEOATTEND_API_ORIGIN` chưa có giá trị, Pages hiển thị **“Dịch vụ chưa được kết nối. Vui lòng liên hệ Admin.”**, khóa nhập/gửi tài khoản và không gọi API đăng nhập. Có giao diện public chưa có nghĩa mọi người đã đăng nhập/chấm công được.
 
@@ -66,3 +66,5 @@ Ngày 21/10/2026, full suite sau sửa review đạt **380 passed, 1 warning, 0 
 Lượt full trước sửa review đạt 377 test; các nhóm kiểm tra trong quá trình triển khai có trùng lặp nên không cộng thành số test độc lập. Không chạy migration hoặc tạo dữ liệu thử trên database ứng dụng.
 
 Review độc lập toàn nhánh không tìm thấy Critical; hai Important về mất UUID khi hết phiên và PDF không giới hạn thời gian đã được tái hiện RED rồi sửa, 3 test hồi quy mới GREEN. Tạm hoãn cải thiện nhỏ về thông báo riêng khi JavaScript không tải được (CSP vẫn chặn native form submit); kiểm thử preview PDF thành công chưa có ca riêng, hiện đã kiểm tra tải đúng byte, fallback popup bị chặn và timeout phục hồi. Bộ kiểm tra artifact bằng `python -S -m unittest tests.test_pages_artifact -v` đạt khi không nạp site-packages.
+
+Workflow [39536578187](https://github.com/nguyenthanhnhan020705/geoattend/actions/runs/39536578187) build/deploy thành công commit `728d6f1`. Kiểm tra link công khai bằng Edge headless 360px xác nhận runtime config đúng commit, API origin rỗng, trang gốc và deep link Admin hoạt động/điều hướng đúng; không có module error, asset 404 hoặc POST thông tin đăng nhập. Ảnh local `.local-tests/pages-public-mobile.png`. Repo variable API chưa được cấu hình; đây là giao diện đã xuất bản, chưa phải hệ thống chấm công có backend công khai.
