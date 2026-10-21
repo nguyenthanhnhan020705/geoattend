@@ -1,4 +1,6 @@
 import {loadAccount,apiFetch,bindLogout,message} from './api.js';
+import {requirePageAccount} from './page-session.js';
+await requirePageAccount('ADMIN');
 import {attachBackground} from './office-map-background.js';
 bindLogout();
 const el=id=>document.getElementById(id);

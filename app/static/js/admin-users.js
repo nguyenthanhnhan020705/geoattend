@@ -1,4 +1,6 @@
 import {apiFetch, loadAccount, bindForm, bindLogout, message} from './api.js';
+import {requirePageAccount} from './page-session.js';
+await requirePageAccount('ADMIN');
 import {openEmployeeHistory} from './admin-history.js';
 const dialog = document.getElementById('reset-dialog');
 let selected = null;

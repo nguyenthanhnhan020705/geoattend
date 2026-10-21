@@ -1,4 +1,6 @@
 import {apiFetch,bindLogout,message} from './api.js';
+import {requirePageAccount} from './page-session.js';
+await requirePageAccount('ADMIN');
 import {reportWeek,reportLine,reportDetails} from './reports-api.js';
 const el=id=>document.getElementById(id);
 const labels={SUBMITTED:'Đã nộp',PENDING:'Chưa nộp',OVERDUE:'Quá hạn chưa nộp',NOT_APPLICABLE:'Không áp dụng'};

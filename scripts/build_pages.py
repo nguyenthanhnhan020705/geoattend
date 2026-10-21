@@ -71,6 +71,8 @@ def build_pages(output: Path, *, base_path: str, api_origin: str, version: str,
         content = (SOURCE / filename).read_text(encoding='utf-8-sig')
         content = re.sub(r'(href|src)=([\"\'])(.*?)\2', rewrite, content)
         content = content.replace('<head>', '<head>' + security, 1)
+        if route != 'login':
+            content = content.replace('<body', '<body data-session-pending', 1)
         target = output / route / 'index.html'
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_text(content, encoding='utf-8')

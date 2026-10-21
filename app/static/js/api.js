@@ -1,7 +1,9 @@
+import {requestApi, pageUrl, clearSession, isPages, saveSession} from './transport.js';
 let csrf = '';
 export async function apiFetch(path, options = {}) {
   const method = options.method || 'GET';
-  if (method !== 'GET' && path !== '/api/auth/login' && !csrf) await loadAccount();
+  const loggingIn = path === '/api/auth/login' || path === '/api/auth/token';
+  if (method !== 'GET' && !loggingIn && !csrf) await loadAccount();
   const headers = {...options.headers};
   if (options.body) headers['Content-Type'] = 'application/json';
   if (method !== 'GET' && csrf) headers['X-CSRF-Token'] = csrf;
@@ -10,7 +12,7 @@ export async function apiFetch(path, options = {}) {
   const timer = setTimeout(()=>controller.abort(),15000);
   const signal = options.signal ? AbortSignal.any([options.signal,controller.signal]) : controller.signal;
   try {
-    response = await fetch(path, {...options, headers, credentials: 'same-origin',signal});
+    response = await requestApi(path, {...options, headers,signal});
     data = response.status === 204 ? null : await response.json();
   } catch {
     // Keep network/timeout errors without a definitive API code: attendance
@@ -18,12 +20,13 @@ export async function apiFetch(path, options = {}) {
     throw new Error(controller.signal.aborted ? 'Yêu cầu quá thời gian chờ. Kiểm tra kết nối và thử tải lại; thao tác vừa lưu có thể đã được ghi nhận.' : 'Không thể kết nối. Kiểm tra mạng và thử lại.');
   } finally {clearTimeout(timer);}
   if (!response.ok) {
-    if (response.status === 401 && data.code === 'AUTH_REQUIRED') window.location.assign('/login');
+    if (response.status === 401 && data.code === 'AUTH_REQUIRED') window.location.assign(pageUrl('/login'));
     const error = new Error(data.message || 'Không thể thực hiện thao tác.');
     error.code = data.code;
     throw error;
   }
   if (data?.csrf_token) csrf = data.csrf_token;
+  if (isPages && path==='/api/auth/token') saveSession(data.access_token,data.expires_at);
   return data;
 }
 export async function loadAccount() { return apiFetch('/api/auth/me'); }
@@ -49,7 +52,7 @@ export function bindForm(id, messageId, action) {
 export function bindLogout(messageId = 'message') {
   document.getElementById('logout')?.addEventListener('click', async event => {
     event.currentTarget.disabled = true;
-    try { await apiFetch('/api/auth/logout', {method:'POST'}); window.location.assign('/login'); }
+    try { await apiFetch('/api/auth/logout', {method:'POST'}); clearSession(); csrf=''; window.location.assign(pageUrl('/login')); }
     catch (error) { message(messageId, error.message); document.getElementById('logout').disabled = false; }
   });
 }

@@ -1,4 +1,7 @@
 import {loadAccount, bindLogout, message, apiFetch} from './api.js';
+import {requirePageAccount} from './page-session.js';
+import {pendingStorageKey} from './transport.js';
+await requirePageAccount('USER');
 bindLogout();
 const el = id => document.getElementById(id);
 const labels = {NOT_STARTED:'Trạng thái: Chưa bắt đầu', WORKING_REMOTE:'Đang làm Remote', WORKING_OFFICE:'Đang làm tại văn phòng', CHECKED_OUT:'Đã Check-out', LUNCH_BREAK:'Đang nghỉ trưa', MORNING_LEAVE:'Đang nghỉ buổi sáng', FULL_DAY_LEAVE:'Nghỉ cả ngày'};
@@ -6,7 +9,7 @@ const clock = value => new Intl.DateTimeFormat('vi-VN',{timeZone:'Asia/Ho_Chi_Mi
 let current = null, pending = null, busy = false, historyPage = 1, historyQuery = null, accountId = null;
 let reasonPanel = null, leaveKind = null;
 let historyGeneration = 0;
-const pendingKey = 'geoattend.pendingAttendance';
+const pendingKey = pendingStorageKey;
 const officeActions = ['START_OFFICE','CANCEL_LEAVE_START_OFFICE','SWITCH_OFFICE'];
 const remoteActions = ['START_REMOTE','CANCEL_LEAVE_START_REMOTE','SWITCH_REMOTE'];
 const isOffice = action => officeActions.includes(action);

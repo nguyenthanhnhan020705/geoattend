@@ -1,4 +1,6 @@
 import {apiFetch,bindLogout} from './api.js';
+import {requirePageAccount} from './page-session.js';
+await requirePageAccount('ADMIN');
 import {openEmployeeHistory} from './admin-history.js';
 import {attachBackground} from './office-map-background.js';
 import {updateExportFilters} from './admin-export.js';

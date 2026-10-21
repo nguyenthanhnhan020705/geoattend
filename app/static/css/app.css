@@ -12,3 +12,6 @@
 @media(max-width:700px){.attendance-choices:not(.is-resuming) .attendance-choice{font-size:14px}}
 @media(prefers-reduced-motion:reduce){.attendance-choices:not(.is-resuming) .attendance-choice{transition:none;transform:none!important}}
 .status-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px;margin:20px 0}.status-card{background:white;border:1px solid var(--line);border-radius:12px;padding:16px;font-size:13px}.status-count{display:block;font-size:28px;color:var(--green)}.dashboard-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.3fr);gap:20px;align-items:start}.dashboard-grid .panel{margin-top:0}.dashboard-workspace .page-heading{flex-wrap:wrap}.dashboard-workspace li,.leaflet-tooltip,.leaflet-popup-content{overflow-wrap:anywhere}.leaflet-tooltip{max-width:200px;white-space:normal}.onsite-dot{font-size:25px;color:#18786a;text-shadow:0 1px 3px white}.dashboard-grid .section-heading{flex-wrap:wrap}@media(max-width:700px){.dashboard-grid{grid-template-columns:1fr}.dashboard-workspace{padding:24px 14px}.dashboard-workspace .panel{padding:18px}.dashboard-workspace .status-cards{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+/* Pages waits for API role verification before showing protected controls. */
+body[data-session-pending] > * { visibility: hidden; }
