@@ -1,3 +1,4 @@
+from tests.browser_navigation import choose_menu, open_menu
 import json
 
 import pytest
@@ -38,6 +39,7 @@ def test_bearer_login_reload_role_and_deep_links(pages_site,width):
     expect(page.locator('#full-name')).to_have_text('Nhân viên Pages')
     assert page.evaluate('document.documentElement.scrollWidth <= innerWidth')
     assert not errors and not failed
+    open_menu(page)
     page.get_by_role('button',name='Đăng xuất',exact=True).click()
     page.wait_for_url('**/login/')
     page.goto(site['url']+'/user/')
@@ -126,6 +128,7 @@ def test_unconfirmed_uuid_survives_expiry_and_relogin_but_not_logout(pages_site)
         const t=await import('/geoattend/static/js/transport.js');
         sessionStorage.setItem(t.pendingStorageKey,JSON.stringify(pending));
     }""",pending)
+    open_menu(page)
     page.get_by_role('button',name='Đăng xuất',exact=True).click()
     page.wait_for_url('**/login/')
     assert not page.evaluate("Object.keys(sessionStorage).some(key=>key.endsWith('pendingAttendance'))")
@@ -167,7 +170,7 @@ def test_office_geofence_and_ambiguous_retry_then_remote(pages_site,migrated_db,
     errors=[]
     admin.on('pageerror',lambda error:errors.append(str(error)))
     login_pages(admin,site,'admin','Admin1234')
-    admin.get_by_role('link',name='Vùng văn phòng',exact=True).click()
+    choose_menu(admin, 'Vùng văn phòng')
     expect(admin.locator('#office-name')).to_be_enabled()
     admin.get_by_label('Tên văn phòng').fill('Pages Office')
     admin.get_by_label('Địa chỉ',exact=True).fill('HCM')

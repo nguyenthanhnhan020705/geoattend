@@ -1,14 +1,15 @@
+from tests.browser_navigation import choose_menu, open_menu
 """User interactions shared by attendance browser regression tests."""
 
 
 def open_history(page):
     if page.locator('#personal-history').is_hidden():
-        page.get_by_role('link',name='Lịch sử cá nhân',exact=True).click()
+        choose_menu(page, 'Lịch sử cá nhân')
 
 
 def open_attendance(page):
     if page.locator('.attendance-panel').is_hidden():
-        page.get_by_role('link',name='Trang chủ chấm công',exact=True).click()
+        choose_menu(page, 'Trang chủ chấm công')
 
 
 def open_remote(page):

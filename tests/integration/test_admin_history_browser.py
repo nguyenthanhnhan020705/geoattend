@@ -1,3 +1,4 @@
+from tests.browser_navigation import choose_menu, open_menu
 import os
 from uuid import uuid4
 import pytest
@@ -23,6 +24,7 @@ def test_admin_history_confirm_delete_retry_and_user_visibility(office_site,migr
         page.get_by_label('Lý do làm Remote').fill(reason)
         page.get_by_role('button',name='Bắt đầu Remote',exact=True).click()
         expect(page.locator('#attendance-status')).to_have_text('Đang làm Remote')
+        open_menu(page)
         page.get_by_role('button',name='Đăng xuất',exact=True).click()
         page.wait_for_url('**/login')
         login(page,office_site,'admin','Admin1234')
@@ -33,6 +35,7 @@ def test_admin_history_confirm_delete_retry_and_user_visibility(office_site,migr
         assert history.locator('img').count()==0
         expect(history.get_by_role('button',name='Xóa ngày này',exact=True)).to_be_disabled()
         page.get_by_role('button',name='Đóng lịch sử',exact=True).click()
+        open_menu(page)
         page.get_by_role('button',name='Đăng xuất',exact=True).click()
         page.wait_for_url('**/login')
         login(page,office_site,'worker','Worker1234')
@@ -40,6 +43,7 @@ def test_admin_history_confirm_delete_retry_and_user_visibility(office_site,migr
         page.get_by_label('Lý do Check-out sớm').fill('Có việc gia đình')
         page.locator('#checkout-form button').click()
         expect(page.locator('#attendance-status')).to_have_text('Đã Check-out')
+        open_menu(page)
         page.get_by_role('button',name='Đăng xuất',exact=True).click()
         page.wait_for_url('**/login')
         login(page,office_site,'admin','Admin1234')

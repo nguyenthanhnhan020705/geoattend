@@ -1,3 +1,4 @@
+from tests.browser_navigation import choose_menu, open_menu
 from pathlib import Path
 
 import pytest
@@ -15,7 +16,7 @@ def test_cross_origin_pdf_upload_download_and_admin_excel(pages_site,width):
     requests=[]
     page.on('request',lambda request: requests.append(request) if '/api/' in request.url else None)
     login_pages(page,site)
-    page.get_by_role('link',name='Nộp báo cáo tuần',exact=True).click()
+    choose_menu(page, 'Nộp báo cáo tuần')
     expect(page.locator('#report-week')).to_contain_text('19/10/2026')
     page.get_by_label('File PDF báo cáo tuần').set_input_files({'name':'Pages.pdf','mimeType':'application/pdf','buffer':PDF})
     page.get_by_role('button',name='Nộp báo cáo',exact=True).click()
@@ -33,12 +34,12 @@ def test_cross_origin_pdf_upload_download_and_admin_excel(pages_site,width):
     page.unroute(site['api']+'/api/weekly-reports/*/file*')
     admin=site['browser'].new_page(viewport={'width':width,'height':900})
     login_pages(admin,site,'admin','Admin1234')
-    admin.get_by_role('link',name='Nhân viên báo cáo tuần',exact=True).click()
+    choose_menu(admin, 'Nhân viên báo cáo tuần')
     expect(admin.locator('#reports-list')).to_contain_text('Pages.pdf')
     with admin.expect_download() as download:
         admin.locator('#reports-list').get_by_role('link',name='Tải PDF',exact=True).click()
     assert Path(download.value.path()).read_bytes()==PDF
-    admin.get_by_role('link',name='Quản lý nhân viên',exact=True).click()
+    choose_menu(admin, 'Quản lý nhân viên')
     expect(admin.locator('#export-attendance')).to_be_enabled()
     with admin.expect_download() as download:
         admin.get_by_role('button',name='Xuất Excel',exact=True).click()
@@ -54,7 +55,7 @@ def test_pdf_timeout_closes_reserved_window_and_allows_retry(pages_site):
     site=pages_site
     page=site['browser'].new_page()
     login_pages(page,site)
-    page.get_by_role('link',name='Nộp báo cáo tuần',exact=True).click()
+    choose_menu(page, 'Nộp báo cáo tuần')
     expect(page.locator('#report-week')).to_contain_text('19/10/2026')
     page.get_by_label('File PDF báo cáo tuần').set_input_files({'name':'Timeout.pdf','mimeType':'application/pdf','buffer':PDF})
     page.get_by_role('button',name='Nộp báo cáo',exact=True).click()

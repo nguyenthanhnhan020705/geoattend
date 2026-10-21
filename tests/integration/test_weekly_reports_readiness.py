@@ -1,3 +1,4 @@
+from tests.browser_navigation import choose_menu, open_menu
 import threading
 import hashlib
 import random
@@ -85,7 +86,7 @@ def test_unready_reports_disable_file_selection_and_show_real_cause(live_site,re
         browser=p.chromium.launch(channel='msedge' if Path('C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe').exists() else None,headless=True)
         page=browser.new_page()
         login(page,live_site,'worker','Worker1234')
-        page.get_by_role('link',name='Nộp báo cáo tuần',exact=True).click()
+        choose_menu(page, 'Nộp báo cáo tuần')
         expect(page.locator('#notice-error')).to_contain_text('chưa được kích hoạt')
         expect(page.get_by_label('File PDF báo cáo tuần')).to_be_disabled()
         expect(page.get_by_role('button',name='Nộp báo cáo',exact=True)).to_be_disabled()

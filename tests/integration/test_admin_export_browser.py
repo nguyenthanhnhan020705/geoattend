@@ -1,3 +1,4 @@
+from tests.browser_navigation import choose_menu, open_menu
 from pathlib import Path
 import pytest
 from playwright.sync_api import sync_playwright, expect
@@ -19,7 +20,7 @@ def test_admin_download_excel_filters_error_and_retry(office_site, migrated_db, 
         errors = []
         page.on('pageerror', lambda error: errors.append(str(error)))
         login(page, office_site, 'admin', 'Admin1234')
-        page.get_by_role('link', name='Quản lý nhân viên', exact=True).click()
+        choose_menu(page, 'Quản lý nhân viên')
         expect(page.locator('#export-attendance')).to_be_enabled()
         expect(page.locator('#export-from')).to_have_value('2026-10-08')
         expect(page.locator('#export-to')).to_have_value('2026-10-14')

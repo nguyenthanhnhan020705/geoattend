@@ -1,3 +1,4 @@
+from tests.browser_navigation import choose_menu, open_menu
 import os
 from pathlib import Path
 import pytest
@@ -35,7 +36,7 @@ def test_dashboard_map_history_navigation_and_xss(office_site,migrated_db,width)
         browser,page=launch(p,width)
         errors=[];page.on('pageerror',lambda error:errors.append(str(error)))
         login(page,office_site,'admin','Admin1234')
-        page.get_by_role('link',name='Xem trạng thái hôm nay',exact=True).click()
+        choose_menu(page, 'Xem trạng thái hôm nay')
         expect(page.locator('#total-users')).to_have_text('1')
         expect(page.locator('[data-status="WORKING_OFFICE"] .status-count')).to_have_text('1')
         expect(page.locator('#dashboard-users li')).to_have_count(1)
@@ -61,10 +62,10 @@ def test_dashboard_map_history_navigation_and_xss(office_site,migrated_db,width)
         assert page.evaluate('document.documentElement.scrollWidth<=innerWidth')
         artifacts=Path('.local-tests/phase-5/artifacts');artifacts.mkdir(parents=True,exist_ok=True)
         page.screenshot(path=str(artifacts/f'dashboard-{width}.png'),full_page=True)
-        page.get_by_role('link',name='Vùng văn phòng',exact=True).click()
+        choose_menu(page, 'Vùng văn phòng')
         expect(page.get_by_label('Tên văn phòng')).to_have_value('Office')
-        page.get_by_role('link',name='Xem trạng thái hôm nay',exact=True).click()
-        page.get_by_role('link',name='Quản lý nhân viên',exact=True).click()
+        choose_menu(page, 'Xem trạng thái hôm nay')
+        choose_menu(page, 'Quản lý nhân viên')
         expect(page.locator('#users li')).to_have_count(1)
         assert errors==[]
         browser.close()

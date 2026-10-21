@@ -10,6 +10,9 @@
 .app-layout>.workspace{width:100%;min-width:0;padding:32px 28px}
 .app-layout .page-heading{flex-wrap:wrap}
 .app-layout .personal-history{margin-top:0}
+.sidebar-toggle{width:44px;height:44px;flex-shrink:0;padding:10px;margin:0 0 16px;background:#eaf1ec;color:var(--green);border:1px solid var(--line)}
+.hamburger-lines{display:flex;flex-direction:column;gap:5px;width:22px}
+.hamburger-lines>span{display:block;height:2px;width:100%;background:currentColor;border-radius:2px}
 @media(max-width:1050px){.app-layout .dashboard-grid,.app-layout .admin-grid,.app-layout .office-grid{grid-template-columns:1fr}.app-layout .admin-grid .panel:nth-child(2){order:initial}}
 @media(max-width:700px){
   .app-layout{--sidebar-width:112px}
@@ -37,3 +40,8 @@
   .app-layout .export-controls{grid-template-columns:1fr}
   .app-layout .report-summary{flex-wrap:wrap}
 }
+.app-layout.sidebar-collapsed{--sidebar-width:56px}
+.sidebar-collapsed .app-sidebar{padding:16px 6px}
+.sidebar-collapsed .app-sidebar .brand,.sidebar-collapsed .app-sidebar nav{display:none}
+.sidebar-collapsed .sidebar-toggle{margin:0}
+.sidebar-collapsed>.user-workspace{max-width:1100px}

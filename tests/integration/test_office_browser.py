@@ -1,3 +1,4 @@
+from tests.browser_navigation import choose_menu, open_menu
 from datetime import datetime,timezone
 from pathlib import Path
 import os
@@ -28,7 +29,7 @@ def test_admin_map_and_user_gps_flow(office_site,migrated_db):
         admin.route('https://tile.openstreetmap.org/**',lambda route:route.abort())
         admin.route('https://tiles.openfreemap.org/**',lambda route:route.abort())
         login(admin,office_site,'admin','Admin1234')
-        admin.get_by_role('link',name='Vùng văn phòng').click()
+        choose_menu(admin, 'Vùng văn phòng')
         expect(admin.locator('#office-revision')).to_contain_text('0')
         admin.get_by_label('Tên văn phòng').fill('Văn phòng kiểm thử')
         admin.get_by_label('Địa chỉ').fill('TP.HCM')

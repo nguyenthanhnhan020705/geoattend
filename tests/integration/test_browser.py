@@ -1,3 +1,4 @@
+from tests.browser_navigation import choose_menu, open_menu
 from pathlib import Path
 import os
 import socket
@@ -72,7 +73,7 @@ def test_account_browser_flow_mobile_xss(live_site):
         assert user.locator('img').count() == 0
         assert user.evaluate('document.documentElement.scrollWidth <= window.innerWidth')
         user.screenshot(path=str(artifacts/'user-mobile.png'),full_page=True)
-        user.get_by_role('link',name='Đổi mật khẩu').first.click()
+        choose_menu(user, 'Đổi mật khẩu')
         user.get_by_label('Mật khẩu hiện tại').fill('User1234')
         user.get_by_label('Mật khẩu mới',exact=True).fill('Changed123')
         user.get_by_label('Nhập lại mật khẩu mới').fill('Changed123')
@@ -89,6 +90,7 @@ def test_account_browser_flow_mobile_xss(live_site):
         admin.set_viewport_size({'width':360,'height':800})
         assert admin.evaluate('document.documentElement.scrollWidth <= window.innerWidth')
         admin.screenshot(path=str(artifacts/'admin-mobile.png'),full_page=True)
+        open_menu(user)
         user.get_by_role('button',name='Đăng xuất').click()
         user.wait_for_url('**/login')
         assert errors == []

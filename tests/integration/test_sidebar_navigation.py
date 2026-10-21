@@ -1,3 +1,4 @@
+from tests.browser_navigation import choose_menu, open_menu
 from pathlib import Path
 
 import pytest
@@ -39,7 +40,7 @@ def test_user_sidebar_history_and_account(office_site, width):
             'Trang chủ chấm công', 'Lịch sử cá nhân', 'Nộp báo cáo tuần', 'Đổi mật khẩu'])
         expect(page.locator('.attendance-panel')).to_be_visible()
         expect(page.locator('#personal-history')).to_be_hidden()
-        nav.get_by_role('link', name='Lịch sử cá nhân', exact=True).click()
+        choose_menu(page, 'Lịch sử cá nhân')
         expect(page.locator('#personal-history')).to_be_visible()
         expect(page.locator('#history-form')).to_be_visible()
         expect(page.locator('.attendance-panel')).to_be_hidden()
@@ -48,7 +49,7 @@ def test_user_sidebar_history_and_account(office_site, width):
         expect(page.locator('#history-form')).to_be_visible()
         page.go_back()
         expect(page.locator('.attendance-panel')).to_be_visible()
-        nav.get_by_role('link', name='Đổi mật khẩu', exact=True).click()
+        choose_menu(page, 'Đổi mật khẩu')
         expect(page.locator('#password-form')).to_be_visible()
         expect(page.locator('nav a[aria-current="page"]')).to_have_text('Đổi mật khẩu')
         assert page.locator('.app-sidebar').bounding_box()['x'] < page.locator('main').bounding_box()['x']
@@ -67,13 +68,15 @@ def test_pages_history_sidebar_routes_and_logout(pages_site):
     expect(history).to_have_attribute('href', '/geoattend/user/#history')
     history.click()
     expect(page.locator('#history-page')).to_contain_text('/')
+    open_menu(page)
     expect(history).to_have_attribute('aria-current', 'page')
-    page.get_by_role('link', name='Nộp báo cáo tuần', exact=True).click()
+    choose_menu(page, 'Nộp báo cáo tuần')
     expect(page.locator('#report-week')).to_contain_text('19/10/2026')
-    page.get_by_role('link', name='Lịch sử cá nhân', exact=True).click()
+    choose_menu(page, 'Lịch sử cá nhân')
     expect(page.locator('#history-form')).to_be_visible()
     expect(page.locator('#history-page')).to_contain_text('/')
     assert page.evaluate('document.documentElement.scrollWidth <= innerWidth')
+    open_menu(page)
     page.get_by_role('button', name='Đăng xuất', exact=True).click()
     page.wait_for_url('**/login/')
     assert errors == []
@@ -91,12 +94,12 @@ def test_admin_sidebar_and_export_location(office_site, width):
             'Xem trạng thái hôm nay', 'Nhân viên báo cáo tuần', 'Quản lý nhân viên',
             'Vùng văn phòng', 'Tài khoản cá nhân'])
         expect(page.locator('#export-attendance')).to_be_enabled()
-        nav.get_by_role('link', name='Xem trạng thái hôm nay', exact=True).click()
+        choose_menu(page, 'Xem trạng thái hôm nay')
         expect(page.locator('#dashboard-users li')).to_have_count(1)
         expect(page.locator('#attendance-export-form')).to_have_count(0)
-        nav.get_by_role('link', name='Nhân viên báo cáo tuần', exact=True).click()
+        choose_menu(page, 'Nhân viên báo cáo tuần')
         expect(page.locator('nav a[aria-current="page"]')).to_have_text('Nhân viên báo cáo tuần')
-        nav.get_by_role('link', name='Tài khoản cá nhân', exact=True).click()
+        choose_menu(page, 'Tài khoản cá nhân')
         expect(page.locator('#password-form')).to_be_visible()
         expect(page.locator('nav a[aria-current="page"]')).to_have_text('Tài khoản cá nhân')
         assert page.locator('.app-sidebar').bounding_box()['x'] < page.locator('main').bounding_box()['x']
