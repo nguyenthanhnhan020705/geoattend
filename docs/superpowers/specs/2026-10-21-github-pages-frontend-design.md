@@ -1,6 +1,6 @@
 # GeoAttend: giao diện GitHub Pages và API độc lập
 
-Trạng thái: thiết kế để người dùng duyệt, chưa triển khai.
+Trạng thái: người dùng đã duyệt thiết kế; chưa triển khai.
 
 ## Mục tiêu đã xác nhận
 
