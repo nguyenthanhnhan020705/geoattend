@@ -48,3 +48,31 @@ def test_cross_origin_pdf_upload_download_and_admin_excel(pages_site,width):
             assert request.headers.get('authorization','').startswith('Bearer '),request.url
         assert 'access_token' not in request.url and 'Bearer' not in request.url
     assert page.evaluate('document.documentElement.scrollWidth<=innerWidth')
+
+
+def test_pdf_timeout_closes_reserved_window_and_allows_retry(pages_site):
+    site=pages_site
+    page=site['browser'].new_page()
+    login_pages(page,site)
+    page.get_by_role('link',name='NỘP BÁO CÁO TUẦN',exact=True).click()
+    expect(page.locator('#report-week')).to_contain_text('19/10/2026')
+    page.get_by_label('File PDF báo cáo tuần').set_input_files({'name':'Timeout.pdf','mimeType':'application/pdf','buffer':PDF})
+    page.get_by_role('button',name='Nộp báo cáo',exact=True).click()
+    expect(page.locator('#current-report')).to_contain_text('Timeout.pdf')
+    page.clock.install()
+    stalled=[]
+    def stall(route):
+        if route.request.method=='OPTIONS':route.continue_()
+        else:stalled.append(route)
+    page.route(site['api']+'/api/weekly-reports/*/file*',stall)
+    with page.expect_popup() as popup:
+        page.locator('#current-report').get_by_role('link',name='Xem PDF',exact=True).click()
+    expect(page.locator('#current-report')).to_contain_text('Đang tải PDF')
+    page.clock.fast_forward(30001)
+    expect(page.locator('#current-report')).to_contain_text('quá thời gian')
+    assert popup.value.is_closed()
+    expect(page.locator('#current-report').get_by_role('link',name='Xem PDF',exact=True)).not_to_have_attribute('aria-disabled','true')
+    page.unroute(site['api']+'/api/weekly-reports/*/file*')
+    with page.expect_download() as download:
+        page.locator('#current-report').get_by_role('link',name='Tải PDF',exact=True).click()
+    assert Path(download.value.path()).read_bytes()==PDF

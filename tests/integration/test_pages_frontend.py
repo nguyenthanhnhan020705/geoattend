@@ -97,6 +97,69 @@ def test_expired_session_on_active_page_redirects_without_sending_request(pages_
     page.wait_for_url('**/login/',timeout=5000)
 
 
+def test_unconfirmed_uuid_survives_expiry_and_relogin_but_not_logout(pages_site):
+    site=pages_site
+    page=site['browser'].new_page()
+    login_pages(page,site)
+    expect(page.locator('#attendance-status')).to_contain_text('Chưa bắt đầu')
+    pending={'accountId':site['user_id'],'body':{'request_id':'3a9afad1-d61e-4eb7-bb56-4c283621999a',
+        'expected_revision':0,'expected_work_date':'2026-10-21','action':'START_REMOTE','reason':'Unconfirmed Pages retry'}}
+    page.evaluate("""async pending => {
+        const t=await import('/geoattend/static/js/transport.js');
+        sessionStorage.setItem(t.pendingStorageKey,JSON.stringify(pending));
+        for(const key of Object.keys(sessionStorage)) {
+            if(key.endsWith(':session')) {
+                const value=JSON.parse(sessionStorage.getItem(key));
+                value.expiresAt='2000-01-01T00:00:00Z';
+                sessionStorage.setItem(key,JSON.stringify(value));
+            }
+        }
+        document.getElementById('refresh-status').click();
+    }""",pending)
+    page.wait_for_url('**/login/')
+    assert page.evaluate("Object.values(sessionStorage).some(value=>value.includes('3a9afad1-d61e-4eb7-bb56-4c283621999a'))")
+    login_pages(page,site)
+    expect(page.locator('#retry-action')).to_be_visible()
+    page.locator('#retry-action').click()
+    expect(page.locator('#attendance-status')).to_have_text('Đang làm Remote')
+    page.evaluate("""async pending => {
+        const t=await import('/geoattend/static/js/transport.js');
+        sessionStorage.setItem(t.pendingStorageKey,JSON.stringify(pending));
+    }""",pending)
+    page.get_by_role('button',name='Đăng xuất',exact=True).click()
+    page.wait_for_url('**/login/')
+    assert not page.evaluate("Object.keys(sessionStorage).some(key=>key.endsWith('pendingAttendance'))")
+
+
+def test_pending_uuid_survives_auth_required_after_ambiguous_response(pages_site,migrated_db):
+    site=pages_site
+    page=site['browser'].new_page()
+    login_pages(page,site)
+    expect(page.locator('#attendance-status')).to_contain_text('Chưa bắt đầu')
+    calls=[]
+    def intercept(route):
+        if route.request.method=='OPTIONS':route.continue_();return
+        calls.append(route.request.post_data_json)
+        if len(calls)==1:route.fetch();route.abort('failed')
+        elif len(calls)==2:
+            route.fulfill(status=401,content_type='application/json',body='{"code":"AUTH_REQUIRED","message":"Phiên hết hạn"}',headers={'Access-Control-Allow-Origin':site['frontend_origin']})
+        else:route.continue_()
+    page.route(site['api']+'/api/attendance/actions',intercept)
+    page.get_by_role('button',name='CHECK-IN REMOTE',exact=True).click()
+    page.locator('#remote-reason').fill('Committed but response lost')
+    page.locator('#remote-form button[type="submit"]').click()
+    expect(page.locator('#retry-action')).to_be_visible()
+    page.locator('#retry-action').click()
+    page.wait_for_url('**/login/')
+    assert page.evaluate('(id)=>Object.values(sessionStorage).some(value=>value.includes(id))',calls[0]['request_id'])
+    login_pages(page,site)
+    expect(page.locator('#retry-action')).to_be_visible()
+    page.locator('#retry-action').click()
+    expect(page.locator('#retry-action')).to_be_hidden()
+    assert calls[0]==calls[1]==calls[2]
+    assert migrated_db.execute('SELECT count(*) AS n FROM geoattend.work_sessions').fetchone()['n']==1
+
+
 @pytest.mark.parametrize('width',[360,1280])
 def test_office_geofence_and_ambiguous_retry_then_remote(pages_site,migrated_db,width):
     site=pages_site

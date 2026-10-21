@@ -4,6 +4,7 @@ export const isPages = config.mode === 'pages';
 const routes = new Set(['/login','/user','/account','/admin/users','/admin/dashboard','/admin/office','/user/weekly-reports','/admin/weekly-reports']);
 const namespace = `geoattend:${config.apiOrigin}:${config.basePath}:`;
 const sessionKey = namespace + 'session';
+let redirectingToLogin=false;
 export const pendingStorageKey = isPages ? namespace + 'pendingAttendance' : 'geoattend.pendingAttendance';
 
 export function pageUrl(path) {
@@ -32,8 +33,17 @@ export function saveSession(token, expiresAt) {
   sessionStorage.setItem(sessionKey, JSON.stringify({token,expiresAt}));
 }
 
-export function clearSession() {
-  try { sessionStorage.removeItem(sessionKey); sessionStorage.removeItem(pendingStorageKey); } catch { /* storage may be disabled */ }
+export function clearSession({discardPending=false}={}) {
+  try {
+    sessionStorage.removeItem(sessionKey);
+    if(discardPending)sessionStorage.removeItem(pendingStorageKey);
+  } catch { /* storage may be disabled */ }
+}
+
+export function redirectToLogin() {
+  if(redirectingToLogin)return;
+  redirectingToLogin=true;
+  window.location.assign(pageUrl('/login'));
 }
 
 export function sessionToken() {
@@ -57,14 +67,14 @@ export async function requestApi(path, options={}) {
     if (path !== '/api/auth/token') {
       try { headers.set('Authorization','Bearer '+sessionToken()); }
       catch(error) {
-        if(error.code==='AUTH_REQUIRED') window.location.assign(pageUrl('/login'));
+        if(error.code==='AUTH_REQUIRED') redirectToLogin();
         throw error;
       }
     }
   }
   const response = await fetch(url, {...options, headers, credentials:isPages?'omit':'same-origin', redirect:'error'});
   if (isPages && response.status===401 && path!=='/api/auth/token') {
-    clearSession(); window.location.assign(pageUrl('/login'));
+    clearSession(); redirectToLogin();
   }
   return response;
 }

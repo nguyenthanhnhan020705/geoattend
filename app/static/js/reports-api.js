@@ -36,8 +36,14 @@ export function reportLinks(report,parent,admin=false) {
 }
 
 export async function fetchReportFile(reportId,{admin=false,download=false}={}) {
-  const response=await requestApi(`/api/${admin?'admin/':''}weekly-reports/${encodeURIComponent(reportId)}/file${download?'?download=true':''}`);
-  return fileBlob(response,'application/pdf');
+  const controller=new AbortController(), timer=setTimeout(()=>controller.abort(),30000);
+  try {
+    const response=await requestApi(`/api/${admin?'admin/':''}weekly-reports/${encodeURIComponent(reportId)}/file${download?'?download=true':''}`,{signal:controller.signal});
+    return await fileBlob(response,'application/pdf');
+  } catch(error) {
+    if(controller.signal.aborted)throw new Error('Tải PDF quá thời gian chờ. Vui lòng thử lại.');
+    throw error;
+  } finally {clearTimeout(timer);}
 }
 export function reportDetails(report,parent,admin=false) {
   reportLine('p',report.filename,parent,'report-filename');

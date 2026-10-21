@@ -94,7 +94,7 @@ async function sendPending() {
     el('checkout-reason').value = '';
     message('message','Đã ghi nhận thao tác.',true);
   } catch (error) {
-    if (error.code && error.code !== 'DATABASE_UNAVAILABLE' && error.code !== 'INCONSISTENT_ATTENDANCE') {
+    if (error.code && !['AUTH_REQUIRED','DATABASE_UNAVAILABLE','INCONSISTENT_ATTENDANCE'].includes(error.code)) {
       pending = null; savePending(); message('message',error.message);
     } else message('message','Chưa xác nhận được kết quả. Bấm “Gửi lại thao tác” để kiểm tra và gửi lại an toàn.');
   } finally { busy = false; controls(); }

@@ -1,5 +1,5 @@
 import {loadAccount} from './api.js';
-import {isPages, sessionToken, pageUrl, clearSession} from './transport.js';
+import {isPages, sessionToken, pageUrl, clearSession, redirectToLogin} from './transport.js';
 
 let checking;
 function navigate(path) {
@@ -15,7 +15,7 @@ export async function requirePageAccount(role=null) {
     document.body.removeAttribute('data-session-pending');
     return account;
   } catch (error) {
-    if (error.code==='AUTH_REQUIRED') { clearSession(); return navigate('/login'); }
+    if (error.code==='AUTH_REQUIRED') { clearSession(); redirectToLogin(); return new Promise(()=>{}); }
     document.body.removeAttribute('data-session-pending');
     for (const form of document.forms) form.inert=true;
     const notice=document.querySelector('#message, #report-message, #dashboard-message, #list-message');

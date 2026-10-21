@@ -12,5 +12,5 @@ try {
 bindForm('password-form','message',async (data, form) => {
   if (data.get('new_password') !== data.get('confirm')) throw new Error('Mật khẩu xác nhận không khớp.');
   await apiFetch('/api/auth/change-password',{method:'POST',body:JSON.stringify({current_password:data.get('current_password'),new_password:data.get('new_password')})});
-  form.reset(); clearSession(); window.location.assign(pageUrl('/login'));
+  form.reset(); clearSession({discardPending:true}); window.location.assign(pageUrl('/login'));
 });

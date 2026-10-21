@@ -1,4 +1,4 @@
-import {requestApi, pageUrl, clearSession, isPages, saveSession} from './transport.js';
+import {requestApi, pageUrl, clearSession, isPages, saveSession, redirectToLogin} from './transport.js';
 let csrf = '';
 export async function apiFetch(path, options = {}) {
   const method = options.method || 'GET';
@@ -21,7 +21,7 @@ export async function apiFetch(path, options = {}) {
     throw new Error(controller.signal.aborted ? 'Yêu cầu quá thời gian chờ. Kiểm tra kết nối và thử tải lại; thao tác vừa lưu có thể đã được ghi nhận.' : 'Không thể kết nối. Kiểm tra mạng và thử lại.');
   } finally {clearTimeout(timer);}
   if (!response.ok) {
-    if (response.status === 401 && data.code === 'AUTH_REQUIRED') window.location.assign(pageUrl('/login'));
+    if (response.status === 401 && data.code === 'AUTH_REQUIRED') redirectToLogin();
     const error = new Error(data.message || 'Không thể thực hiện thao tác.');
     error.code = data.code;
     throw error;
@@ -53,7 +53,7 @@ export function bindForm(id, messageId, action) {
 export function bindLogout(messageId = 'message') {
   document.getElementById('logout')?.addEventListener('click', async event => {
     event.currentTarget.disabled = true;
-    try { await apiFetch('/api/auth/logout', {method:'POST'}); clearSession(); csrf=''; window.location.assign(pageUrl('/login')); }
+    try { await apiFetch('/api/auth/logout', {method:'POST'}); clearSession({discardPending:true}); csrf=''; redirectToLogin(); }
     catch (error) { message(messageId, error.message); document.getElementById('logout').disabled = false; }
   });
 }

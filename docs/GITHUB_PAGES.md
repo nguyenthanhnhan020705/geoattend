@@ -43,6 +43,7 @@ Tạo/cấp tài khoản qua Admin; không có đăng ký công khai. Sau khi k�
 - CORS chỉ cho origin Pages đã cấu hình. Thao tác ghi vẫn kiểm tra CSRF/Origin; bearer sai không được fallback sang cookie hợp lệ.
 - PDF/Excel được fetch với xác thực rồi tạo Blob để xem/tải; popup bị chặn sẽ tải PDF về máy. Không đưa token vào link PDF. Bản cùng origin tiếp tục hỗ trợ link PDF trực tiếp như trước.
 - Lỗi mạng không được coi là thao tác thất bại chắc chắn; giữ UUID/revision để gửi lại an toàn. GPS chỉ ở RAM khi retry Office, không được đưa vào storage hoặc log.
+- Hết phiên hoặc API trả 401 chỉ xóa token, giữ thao tác chưa xác nhận để đúng tài khoản đăng nhập lại gửi cùng UUID. Đăng xuất/đổi mật khẩu chủ động xóa cả phiên lẫn pending của ứng dụng. Tải PDF có hạn 30 giây bao gồm đọc body; timeout đóng cửa sổ chờ và cho thử lại.
 
 ## Kiểm tra local
 
@@ -61,3 +62,5 @@ Các test mới: `test_pages_build.py`, `test_pages_artifact.py`, `integration/t
 ## Bằng chứng triển khai
 
 Kết quả trước hồi quy cuối: 17 test builder; 37 test auth/config/cookie/health/timing; 5 test Pages ban đầu; 19 test builder/browser cũ; 2 test PDF/Excel khác origin và 8 test PDF/Excel cũ đạt. Những nhóm này có trùng lặp, không cộng làm số test độc lập. Ca hết hạn phiên trên trang đang mở đã được tái hiện trước khi sửa transport. Kết quả full suite và review cuối được bổ sung sau khi có đầu ra thực tế.
+
+Review độc lập toàn nhánh không tìm thấy Critical; hai Important về mất UUID khi hết phiên và PDF không giới hạn thời gian đã được tái hiện RED rồi sửa, 3 test hồi quy mới GREEN. Tạm hoãn cải thiện nhỏ về thông báo riêng khi JavaScript không tải được (CSP vẫn chặn native form submit); kiểm thử preview PDF thành công chưa có ca riêng, hiện đã kiểm tra tải đúng byte, fallback popup bị chặn và timeout phục hồi. Bộ kiểm tra artifact bằng `python -S -m unittest tests.test_pages_artifact -v` đạt khi không nạp site-packages.
