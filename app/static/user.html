@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Tài khoản · GeoAttend</title><link rel="stylesheet" href="/static/css/app.css?v=personal-history-20261020"><link rel="stylesheet" href="/static/css/reports.css"><script type="module" src="/static/js/user.js?v=personal-history-20261020"></script><script type="module" src="/static/js/report-home.js"></script><link rel="stylesheet" href="/static/css/illustrations.css"></head><body class="illustrated-page">
+<header class="topbar report-topbar"><a class="brand" href="/user"><span class="brand-mark">G</span>GeoAttend</a><nav aria-label="Điều hướng"><a href="/account">Đổi mật khẩu</a><a href="/user/weekly-reports">NỘP BÁO CÁO TUẦN</a><button id="logout" class="text-button">Đăng xuất</button></nav></header>
+<main class="workspace user-workspace">
+<section id="employee-account" class="panel employee-account illustrated-account" aria-labelledby="employee-heading">
+  <span class="eyebrow green">THÔNG TIN NHÂN VIÊN</span>
+  <h1 id="employee-heading">Xin chào, <span id="full-name">bạn</span>.</h1>
+  <dl><dt>Tài khoản</dt><dd id="account-username">—</dd><dt>Vai trò</dt><dd>Nhân viên</dd></dl><div class="work-scenes" aria-hidden="true"><div class="scene scene-team"></div><div class="scene scene-remote"></div></div><div data-report-notices aria-live="polite"></div><p id="notice-error" class="message" role="status"></p>
+</section>
+<section class="panel attendance-panel" aria-labelledby="attendance-heading">
+  <div class="section-heading"><h2 id="attendance-heading">HÔM NAY</h2><button id="refresh-status" class="secondary" type="button">Làm mới</button></div>
+  <p id="work-date" class="muted">Đang tải…</p><p id="attendance-status" class="attendance-state" role="status">Đang tải…</p><p id="session-info" class="muted"></p><p id="day-notice" class="muted"></p>
+  <div id="attendance-choices" class="attendance-choices" role="group" aria-label="Chọn phiên làm việc">
+    <button id="start-office" class="attendance-choice" type="button" disabled>CHECK-IN OFFICE</button>
+    <button id="choose-remote" class="attendance-choice" type="button" aria-expanded="false" aria-controls="reason-panel" disabled>CHECK-IN REMOTE</button>
+    <button id="choose-leave" class="attendance-choice" type="button" aria-expanded="false" aria-controls="reason-panel" disabled>XIN NGHỈ</button>
+  </div>
+  <p id="gps-note" class="muted" hidden>Office xác minh GPS một lần khi bạn bấm; không theo dõi vị trí liên tục.</p>
+  <section id="reason-panel" class="reason-panel" aria-labelledby="reason-heading" hidden>
+    <div class="section-heading"><h3 id="reason-heading">Nhập lý do</h3><button id="close-reason" class="text-button" type="button" aria-label="Đóng nhập lý do">✕</button></div>
+    <form id="remote-form" hidden><label for="remote-reason">Lý do làm Remote</label><textarea id="remote-reason" name="reason" rows="3" maxlength="1000" required placeholder="Bạn làm việc từ xa vì…"></textarea><button class="primary" type="submit">Bắt đầu Remote</button></form>
+    <form id="leave-form" hidden><div class="leave-actions"><button id="morning-leave" class="secondary" type="button" value="MORNING_LEAVE" aria-pressed="false" hidden>BUỔI SÁNG</button><button id="full-day-leave" class="secondary" type="button" value="FULL_DAY_LEAVE" aria-pressed="false" hidden>CẢ NGÀY</button></div><div id="leave-fields" hidden><label for="leave-reason">Lý do nghỉ</label><textarea id="leave-reason" name="reason" rows="3" maxlength="1000" required placeholder="Lý do nghỉ của bạn…"></textarea><button id="confirm-leave" class="primary" type="submit">Xác nhận xin nghỉ</button></div></form>
+    <form id="checkout-form" hidden><label for="checkout-reason">Lý do Check-out sớm</label><textarea id="checkout-reason" name="reason" rows="3" maxlength="1000" required></textarea><p class="help">Check-out sớm kết thúc ngày làm việc. Bạn có thể Check-in lại vào ngày mai.</p><button class="primary" type="submit">Xác nhận Check-out sớm</button></form>
+  </section>
+  <div class="session-actions"><button id="start-lunch" class="secondary" type="button" hidden>Nghỉ trưa</button><button id="check-out" class="primary" type="button" hidden>Check-out</button></div>
+  <p id="message" class="message" role="status" aria-live="polite"></p><button id="retry-action" class="secondary" type="button" hidden>Gửi lại thao tác</button>
+  <p class="help">Hệ thống tự đóng phiên còn mở lúc 20:00; đây không phải giờ kết thúc thực tế.</p>
+</section>
+<details id="personal-history" class="panel personal-history">
+  <summary>Lịch sử cá nhân<span class="history-toggle-hint" aria-hidden="true">Bấm để mở / thu gọn</span></summary>
+  <div class="personal-history-content"><form id="history-form"><div class="date-range"><div><label for="history-from">Từ ngày</label><input id="history-from" type="date" name="from" required></div><div><label for="history-to">Đến ngày</label><input id="history-to" type="date" name="to" required></div></div><button class="secondary" type="submit">Xem lịch sử</button></form><p id="history-message" class="message" role="status" aria-live="polite"></p><div id="history-list"></div><div class="pagination"><button id="history-prev" class="secondary" type="button" disabled>Trang trước</button><span id="history-page"></span><button id="history-next" class="secondary" type="button" disabled>Trang sau</button></div></div>
+</details>
+</main></body></html>

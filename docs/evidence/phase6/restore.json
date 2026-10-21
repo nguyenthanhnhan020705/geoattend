@@ -1,0 +1,32 @@
+[
+  {
+    "tool": "pg_dump custom / pg_restore",
+    "backup_policy": "gps-free",
+    "expired_hidden_before_purge": true,
+    "expired_remaining": 0,
+    "fresh_remaining": 0,
+    "tombstone_replay": "HISTORY_DELETED",
+    "migration_checksums": "unchanged",
+    "runtime_ddl": false,
+    "maintenance_second_purge": 0,
+    "restored_sessions_revoked": true,
+    "restore_and_verify_seconds": 2.094,
+    "backup_bytes": 31191,
+    "scope": "synthetic isolated local only"
+  },
+  {
+    "tool": "pg_dump custom / pg_restore",
+    "backup_policy": "legacy-with-gps",
+    "expired_hidden_before_purge": true,
+    "expired_remaining": 0,
+    "fresh_remaining": 1,
+    "tombstone_replay": "HISTORY_DELETED",
+    "migration_checksums": "unchanged",
+    "runtime_ddl": false,
+    "maintenance_second_purge": 0,
+    "restored_sessions_revoked": true,
+    "restore_and_verify_seconds": 2.605,
+    "backup_bytes": 31719,
+    "scope": "synthetic isolated local only"
+  }
+]

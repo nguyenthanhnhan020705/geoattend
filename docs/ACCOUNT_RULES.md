@@ -1,6 +1,6 @@
-﻿# GeoAttend — Quy tắc tài khoản MVP
+# GeoAttend — Quy tắc tài khoản MVP
 
-Nguồn: [BRD](../README.md), các quyết định tài khoản được xác nhận trong Phase 0.
+Nguồn: [BRD](REQUIREMENTS.md), các quyết định tài khoản được xác nhận trong Phase 0.
 
 ## 1. Phạm vi đã chốt
 
@@ -37,9 +37,11 @@ Cấp thông tin cho nhân viên là công việc của Admin; tài liệu này 
 - Kiểm tra mật khẩu hiện tại khi người dùng tự đổi; xử lý phiên đăng nhập sau đổi/đặt lại mật khẩu.
 - API chấm công cá nhân chỉ nhận vai trò `USER`; Admin chỉ đọc trạng thái/lịch sử nhân viên qua API quản lý.
 
-Các nội dung mục 3 đã được mô tả và duyệt trong [bản thiết kế Phase 0](superpowers/specs/2026-10-14-geoattend-mvp-design.md), mục 3. Triển khai theo kế hoạch Phase 1.
+Các nội dung mục 3 đã được mô tả và duyệt trong [bản thiết kế Phase 0](archive/superpowers/specs/2026-10-14-geoattend-mvp-design.md), mục 3. Phần tài khoản đã triển khai; hướng dẫn vận hành hiện hành tại [DEVELOPMENT](DEVELOPMENT.md).
 
 ## 4. Đối chiếu yêu cầu
+
+Cập nhật theo yêu cầu người dùng 15/10/2026: Admin được xem lịch sử từng nhân viên và xóa vĩnh viễn từng ngày sau xác nhận tên tài khoản. Không xóa ngày đang làm việc/nghỉ trưa; không cấp quyền xóa cho User. Chi tiết tại [ADMIN_HISTORY](ADMIN_HISTORY.md).
 
 - FR-01 / AC-01: đăng nhập và phân quyền.
 - FR-16 / AC-17: khởi tạo một Admin và cấp tài khoản User.
