@@ -1,4 +1,6 @@
 import {loadAccount} from './api.js';
+import {requestApi,isPages} from './transport.js';
+import {downloadBlob,openPdf,fileBlob} from './file-downloads.js';
 
 export function reportDate(value) {
   const [year,month,day]=value.split('-');return `${day}/${month}/${year}`;
@@ -12,6 +14,30 @@ export function reportLinks(report,parent,admin=false) {
   const url=`/api/${admin?'admin/':''}weekly-reports/${encodeURIComponent(report.id)}/file`;
   const view=reportLine('a','Xem PDF',links);view.href=url;view.target='_blank';view.rel='noopener';
   const download=reportLine('a','Tải PDF',links);download.href=url+'?download=true';
+  if(isPages) {
+    const notice=reportLine('p','',links,'message');notice.setAttribute('role','status');
+    for(const [link,wantsDownload] of [[view,false],[download,true]]) {
+      link.href='#';link.removeAttribute('target');
+      let busy=false;
+      link.addEventListener('click',async event=>{
+        event.preventDefault();if(busy)return;busy=true;
+        link.setAttribute('aria-disabled','true');notice.textContent='Đang tải PDF…';
+        const popup=wantsDownload?null:window.open('about:blank','_blank');
+        if(popup)popup.opener=null;
+        try {
+          const blob=await fetchReportFile(report.id,{admin,download:wantsDownload});
+          if(wantsDownload)downloadBlob(blob,report.filename);else openPdf(blob,popup);
+          notice.textContent=(!wantsDownload && !popup)?'Trình duyệt chặn cửa sổ xem; đã tải PDF về máy.':'';
+        } catch(error) {if(popup)popup.close();notice.textContent=error.message;}
+        finally {busy=false;link.removeAttribute('aria-disabled');}
+      });
+    }
+  }
+}
+
+export async function fetchReportFile(reportId,{admin=false,download=false}={}) {
+  const response=await requestApi(`/api/${admin?'admin/':''}weekly-reports/${encodeURIComponent(reportId)}/file${download?'?download=true':''}`);
+  return fileBlob(response,'application/pdf');
 }
 export function reportDetails(report,parent,admin=false) {
   reportLine('p',report.filename,parent,'report-filename');
@@ -29,8 +55,8 @@ export async function uploadReport(pending) {
   const controller=new AbortController();const timer=setTimeout(()=>controller.abort(),60000);
   let response,data;
   try {
-    response=await fetch(`/api/weekly-reports/${pending.week_start}?${params}`,{
-      method:'PUT',credentials:'same-origin',headers:{'Content-Type':'application/pdf','X-CSRF-Token':account.csrf_token,'X-Report-Filename':encodeURIComponent(pending.filename)},
+    response=await requestApi(`/api/weekly-reports/${pending.week_start}?${params}`,{
+      method:'PUT',headers:{'Content-Type':'application/pdf','X-CSRF-Token':account.csrf_token,'X-Report-Filename':encodeURIComponent(pending.filename)},
       body:pending.file,signal:controller.signal,
     });
     data=await response.json();

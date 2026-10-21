@@ -1,4 +1,6 @@
 import {message} from './api.js';
+import {requestApi,pageUrl} from './transport.js';
+import {fileBlob,downloadBlob} from './file-downloads.js';
 
 const el = id=>document.getElementById(id);
 let initialized = false, optionsKey = '';
@@ -43,17 +45,14 @@ el('attendance-export-form').addEventListener('submit', async event=>{
   message('export-message','Đang chuẩn bị file Excel…');
   const controller=new AbortController(), timeout=setTimeout(()=>controller.abort(),30000);
   try {
-    const response=await fetch('/api/admin/attendance/export?'+params,{credentials:'same-origin',signal:controller.signal});
+    const response=await requestApi('/api/admin/attendance/export?'+params,{signal:controller.signal});
     if (!response.ok) {
       const error=await response.json();
-      if (response.status===401) window.location.assign('/login');
+      if (response.status===401) window.location.assign(pageUrl('/login'));
       throw new Error(error.message || 'Không thể xuất Excel.');
     }
-    const blob=await response.blob(), url=URL.createObjectURL(blob);
-    const link=document.createElement('a'); link.href=url;
-    link.download=`geoattend_${start}_${end}.xlsx`;
-    document.body.append(link); link.click(); link.remove();
-    setTimeout(()=>URL.revokeObjectURL(url),60000);
+    const blob=await fileBlob(response,'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    downloadBlob(blob,`geoattend_${start}_${end}.xlsx`);
     message('export-message','Đã tải file Excel.',true);
   } catch (error) {
     message('export-message',error.name==='AbortError'?'Xuất Excel quá thời gian chờ. Vui lòng thử lại.':error.message || 'Không thể kết nối. Vui lòng thử lại.');
