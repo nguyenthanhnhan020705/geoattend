@@ -48,6 +48,11 @@ def test_dump_restore_purge_and_tombstone_before_reopening(configured,migrated_d
     migrated_db.execute('INSERT INTO geoattend.office_locations(session_id,start_event_id,point,accuracy_m,recorded_at,expires_at) VALUES(%s,%s,ST_SetSRID(ST_MakePoint(106.5,10.5),4326),42,%s,%s)',(session,event,now,now+timedelta(days=30)))
     migrated_db.commit()
     # Weekly PDF is ordinary application data, including in GPS-free backups.
+    # The attendance fixture freezes October 14 only after creating accounts.
+    # Keep reporting eligibility independent of the actual test execution date.
+    migrated_db.execute("UPDATE geoattend.profiles SET created_at=%s WHERE id=%s",(now,user_id))
+    migrated_db.execute("UPDATE geoattend.schema_migrations SET applied_at=%s WHERE name='005_weekly_reports.sql'",(now,))
+    migrated_db.commit()
     from tests.integration.test_weekly_reports import upload, PDF
     report=upload(client,headers,week='2026-10-12',filename='Synthetic weekly.pdf')
     assert report.status_code==200,report.text

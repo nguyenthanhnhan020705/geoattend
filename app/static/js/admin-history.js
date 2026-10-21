@@ -31,7 +31,6 @@ function render(data) {
       if(session.start_reason)line(section,'p',session.start_reason,'muted');
       if(session.end_reason)line(section,'p',session.end_reason,'muted');
       if(session.end_source==='SYSTEM')line(section,'p','Hệ thống tự đóng lúc 20:00; không phải giờ kết thúc thực tế.','system-note');
-      if(session.location?.status==='available')line(section,'p',`GPS đã xác minh · ${session.location.latitude}, ${session.location.longitude} · Sai số ${session.location.accuracy_m} m`,'muted');
       if(session.location?.status==='expired')line(section,'p','Dữ liệu vị trí đã hết hạn lưu. Kết quả xác minh được giữ lại.','muted');
     }
     const timeline=document.createElement('ul');timeline.className='timeline';

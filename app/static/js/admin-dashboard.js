@@ -1,6 +1,7 @@
 import {apiFetch,bindLogout} from './api.js';
 import {openEmployeeHistory} from './admin-history.js';
 import {attachBackground} from './office-map-background.js';
+import {updateExportFilters} from './admin-export.js';
 
 const el=id=>document.getElementById(id);
 const labels={NOT_STARTED:'Chưa bắt đầu',WORKING_OFFICE:'Đang làm tại văn phòng',WORKING_REMOTE:'Đang làm Remote',LUNCH_BREAK:'Đang nghỉ trưa',MORNING_LEAVE:'Nghỉ buổi sáng',FULL_DAY_LEAVE:'Nghỉ cả ngày',CHECKED_OUT:'Đã Check-out'};
@@ -45,7 +46,6 @@ function renderMap(data) {
       const popup=node('div','');
       node('strong',item.full_name,popup);node('p',labels[item.status],popup);
       node('p',`Check-in: ${time(item.open_session.start_time)}`,popup);
-      node('p',`GPS đã xác minh · Sai số ${gps.accuracy_m ?? '—'} m`,popup);
       historyButton(item,popup);marker.bindPopup(popup);
       bounds.push(L.latLngBounds([gps.latitude,gps.longitude],[gps.latitude,gps.longitude]));
     }
@@ -56,6 +56,7 @@ function renderMap(data) {
   }catch{el('tile-message').textContent='Không tải được bản đồ. Danh sách và lịch sử vẫn dùng được. Bấm Tải lại bản đồ để thử lại.';}
 }
 function render(data) {
+  updateExportFilters(data);
   lastData=data;
   el('total-users').textContent=data.total_users;
   el('snapshot-time').textContent=`Ngày ${data.work_date} · Cập nhật ${time(data.as_of)} (giờ Việt Nam)`;

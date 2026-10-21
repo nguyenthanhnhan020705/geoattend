@@ -9,6 +9,7 @@
 - Check-out và lịch sử cá nhân; tự kết thúc phiên lúc 20:00 giờ Việt Nam.
 - Dashboard, bản đồ Onsite, quản lý Geofence và lịch sử nhân viên cho Admin.
 - Xóa lịch sử từng ngày theo quyền Admin; xóa tọa độ và độ chính xác GPS sau 30 ngày.
+- [Xuất Excel chấm công](docs/features/EXCEL_EXPORT.md) cho Admin: chọn khoảng ngày, tất cả hoặc một nhân viên; mỗi phiên/lần nghỉ một dòng, không xuất GPS/sai số.
 - [Báo cáo tuần PDF](docs/features/WEEKLY_REPORTS.md): User nộp/thay một PDF trong tuần, Admin xem/tải; nhắc Chủ nhật và khóa tuần cũ. Đã kiểm chứng local (318 test toàn suite đạt), dùng migration 005 chưa áp dụng vào database ứng dụng.
 
 Mọi Check-out và nghỉ cả ngày đều kết thúc ngày; ngày hôm sau mới bắt đầu lại, trừ ngoại lệ Admin xóa lịch sử hôm nay hợp lệ. Chi tiết tại [quy tắc trạng thái](docs/STATE_TRANSITIONS.md).
@@ -17,10 +18,10 @@ Mọi Check-out và nghỉ cả ngày đều kết thúc ngày; ngày hôm sau m
 
 ## Chạy trên Windows
 
-Cần Python 3.13, Git và kết nối PostgreSQL có PostGIS. Mã đầy đủ hiện nằm trên nhánh `feat/phase-1-foundation-auth`.
+Cần Python 3.13, Git và kết nối PostgreSQL có PostGIS. Nhánh `main` chứa mã nguồn chuẩn bị triển khai.
 
 ```powershell
-git clone --branch feat/phase-1-foundation-auth https://github.com/nguyenthanhnhan020705/geoattend.git
+git clone --branch main https://github.com/nguyenthanhnhan020705/geoattend.git
 cd geoattend
 python -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -r requirements.lock.txt
@@ -41,6 +42,14 @@ Terminal thứ hai:
 ```
 
 Mở **http://127.0.0.1:8000/login**. Khi bật máy lại, chạy lại hai lệnh trên. Máy cần kết nối tới database; nền bản đồ cần Internet. Khi dùng Supabase đã cấu hình, các máy cùng kết nối sẽ dùng chung dữ liệu.
+
+## Chuẩn bị triển khai từ main
+
+Ứng dụng cần máy chủ chạy Python/FastAPI và PostgreSQL/PostGIS; GitHub Pages chỉ phục vụ nội dung tĩnh nên không chạy được ứng dụng này. Giao diện và API hiện dùng chung origin, cookie phiên và CSRF.
+
+Trước khi mở cho người dùng, làm theo [hướng dẫn vận hành](docs/PHASE_6_OPERATIONS.md): cài dependency từ `requirements.lock.txt`, cấu hình bí mật ngoài Git, áp dụng migration bằng tài khoản operator (gồm `005_weekly_reports.sql` cho báo cáo tuần), cấp quyền runtime, chạy web và maintenance riêng, cấu hình domain/HTTPS qua Caddy. Các mẫu nằm trong `deploy/`; không dùng giá trị `CHANGE_ME` cho môi trường thật.
+
+Sau triển khai cần kiểm tra health, đăng nhập/phân quyền, GPS trên thiết bị thật, backup/restore và hoàn thành [pilot](docs/PHASE_6_PILOT.md). Đưa mã lên `main` chưa đồng nghĩa ứng dụng đã được deploy hoặc nghiệm thu production.
 
 ## Tài liệu
 

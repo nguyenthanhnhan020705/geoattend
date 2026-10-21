@@ -14,13 +14,14 @@ Mọi Check-out và nghỉ cả ngày đều kết thúc ngày. Ngày hôm sau t
 
 Lúc 20:00 giờ Việt Nam, hệ thống đóng phiên còn mở; đang nghỉ trưa thì kết thúc ngày mà không kéo dài phiên trước nghỉ. Giao diện ghi rõ nguồn hệ thống, không coi 20:00 là giờ nhân viên thực tế kết thúc làm việc. Từ 20:00 không thể bắt đầu hoặc tiếp tục phiên.
 
-Mở **Lịch sử cá nhân** ở cuối trang, chọn khoảng ngày để xem các phiên và sự kiện. Lịch sử chỉ tải khi mở phần này. Tọa độ/độ chính xác GPS đủ 30 ngày sẽ hết hạn lưu; lịch sử phiên và kết quả xác minh vẫn còn.
+Mở **Lịch sử cá nhân** ở cuối trang, chọn khoảng ngày để xem. Mỗi ngày có tiêu đề **GHI NHẬN ĐÃ LÀM VIỆC OFFICE**, **REMOTE** hoặc **OFFICE VÀ REMOTE**, bên dưới là các mốc Check-in, Nghỉ trưa và Check-out theo giờ Việt Nam. Ngày làm cả hai hình thức ghi rõ Office/Remote ở từng lần Check-in; nghỉ trưa chỉ hiện một lần, không lặp thêm kết thúc phiên. Ngày nghỉ, phiên đang làm và mốc hệ thống tự đóng được ghi rõ. Phần này không hiển thị GPS, sai số hoặc lý do của phiên làm việc; lý do nghỉ vẫn hiển thị. Lịch sử chỉ tải khi mở phần này. Chính sách lưu GPS 30 ngày vẫn áp dụng.
 
 ## Quản lý
 
 - **Nhân viên:** tạo tài khoản User và cấp thông tin đăng nhập; đặt lại mật khẩu khi cần. Admin không chấm công cá nhân.
 - **Văn phòng:** nhập tên/địa chỉ, chọn **Vẽ vùng**, bấm ít nhất ba đỉnh; chỉnh đỉnh nếu cần, chọn **Xem trước** rồi **Lưu vùng văn phòng**. Vùng mới chỉ áp dụng cho các lần xác minh tiếp theo.
 - **Dashboard:** xem số lượng, danh sách theo trạng thái và bản đồ Onsite. Dữ liệu tự làm mới mỗi 30 giây khi tab đang hiển thị; có nút tải lại thủ công.
+- **Xuất Excel chấm công:** tại Dashboard chọn từ ngày/đến ngày và tất cả hoặc một nhân viên rồi bấm **Xuất Excel**. Mỗi phiên/lần nghỉ một dòng, giờ Việt Nam, không có GPS/sai số; khoảng tối đa 366 ngày. Xem [chi tiết file Excel](features/EXCEL_EXPORT.md).
 - **Lịch sử:** chọn nhân viên, lọc khoảng ngày và xem các phiên/sự kiện. Quyền xóa ngày có điều kiện và yêu cầu nhập đúng tên tài khoản; xem [ADMIN_HISTORY](ADMIN_HISTORY.md).
 
 Marker Onsite là vị trí Check-in Office gần nhất đã xác minh của phiên đang mở. Ứng dụng không theo dõi GPS liên tục. Nhân viên rời trạng thái Office sẽ không còn Marker sau khi dữ liệu được làm mới.

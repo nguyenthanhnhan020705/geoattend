@@ -1,8 +1,7 @@
 import {loadAccount, bindLogout, message, apiFetch} from './api.js';
 bindLogout();
 const el = id => document.getElementById(id);
-const labels = {NOT_STARTED:'Chưa bắt đầu', WORKING_REMOTE:'Đang làm Remote', WORKING_OFFICE:'Đang làm tại văn phòng', CHECKED_OUT:'Đã Check-out', LUNCH_BREAK:'Đang nghỉ trưa', MORNING_LEAVE:'Đang nghỉ buổi sáng', FULL_DAY_LEAVE:'Nghỉ cả ngày'};
-const eventLabels = {WORK_START:'Bắt đầu làm việc', WORK_END:'Kết thúc phiên', DAY_END:'Kết thúc ngày', LUNCH_START:'Nghỉ trưa', MORNING_LEAVE:'Nghỉ buổi sáng', FULL_DAY_LEAVE:'Nghỉ cả ngày', LEAVE_CANCELLED:'Hủy nghỉ'};
+const labels = {NOT_STARTED:'Trạng thái: Chưa bắt đầu', WORKING_REMOTE:'Đang làm Remote', WORKING_OFFICE:'Đang làm tại văn phòng', CHECKED_OUT:'Đã Check-out', LUNCH_BREAK:'Đang nghỉ trưa', MORNING_LEAVE:'Đang nghỉ buổi sáng', FULL_DAY_LEAVE:'Nghỉ cả ngày'};
 const clock = value => new Intl.DateTimeFormat('vi-VN',{timeZone:'Asia/Ho_Chi_Minh',hour:'2-digit',minute:'2-digit',second:'2-digit'}).format(new Date(value));
 let current = null, pending = null, busy = false, historyPage = 1, historyQuery = null, accountId = null;
 let reasonPanel = null, leaveKind = null;
@@ -67,7 +66,7 @@ async function refreshStatus() {
   const data = await apiFetch('/api/attendance/status'); current = data;
   el('work-date').textContent = data.work_date + ' · Giờ Việt Nam';
   el('attendance-status').textContent = data.morning_leave && data.status==='WORKING_OFFICE'?'Đang làm việc tại văn phòng':data.morning_leave && data.status==='WORKING_REMOTE'?'Đang làm việc Remote':labels[data.status] || data.status;
-  el('session-info').textContent = data.open_session ? `Bắt đầu lúc ${clock(data.open_session.start_time)} · ${data.open_session.start_reason || ''}` : 'Hiện không có phiên đang mở.';
+  el('session-info').textContent = data.open_session ? `Bắt đầu lúc ${clock(data.open_session.start_time)} · ${data.open_session.start_reason || ''}` : '';
   el('day-notice').textContent = data.day_finished ? 'Ngày làm việc đã kết thúc. Có thể bắt đầu lại vào ngày mai.' : data.allowed_actions.length ? '' : 'Hiện chưa có thao tác khả dụng. Ngày làm việc kết thúc lúc 20:00.';
   controls();
 }
@@ -112,6 +111,47 @@ function line(tag, text, parent, className='') {
   parent.append(node); return node;
 }
 
+function historyDay(day) {
+  const section = document.createElement('section'); section.className = 'history-day';
+  const modes = ['OFFICE','REMOTE'].filter(mode=>day.sessions.some(session=>session.work_mode===mode));
+  const summary = modes.length ? 'GHI NHẬN ĐÃ LÀM VIỆC '+modes.join(' VÀ ')
+    : day.status==='FULL_DAY_LEAVE' ? 'NGHỈ CẢ NGÀY'
+    : day.status==='MORNING_LEAVE' ? 'NGHỈ BUỔI SÁNG' : 'CHƯA CÓ GHI NHẬN LÀM VIỆC';
+  line('h3',day.work_date+' · '+summary,section);
+  const entries = [];
+  const lunches = day.events.filter(event=>event.event_type==='LUNCH_START');
+  const usedLunches = new Set();
+  for (const event of day.events) {
+    if (['MORNING_LEAVE','FULL_DAY_LEAVE','LEAVE_CANCELLED','DAY_END'].includes(event.event_type)) {
+      const label = {MORNING_LEAVE:'Nghỉ buổi sáng',FULL_DAY_LEAVE:'Nghỉ cả ngày',LEAVE_CANCELLED:'Hủy nghỉ',DAY_END:'Hệ thống kết thúc ngày'}[event.event_type];
+      entries.push({time:event.event_time,label,reason:event.reason,system:event.source==='SYSTEM'});
+    }
+  }
+  for (const session of day.sessions) {
+    const mode = session.work_mode==='OFFICE'?'Office':'Remote';
+    entries.push({time:session.start_time,label:'Check-in'+(modes.length>1?' '+mode:'')});
+    if (!session.end_time) continue;
+    // Lunch closes a session too: show that moment once, as "Nghỉ trưa".
+    const lunch = lunches.find(event=>!usedLunches.has(event.id) && Date.parse(event.event_time)===Date.parse(session.end_time));
+    if (lunch) usedLunches.add(lunch.id);
+    entries.push({time:session.end_time,label:lunch?'Nghỉ trưa':session.end_source==='SYSTEM'?'Hệ thống tự đóng':'Check-out',system:session.end_source==='SYSTEM'});
+  }
+  const timeline = document.createElement('ol'); timeline.className = 'personal-timeline';
+  const formatTime = new Intl.DateTimeFormat('vi-VN',{timeZone:'Asia/Ho_Chi_Minh',hour:'2-digit',minute:'2-digit'});
+  entries.sort((a,b)=>Date.parse(a.time)-Date.parse(b.time));
+  for (const entry of entries) {
+    const item = line('li','',timeline);
+    const time = line('time',formatTime.format(new Date(entry.time)),item);
+    time.dateTime = entry.time;
+    line('span',' · '+entry.label,item);
+    if (entry.reason) line('p',entry.reason,item,'muted');
+  }
+  section.append(timeline);
+  if (day.sessions.some(session=>!session.end_time)) line('p','Đang làm việc',section,'history-current');
+  if (entries.some(entry=>entry.system)) line('p','Mốc hệ thống đóng, không phải giờ kết thúc thực tế.',section,'system-note');
+  return section;
+}
+
 async function loadHistory(query, page=1) {
   if (!query || !el('personal-history').open) return;
   const generation=++historyGeneration;
@@ -125,24 +165,7 @@ async function loadHistory(query, page=1) {
   if (generation!==historyGeneration || !el('personal-history').open) return;
   el('history-list').replaceChildren();
   if (!data.items.length) line('p','Chưa có lịch sử trong khoảng ngày này.',el('history-list'),'muted');
-  for (const day of data.items) {
-    const section = document.createElement('section'); section.className = 'history-day';
-    line('h3',day.work_date+' · '+(labels[day.status] || day.status),section);
-    for (const session of day.sessions) {
-      const ending = session.end_time ? clock(session.end_time) : 'Đang mở';
-      line('p',`${session.work_mode==='REMOTE'?'Remote':'Office'} · ${clock(session.start_time)} → ${ending}`,section);
-      if (session.start_reason) line('p',session.start_reason,section,'muted');
-      if (session.end_source==='SYSTEM') line('p','Hệ thống tự đóng lúc 20:00; không phải giờ kết thúc thực tế.',section,'system-note');
-      if(session.location?.status==='available') line('p',`GPS đã xác minh · ${session.location.latitude}, ${session.location.longitude} · Sai số ${session.location.accuracy_m} m`,section,'muted');
-      if(session.location?.status==='expired') line('p','Dữ liệu vị trí đã hết hạn lưu. Kết quả xác minh được giữ lại.',section,'muted');
-    }
-    const events = document.createElement('ul'); events.className='timeline';
-    for (const event of day.events) {
-      const label = event.event_type==='DAY_END' && event.source==='SYSTEM' ? 'Hệ thống kết thúc ngày lúc 20:00; không phải giờ kết thúc thực tế.' : eventLabels[event.event_type] || event.event_type;
-      line('li',`${clock(event.event_time)} · ${label}${event.source==='SYSTEM'?' · Hệ thống':''}${event.reason?' · '+event.reason:''}`,events);
-    }
-    section.append(events); el('history-list').append(section);
-  }
+  for (const day of data.items) el('history-list').append(historyDay(day));
   el('history-page').textContent = `${page} / ${Math.max(1,Math.ceil(data.total/20))}`;
   el('history-prev').disabled = page<=1; el('history-next').disabled = page*20>=data.total;
   message('history-message','');

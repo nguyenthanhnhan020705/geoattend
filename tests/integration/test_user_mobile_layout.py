@@ -23,7 +23,7 @@ def test_account_first_reason_panels_and_lazy_history(office_site,migrated_db,wi
         page.on('request',record)
         page.add_init_script("navigator.geolocation.getCurrentPosition=()=>{throw Error('No GPS on Remote/leave/panel open')}")
         login(page,office_site,'worker','Worker1234')
-        expect(page.locator('#attendance-status')).to_have_text('Chưa bắt đầu')
+        expect(page.locator('#attendance-status')).to_contain_text('Chưa bắt đầu')
         expect(page.get_by_role('button',name='CHECK-IN OFFICE',exact=True)).to_be_enabled()
         expect(page.get_by_role('button',name='CHECK-IN REMOTE',exact=True)).to_be_enabled()
         expect(page.get_by_role('button',name='XIN NGHỈ',exact=True)).to_be_enabled()
@@ -51,7 +51,7 @@ def test_account_first_reason_panels_and_lazy_history(office_site,migrated_db,wi
         expect(page.get_by_label('Lý do làm Remote')).to_be_hidden()
         assert history_calls==[] and len(actions)==1
         page.locator('#personal-history > summary').click()
-        expect(page.locator('#history-list')).to_contain_text('Bản nháp Remote')
+        expect(page.locator('#history-list h3')).to_contain_text('GHI NHẬN ĐÃ LÀM VIỆC REMOTE')
         assert len(history_calls)==1
         page.locator('#personal-history > summary').click()
         expect(page.locator('#history-form')).to_be_hidden()
@@ -63,7 +63,7 @@ def test_account_first_reason_panels_and_lazy_history(office_site,migrated_db,wi
         expect(page.locator('#attendance-status')).to_have_text('Đã Check-out')
         assert len(history_calls)==1
         page.locator('#personal-history > summary').click()
-        expect(page.locator('#history-list')).to_contain_text('Đã Check-out')
+        expect(page.locator('#history-list li')).to_have_text(['09:00 · Check-in','09:00 · Check-out'])
         assert len(history_calls)==2
         assert page.evaluate('document.documentElement.scrollWidth<=innerWidth')
         page.locator('#personal-history > summary').click()
@@ -81,7 +81,7 @@ def test_reopening_history_ignores_older_inflight_response(office_site):
         page=browser.new_page(viewport={'width':360,'height':800})
         page.set_default_timeout(5000)
         login(page,office_site,'worker','Worker1234')
-        expect(page.locator('#attendance-status')).to_have_text('Chưa bắt đầu')
+        expect(page.locator('#attendance-status')).to_contain_text('Chưa bắt đầu')
         held=[]
         def delay_first(route):
             if not held:
@@ -97,9 +97,9 @@ def test_reopening_history_ignores_older_inflight_response(office_site):
         page.get_by_role('button',name='Bắt đầu Remote',exact=True).click()
         expect(page.locator('#attendance-status')).to_have_text('Đang làm Remote')
         page.locator('#personal-history > summary').click()
-        expect(page.locator('#history-list')).to_contain_text('Phiên mới sau phản hồi cũ')
+        expect(page.locator('#history-list h3')).to_contain_text('GHI NHẬN ĐÃ LÀM VIỆC REMOTE')
         route,response=held[0];route.fulfill(response=response)
         # All transport responses have settled before checking the rendered result.
         page.wait_for_load_state('networkidle')
-        expect(page.locator('#history-list')).to_contain_text('Phiên mới sau phản hồi cũ')
+        expect(page.locator('#history-list h3')).to_contain_text('GHI NHẬN ĐÃ LÀM VIỆC REMOTE')
         browser.close()

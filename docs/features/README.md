@@ -5,6 +5,7 @@ Các tài liệu này mô tả phần bổ sung hoặc thay đổi so với thi�
 | Chức năng/điều chỉnh | Trạng thái | Tài liệu |
 | --- | --- | --- |
 | Admin xem và xóa lịch sử từng ngày | Đã triển khai, migration 004 | [ADMIN_HISTORY](../ADMIN_HISTORY.md) |
+| Admin xuất Excel chấm công theo khoảng ngày/nhân viên | Đã triển khai/kiểm chứng local và mở file mẫu bằng Excel; không cần migration | [EXCEL_EXPORT](EXCEL_EXPORT.md) |
 | Check-out sớm có lý do, khóa ngày, xin nghỉ và tiếp tục buổi chiều | Đã triển khai | [USER_FLOW](USER_FLOW.md) |
 | UI User ưu tiên điện thoại và khôi phục nền bản đồ | Đã triển khai, còn nghiệm thu thiết bị thật | [UI_AND_MAP](UI_AND_MAP.md) |
 | User nộp PDF báo cáo tuần, Admin xem/tải và nhắc hạn | Đã triển khai/kiểm chứng local, full suite 318 test đạt; migration 005 chưa áp dụng DB ứng dụng | [WEEKLY_REPORTS](WEEKLY_REPORTS.md) |

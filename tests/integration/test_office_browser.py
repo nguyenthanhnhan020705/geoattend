@@ -54,7 +54,11 @@ def test_admin_map_and_user_gps_flow(office_site,migrated_db):
         user.reload()
         expect(user.locator('#attendance-status')).to_have_text('Đang làm tại văn phòng')
         open_history(user)
-        expect(user.locator('#history-list')).to_contain_text('GPS đã xác minh')
+        expect(user.locator('#history-list h3')).to_have_text('2026-10-14 · GHI NHẬN ĐÃ LÀM VIỆC OFFICE')
+        expect(user.locator('#history-list li')).to_have_text(['09:00 · Check-in'])
+        expect(user.locator('#history-list')).to_contain_text('Đang làm việc')
+        expect(user.locator('#history-list')).not_to_contain_text('GPS')
+        expect(user.locator('#history-list')).not_to_contain_text('50000')
         user.locator('#start-lunch').click()
         expect(user.locator('#attendance-status')).to_have_text('Đang nghỉ trưa')
         assert user.evaluate('gpsCalls')==0

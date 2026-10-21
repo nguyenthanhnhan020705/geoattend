@@ -26,7 +26,7 @@ def test_remote_browser_reload_history_and_retry(remote_site,migrated_db):
         page.on('pageerror',lambda e:errors.append(str(e)))
         page.add_init_script("navigator.geolocation.getCurrentPosition=()=>{throw Error('GPS must not be requested')}")
         login(page,remote_site,'worker','Worker1234')
-        expect(page.locator('#attendance-status')).to_have_text('Chưa bắt đầu')
+        expect(page.locator('#attendance-status')).to_contain_text('Chưa bắt đầu')
         reason='<img src=x onerror=alert(1)>'
         open_remote(page)
         page.get_by_label('Lý do làm Remote').fill(reason)
@@ -49,7 +49,9 @@ def test_remote_browser_reload_history_and_retry(remote_site,migrated_db):
         page.reload()
         expect(page.locator('#attendance-status')).to_have_text('Đang làm Remote')
         open_history(page)
-        expect(page.locator('#history-list')).to_contain_text(reason)
+        expect(page.locator('#history-list h3')).to_have_text('2026-10-14 · GHI NHẬN ĐÃ LÀM VIỆC REMOTE')
+        expect(page.locator('#history-list li')).to_have_text(['09:00 · Check-in'])
+        expect(page.locator('#history-list')).not_to_contain_text(reason)
         assert page.locator('#history-list img').count()==0
         page.locator('#check-out').click()
         page.get_by_label('Lý do Check-out sớm').fill('Có việc gia đình')
@@ -64,6 +66,6 @@ def test_remote_browser_reload_history_and_retry(remote_site,migrated_db):
         page.get_by_label('Đến ngày').fill('2026-10-14')
         page.get_by_role('button',name='Xem lịch sử').click()
         expect(page.locator('#history-message')).to_contain_text('Ngày bắt đầu')
-        expect(page.locator('#history-list')).to_contain_text(reason)
+        expect(page.locator('#history-list li')).to_have_text(['09:00 · Check-in','09:00 · Check-out'])
         assert errors==[]
         browser.close()

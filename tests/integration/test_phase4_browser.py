@@ -26,7 +26,7 @@ def phase4_page(office_site,migrated_db):
         page.on('pageerror',lambda error:errors.append(str(error)))
         page.add_init_script("window.gpsCalls=0;window.gpsMode='inside';navigator.geolocation.getCurrentPosition=(ok,fail)=>{window.gpsCalls++;if(window.gpsMode==='denied')return fail({code:1});ok({coords:{latitude:window.gpsMode==='outside'?12:10.5,longitude:106.5,accuracy:10}})}")
         login(page,office_site,'worker','Worker1234')
-        expect(page.locator('#attendance-status')).to_have_text('Chưa bắt đầu')
+        expect(page.locator('#attendance-status')).to_contain_text('Chưa bắt đầu')
         yield page
         assert errors == []
         assert page.evaluate('document.documentElement.scrollWidth<=innerWidth')
@@ -40,19 +40,28 @@ def remote(page, button, reason='Làm ở nhà'):
     expect(page.locator('#attendance-status')).to_have_text(re.compile(r'Đang làm(?: việc)? Remote'))
 
 
-def test_lunch_resume_and_checkout_timeline(phase4_page,migrated_db):
+def test_lunch_resume_and_checkout_timeline(phase4_page,migrated_db,monkeypatch):
     page = phase4_page
     remote(page,'Bắt đầu Remote')
+    monkeypatch.setattr('app.clock.utc_now',lambda:datetime(2026,10,14,5,tzinfo=timezone.utc))
     page.locator('#start-lunch').click()
     expect(page.locator('#attendance-status')).to_have_text('Đang nghỉ trưa')
     open_history(page)
     expect(page.locator('#history-list')).to_contain_text('Nghỉ trưa')
+    monkeypatch.setattr('app.clock.utc_now',lambda:datetime(2026,10,14,6,tzinfo=timezone.utc))
     page.locator('#start-office').click()
     expect(page.locator('#attendance-status')).to_have_text('Đang làm tại văn phòng')
     expect(page.locator('#attendance-choices')).to_be_hidden()
+    monkeypatch.setattr('app.clock.utc_now',lambda:datetime(2026,10,14,10,tzinfo=timezone.utc))
     page.locator('#check-out').click()
     expect(page.locator('#attendance-status')).to_have_text('Đã Check-out')
-    expect(page.locator('#history-list')).to_contain_text('GPS đã xác minh')
+    expect(page.locator('#history-list h3')).to_have_text('2026-10-14 · GHI NHẬN ĐÃ LÀM VIỆC OFFICE VÀ REMOTE')
+    expect(page.locator('#history-list li')).to_have_text([
+        '09:00 · Check-in Remote', '12:00 · Nghỉ trưa',
+        '13:00 · Check-in Office', '17:00 · Check-out',
+    ])
+    expect(page.locator('#history-list')).not_to_contain_text('GPS')
+    expect(page.locator('#history-list')).not_to_contain_text('Sai số')
     assert page.evaluate('gpsCalls') == 1
     rows = migrated_db.execute('SELECT end_time FROM geoattend.work_sessions').fetchall()
     assert len(rows) == 2 and all(r['end_time'] for r in rows)
@@ -166,4 +175,5 @@ def test_lunch_day_end_system_label(phase4_page,monkeypatch):
     page.get_by_role('button',name='Làm mới',exact=True).click()
     expect(page.locator('#attendance-status')).to_have_text('Đã Check-out')
     open_history(page)
-    expect(page.locator('#history-list')).to_contain_text('Hệ thống kết thúc ngày lúc 20:00')
+    expect(page.locator('#history-list')).to_contain_text('Hệ thống kết thúc ngày')
+    expect(page.locator('#history-list')).to_contain_text('không phải giờ kết thúc thực tế')

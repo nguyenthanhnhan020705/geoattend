@@ -131,7 +131,8 @@ def test_early_checkout_hides_checkin_until_next_day(phase4_page,monkeypatch,mig
     assert calls[0]==calls[1] and calls[0]['reason']==reason
     assert migrated_db.execute("SELECT count(*) AS n FROM geoattend.attendance_events WHERE event_type='WORK_END'").fetchone()['n']==1
     page.locator('#personal-history summary').click()
-    expect(page.locator('#history-list')).to_contain_text(reason)
+    expect(page.locator('#history-list li')).to_have_text(['09:00 · Check-in','09:00 · Check-out'])
+    expect(page.locator('#history-list')).not_to_contain_text(reason)
     assert page.locator('#history-list img').count()==0
     for reload in (False, True):
         if reload: page.reload()
@@ -141,7 +142,7 @@ def test_early_checkout_hides_checkin_until_next_day(phase4_page,monkeypatch,mig
         expect(page.locator('#check-out')).to_be_hidden()
     monkeypatch.setattr('app.clock.utc_now',lambda:datetime(2026,10,14,17,tzinfo=timezone.utc))
     page.reload()
-    expect(page.locator('#attendance-status')).to_have_text('Chưa bắt đầu')
+    expect(page.locator('#attendance-status')).to_contain_text('Chưa bắt đầu')
     expect(page.locator('#start-office')).to_be_enabled()
     expect(page.locator('#choose-remote')).to_be_enabled()
 

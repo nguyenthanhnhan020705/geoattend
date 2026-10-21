@@ -82,6 +82,8 @@ Còn thiếu HTTPS trên máy chủ đích, GPS/thiết bị thật, xác minh v
 
 ## 8. Cách tiếp tục dự án
 
+Bổ sung ngày 20/10/2026: [Xuất Excel chấm công cho Admin](features/EXCEL_EXPORT.md) tại Dashboard, lọc khoảng ngày và nhân viên; dữ liệu theo phiên/nghỉ, không xuất GPS/sai số. Đã kiểm chứng local, 41 test hồi quy và 1 test thu hồi phiên bổ sung đạt; file mẫu mở đúng bằng Microsoft Excel. Không thêm migration.
+
 - Chạy/cấu hình/kiểm thử: [DEVELOPMENT](DEVELOPMENT.md).
 - Hướng dẫn User/Admin: [USAGE](USAGE.md).
 - Tiến độ và việc còn lại: [ROADMAP](ROADMAP.md).
