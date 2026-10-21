@@ -6,6 +6,7 @@ from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import FileResponse, JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
+from starlette.middleware.cors import CORSMiddleware
 from starlette.exceptions import HTTPException
 from app.config import Settings
 from app.errors import ApiError
@@ -26,7 +27,15 @@ class TimedFastAPI(FastAPI):
     async def __call__(self,scope,receive,send):
         # FastAPI's outer ServerErrorMiddleware generates unhandled 500 bodies.
         # Timing must surround that entire stack, not live inside add_middleware.
-        await ApiTiming(super().__call__)(scope,receive,send)
+        application = super().__call__
+        if self.state.settings.frontend_origin:
+            # Outside ServerErrorMiddleware, so error responses also have CORS.
+            application = CORSMiddleware(application,
+                allow_origins=[self.state.settings.frontend_origin],
+                allow_methods=['GET','POST','PUT','DELETE'],
+                allow_headers=['Authorization','Content-Type','X-CSRF-Token','X-Report-Filename'],
+                allow_credentials=False)
+        await ApiTiming(application)(scope,receive,send)
 
 
 def create_app(settings=None, pool=None):

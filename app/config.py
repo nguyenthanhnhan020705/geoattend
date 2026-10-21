@@ -1,4 +1,5 @@
 import os
+import re
 from urllib.parse import urlsplit
 from dataclasses import dataclass
 from string import Formatter
@@ -14,8 +15,15 @@ class Settings:
     map_attribution: str = '© OpenStreetMap contributors'
     map_background: str = 'auto'
     map_style_url: str = 'https://tiles.openfreemap.org/styles/liberty'
+    frontend_origin: str = ''
 
     def __post_init__(self):
+        if self.frontend_origin:
+            frontend = urlsplit(self.frontend_origin)
+            if (not re.fullmatch(r'https?://[A-Za-z0-9.-]+(?::[0-9]+)?', self.frontend_origin)
+                    or not frontend.hostname or not 0 < (frontend.port or 443) < 65536
+                    or (frontend.scheme != 'https' and frontend.hostname not in ('localhost','127.0.0.1'))):
+                raise ValueError('GEOATTEND_FRONTEND_ORIGIN phải là HTTPS origin hoặc localhost.')
         parsed = urlsplit(self.origin)
         if parsed.scheme not in ('http', 'https') or not parsed.netloc or parsed.path or parsed.query or parsed.fragment or parsed.username:
             raise ValueError('GEOATTEND_ORIGIN phải là scheme/host/port.')
@@ -56,4 +64,4 @@ class Settings:
         secure = os.getenv('GEOATTEND_SECURE_COOKIES', str(origin.startswith('https://'))).lower()
         if secure not in ('true', 'false'):
             raise ValueError('GEOATTEND_SECURE_COOKIES phải là true hoặc false.')
-        return cls(os.getenv('GEOATTEND_DATABASE_URL', ''), os.getenv('GEOATTEND_MIGRATION_DATABASE_URL', ''), origin, secure == 'true',os.getenv('GEOATTEND_MAP_TILE_URL',cls.map_tile_url),os.getenv('GEOATTEND_MAP_ATTRIBUTION',cls.map_attribution),os.getenv('GEOATTEND_MAP_BACKGROUND','auto'),os.getenv('GEOATTEND_MAP_STYLE_URL',cls.map_style_url))
+        return cls(os.getenv('GEOATTEND_DATABASE_URL', ''), os.getenv('GEOATTEND_MIGRATION_DATABASE_URL', ''), origin, secure == 'true',os.getenv('GEOATTEND_MAP_TILE_URL',cls.map_tile_url),os.getenv('GEOATTEND_MAP_ATTRIBUTION',cls.map_attribution),os.getenv('GEOATTEND_MAP_BACKGROUND','auto'),os.getenv('GEOATTEND_MAP_STYLE_URL',cls.map_style_url),os.getenv('GEOATTEND_FRONTEND_ORIGIN',''))

@@ -33,6 +33,21 @@ def me(context=Depends(get_auth_context)):
     return account_response(context)
 
 
+@router.post('/token')
+def token_route(body: LoginInput, request: Request):
+    if not request.app.state.settings.frontend_origin:
+        raise ApiError(404,'HTTP_ERROR','Không tìm thấy hoặc không thể truy cập.')
+    validate_origin(request,request.app.state.settings.origin,bearer=True)
+    if not request.headers.get('content-type','').startswith('application/json'):
+        raise ApiError(422,'INVALID_INPUT','Đăng nhập yêu cầu JSON.')
+    if request.app.state.pool is None:
+        raise ApiError(503,'DATABASE_UNAVAILABLE','Cơ sở dữ liệu chưa sẵn sàng.')
+    with request.app.state.pool.connection() as conn:
+        result = login(conn,body.username,body.password,utc_now())
+    return {**account_response(result),'access_token':result.raw_token,
+            'token_type':'Bearer','expires_at':result.expires_at}
+
+
 @router.post('/logout',status_code=204)
 def logout(request: Request, context=Depends(get_auth_context)):
     with request.app.state.pool.connection() as conn:
