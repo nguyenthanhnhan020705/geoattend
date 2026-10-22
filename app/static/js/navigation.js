@@ -52,6 +52,7 @@ const adminIcons = {
 
 function decorateAdminItem(element, label, key) {
   const [shortLabel, path] = adminIcons[key];
+  element.dataset.mobileLabel = shortLabel;
   element.dataset.compactLabel = shortLabel;
   element.setAttribute('aria-label', label);
   element.title = label;
@@ -81,7 +82,7 @@ export function configureNavigation(role) {
     nav.append(link);
   }
   if (role === 'USER') decorateMobileItem(logout, 'Đăng xuất', 'logout');
-  else { decorateAdminItem(logout, 'Đăng xuất', 'logout'); delete logout.dataset.mobileLabel; }
+  else decorateAdminItem(logout, 'Đăng xuất', 'logout');
   nav.append(logout);
   sidebar.querySelector('.brand').href = pageUrl(role === 'ADMIN' ? '/admin/dashboard' : '/user');
   const markCurrent = () => {

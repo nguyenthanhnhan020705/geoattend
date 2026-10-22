@@ -115,9 +115,9 @@ def test_preview_desktop_sidebar_and_resizing(preview):
     expect(page.get_by_role('link',name='Lịch sử cá nhân',exact=True)).to_be_visible()
 
 
-def test_preview_admin_account_keeps_mobile_sidebar(preview):
+def test_preview_admin_account_uses_mobile_bottom_bar(preview):
     page, _ = preview(width=390,role='ADMIN',path='/account')
     expect(page.locator('body')).to_have_attribute('data-navigation-role','ADMIN')
-    expect(page.locator('#sidebar-toggle')).to_be_visible()
-    assert page.locator('.app-sidebar').bounding_box()['width'] == 112
+    expect(page.locator('#sidebar-toggle')).to_be_hidden()
+    assert page.locator('.app-sidebar').bounding_box()['width'] == 390
     expect(page.locator('nav a[aria-current="page"]')).to_have_text('Tài khoản cá nhân')

@@ -1,7 +1,7 @@
 const sidebar = document.querySelector('.app-sidebar');
 const toggle = document.getElementById('sidebar-toggle');
 const storageKey = 'geoattend.sidebarCollapsed';
-const usesBottomNavigation = () => document.body.dataset.navigationRole === 'USER' && window.matchMedia('(max-width:700px)').matches;
+const usesBottomNavigation = () => ['USER','ADMIN'].includes(document.body.dataset.navigationRole) && window.matchMedia('(max-width:700px)').matches;
 
 if (sidebar && toggle) {
   function setCollapsed(collapsed, remember = true) {
