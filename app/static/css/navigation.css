@@ -45,3 +45,29 @@
 .sidebar-collapsed .app-sidebar .brand,.sidebar-collapsed .app-sidebar nav{display:none}
 .sidebar-collapsed .sidebar-toggle{margin:0}
 .sidebar-collapsed>.user-workspace{max-width:1100px}
+.navigation-icon{display:none}
+@media(min-width:701px){
+  .app-layout{padding-top:80px}
+  .app-layout::before{content:"";position:fixed;inset:0 0 auto;height:80px;background:#fff;border-bottom:1px solid #dce5e166;z-index:90;pointer-events:none}
+  .app-layout .app-sidebar{padding:96px 12px 16px;overflow:visible;border-right:0}
+  .app-layout .sidebar-toggle{position:fixed;left:16px;top:16px;margin:0;width:44px;height:44px;border:0;border-radius:50%;background:transparent;color:var(--ink);z-index:2}
+  .app-layout .sidebar-toggle:hover{background:#eaf1ec}
+  .app-layout .app-sidebar .brand,.app-layout.sidebar-collapsed .app-sidebar .brand{display:block;position:fixed;left:76px;top:10px;width:156px;height:60px;padding:0;z-index:2}
+  .app-layout .app-sidebar .brand-logo{height:60px;object-fit:contain}
+  .app-layout .app-sidebar nav{gap:6px;max-height:calc(100dvh - 112px);overflow-y:auto;scrollbar-width:thin}
+  .app-layout .app-sidebar nav>a,.app-layout .app-sidebar #logout{display:flex;align-items:center;justify-content:flex-start;gap:12px;padding:12px;min-height:50px}
+  .app-sidebar .mobile-nav-icon,.app-sidebar .navigation-icon{display:block;width:28px;height:28px;flex-shrink:0}
+  .app-sidebar .mobile-nav-icon{overflow:hidden;mix-blend-mode:multiply}
+  .app-sidebar .mobile-nav-icon img{display:block;width:28px;height:28px;object-fit:contain;transform:scale(1.1)}
+  .app-sidebar .mobile-nav-icon--reports img{transform:scale(1.75)}
+  .app-sidebar .mobile-nav-icon--password img{transform:scale(2.1)}
+  .app-sidebar .mobile-nav-icon--logout img{transform:scale(1.9)}
+  .app-sidebar nav>a[aria-current=page] .mobile-nav-icon{mix-blend-mode:screen}
+  .app-sidebar nav>a[aria-current=page] .mobile-nav-icon img{filter:invert(1)}
+  .app-layout.sidebar-collapsed{--sidebar-width:88px}
+  .app-layout.sidebar-collapsed .app-sidebar{padding:96px 6px 16px}
+  .app-layout.sidebar-collapsed .app-sidebar nav{display:flex;gap:6px}
+  .app-layout.sidebar-collapsed .app-sidebar nav>a,.app-layout.sidebar-collapsed .app-sidebar #logout{flex-direction:column;justify-content:center;gap:6px;min-height:76px;padding:10px 3px;text-align:center}
+  .sidebar-collapsed .app-sidebar nav .nav-label{display:none}
+  .sidebar-collapsed .app-sidebar nav>a::after,.sidebar-collapsed .app-sidebar #logout::after{content:attr(data-compact-label);display:block;font-size:10px;line-height:1.25;font-weight:600;overflow-wrap:normal}
+}

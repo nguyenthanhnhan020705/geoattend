@@ -1,6 +1,7 @@
 const sidebar = document.querySelector('.app-sidebar');
 const toggle = document.getElementById('sidebar-toggle');
 const storageKey = 'geoattend.sidebarCollapsed';
+const usesBottomNavigation = () => document.body.dataset.navigationRole === 'USER' && window.matchMedia('(max-width:700px)').matches;
 
 if (sidebar && toggle) {
   function setCollapsed(collapsed, remember = true) {
@@ -24,12 +25,12 @@ if (sidebar && toggle) {
   toggle.addEventListener('click', () => setCollapsed(toggle.getAttribute('aria-expanded') === 'true'));
   sidebar.addEventListener('click', event => {
     const link = event.target.closest('nav a');
-    if (!link || event.button !== 0 || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey || link.target === '_blank') return;
+    if (usesBottomNavigation() || !link || event.button !== 0 || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey || link.target === '_blank') return;
     setCollapsed(true);
     toggle.focus({preventScroll:true});
   });
   document.addEventListener('keydown', event => {
-    if (event.key === 'Escape' && toggle.getAttribute('aria-expanded') === 'true') {
+    if (!usesBottomNavigation() && event.key === 'Escape' && toggle.getAttribute('aria-expanded') === 'true') {
       setCollapsed(true);
       toggle.focus({preventScroll:true});
     }

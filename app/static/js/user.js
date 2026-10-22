@@ -8,6 +8,8 @@ const labels = {NOT_STARTED:'Trạng thái: Chưa bắt đầu', WORKING_REMOTE:
 const clock = value => new Intl.DateTimeFormat('vi-VN',{timeZone:'Asia/Ho_Chi_Minh',hour:'2-digit',minute:'2-digit',second:'2-digit'}).format(new Date(value));
 let current = null, pending = null, busy = false, historyPage = 1, historyQuery = null, accountId = null;
 let reasonPanel = null, leaveKind = null;
+let deferredAction = null, undoTimer = null;
+let gpsGeneration = 0, locating = false;
 let historyGeneration = 0;
 const pendingKey = pendingStorageKey;
 const officeActions = ['START_OFFICE','CANCEL_LEAVE_START_OFFICE','SWITCH_OFFICE'];
@@ -104,9 +106,70 @@ async function sendPending() {
 
 function submit(action, reason, position=null, intended=current) {
   if (!current || pending || busy) return;
-  pending = {accountId,body:{request_id:crypto.randomUUID(),expected_revision:intended.revision,expected_work_date:intended.work_date,action,...(reason !== undefined ? {reason} : {}),...(position || {})}};
-  savePending(); sendPending();
+  deferredAction = {accountId,body:{request_id:crypto.randomUUID(),expected_revision:intended.revision,expected_work_date:intended.work_date,action,...(reason !== undefined ? {reason} : {}),...(position || {})}};
+  const startLabel = intended.status==='MORNING_LEAVE' ? 'Tiếp tục buổi chiều' : intended.status==='LUNCH_BREAK' ? 'Tiếp tục' : 'Check-in';
+  const label = {
+    START_OFFICE:`${startLabel} Office`, START_REMOTE:`${startLabel} Remote`,
+    MORNING_LEAVE:'Nghỉ buổi sáng', FULL_DAY_LEAVE:'Nghỉ cả ngày',
+    START_LUNCH:'Nghỉ trưa', CHECK_OUT:reason?'Check-out sớm':'Check-out',
+    CANCEL_LEAVE_START_OFFICE:'Hủy nghỉ và bắt đầu Office', CANCEL_LEAVE_START_REMOTE:'Hủy nghỉ và bắt đầu Remote',
+    SWITCH_OFFICE:'Chuyển sang Office', SWITCH_REMOTE:'Chuyển sang Remote',
+  }[action];
+  busy = true;
+  controls();
+  message('message','');
+  const deadline = performance.now() + 5000;
+  const tick = () => {
+    const remaining = Math.max(0, Math.ceil((deadline-performance.now())/1000));
+    const text = `${label}: sẽ ghi nhận sau ${remaining} giây.`;
+    if (el('undo-countdown').textContent !== text) el('undo-countdown').textContent = text;
+    if (remaining > 0) return;
+    const ready = deferredAction;
+    clearInterval(undoTimer);
+    undoTimer = null;
+    deferredAction = null;
+    el('undo-action').hidden = true;
+    busy = false;
+    pending = ready;
+    savePending();
+    sendPending();
+  };
+  el('undo-action').hidden = false;
+  tick();
+  // Recompute against the deadline so background timer throttling cannot
+  // turn five seconds into five delayed interval callbacks.
+  undoTimer = setInterval(tick,100);
+  el('undo-button').focus();
 }
+
+function cancelDeferredAction() {
+  if (locating) {
+    gpsGeneration++;
+    locating = false;
+    busy = false;
+    controls();
+    message('message','Đã hủy Check-in Office chưa gửi.');
+  }
+  if (!deferredAction) return;
+  const action = deferredAction.body.action;
+  clearInterval(undoTimer);
+  undoTimer = null;
+  deferredAction = null;
+  busy = false;
+  el('undo-action').hidden = true;
+  controls();
+  message('message','Đã hoàn tác. Thao tác chưa được ghi nhận.');
+  const focusId = isOffice(action) ? 'start-office' : remoteActions.includes(action) ? 'remote-reason'
+    : ['MORNING_LEAVE','FULL_DAY_LEAVE'].includes(action) ? 'leave-reason'
+    : action==='START_LUNCH' ? 'start-lunch' : reasonPanel==='checkout' ? 'checkout-reason' : 'check-out';
+  el(focusId).focus({preventScroll:true});
+}
+
+el('undo-button').addEventListener('click',cancelDeferredAction);
+window.addEventListener('beforeunload',cancelDeferredAction);
+window.addEventListener('pagehide',cancelDeferredAction);
+window.addEventListener('hashchange',cancelDeferredAction);
+document.getElementById('logout')?.addEventListener('click',cancelDeferredAction,{capture:true});
 
 function line(tag, text, parent, className='') {
   const node = document.createElement(tag); node.textContent = text;
@@ -203,6 +266,8 @@ el('checkout-form').addEventListener('submit',event=>{
 el('start-office').addEventListener('click',async()=>{
   if(!current || busy || pending)return;
   const action=available(officeActions);if(!action)return;
+  const generation=++gpsGeneration;
+  locating=true;
   const intended={...current};let position=null;busy=true;controls();message('message','Đang xác minh vị trí…');
   try{
     if(!navigator.geolocation)throw {code:2};
@@ -210,9 +275,9 @@ el('start-office').addEventListener('click',async()=>{
     position={latitude:result.coords.latitude,longitude:result.coords.longitude,accuracy_m:result.coords.accuracy};
   }catch(error){
     const text=error.code===1?'Bạn chưa cấp quyền vị trí. Cho phép GPS rồi thử lại, hoặc tự chọn Remote và nhập lý do.':error.code===3?'Lấy vị trí quá thời gian chờ. Hãy thử lại hoặc tự chọn Remote.':'Chưa lấy được vị trí. Kiểm tra GPS hoặc tự chọn Remote.';
-    message('message',text);
-  }finally{busy=false;controls();}
-  if(position)submit(action,undefined,position,intended);
+    if(generation===gpsGeneration)message('message',text);
+  }finally{if(generation===gpsGeneration){locating=false;busy=false;controls();}}
+  if(position && generation===gpsGeneration)submit(action,undefined,position,intended);
 });
 el('retry-action').addEventListener('click',sendPending);
 async function refreshAll() { await refreshStatus(); await loadHistory(historyQuery,historyPage); }

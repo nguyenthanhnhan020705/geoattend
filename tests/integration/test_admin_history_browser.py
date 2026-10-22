@@ -42,7 +42,7 @@ def test_admin_history_confirm_delete_retry_and_user_visibility(office_site,migr
         page.locator('#check-out').click()
         page.get_by_label('Lý do Check-out sớm').fill('Có việc gia đình')
         page.locator('#checkout-form button').click()
-        expect(page.locator('#attendance-status')).to_have_text('Đã Check-out')
+        expect(page.locator('#attendance-status')).to_have_text('Đã Check-out',timeout=10000)
         open_menu(page)
         page.get_by_role('button',name='Đăng xuất',exact=True).click()
         page.wait_for_url('**/login')

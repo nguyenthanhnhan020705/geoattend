@@ -61,7 +61,7 @@ def test_account_first_reason_panels_and_lazy_history(office_site,migrated_db,wi
         assert len(actions)==1
         page.get_by_label('Lý do Check-out sớm').fill('Có việc gia đình')
         page.locator('#checkout-form button').click()
-        expect(page.locator('#attendance-status')).to_have_text('Đã Check-out')
+        expect(page.locator('#attendance-status')).to_have_text('Đã Check-out',timeout=10000)
         assert len(history_calls)==1
         choose_menu(page, 'Lịch sử cá nhân')
         expect(page.locator('#history-list li')).to_have_text(['09:00 · Check-in','09:00 · Check-out'])

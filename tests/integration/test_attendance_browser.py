@@ -57,7 +57,7 @@ def test_remote_browser_reload_history_and_retry(remote_site,migrated_db):
         page.locator('#check-out').click()
         page.get_by_label('Lý do Check-out sớm').fill('Có việc gia đình')
         page.locator('#checkout-form button').click()
-        expect(page.locator('#attendance-status')).to_have_text('Đã Check-out')
+        expect(page.locator('#attendance-status')).to_have_text('Đã Check-out',timeout=10000)
         expect(page.locator('#day-notice')).to_contain_text('ngày mai')
         expect(page.locator('#attendance-choices')).to_be_hidden()
         assert migrated_db.execute('SELECT count(*) AS n FROM geoattend.work_sessions').fetchone()['n']==1

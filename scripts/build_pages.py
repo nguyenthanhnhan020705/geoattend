@@ -40,7 +40,7 @@ def build_pages(output: Path, *, base_path: str, api_origin: str, version: str,
             or SOURCE in output.parents or (output.exists() and any(output.iterdir()))):
         raise ValueError('Use a new, empty artifact directory outside the source.')
     output.mkdir(parents=True, exist_ok=True)
-    extensions = {'.css', '.js', '.jpg', '.jpeg', '.png', '.svg', '.webp', '.woff', '.woff2', '.txt'}
+    extensions = {'.css', '.js', '.jpg', '.jpeg', '.png', '.gif', '.svg', '.webp', '.woff', '.woff2', '.txt'}
     for folder in ('css', 'js', 'images', 'vendor'):
         for asset in (SOURCE / folder).rglob('*'):
             if asset.is_symlink():

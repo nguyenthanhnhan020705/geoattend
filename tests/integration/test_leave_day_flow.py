@@ -83,7 +83,7 @@ def test_user_selects_leave_then_reason_and_follows_day_flow(phase4_page,leave,m
         expect(page.locator('#attendance-status')).to_have_text('Nghỉ cả ngày')
         page.reload()
         expect(page.locator('#attendance-choices')).to_be_hidden()
-        expect(page.locator('#day-notice')).to_contain_text('ngày mai')
+        expect(page.locator('#day-notice')).to_contain_text('ngày mai',timeout=10000)
         return
     expect(page.locator('#attendance-status')).to_have_text('Đang nghỉ buổi sáng')
     page.reload()
@@ -100,4 +100,4 @@ def test_user_selects_leave_then_reason_and_follows_day_flow(phase4_page,leave,m
     expect(page.locator('#check-out')).to_have_text('CHECK-OUT')
     expect(page.locator('#start-lunch')).to_be_hidden()
     page.locator('#check-out').click()
-    expect(page.locator('#day-notice')).to_contain_text('ngày mai')
+    expect(page.locator('#day-notice')).to_contain_text('ngày mai',timeout=10000)

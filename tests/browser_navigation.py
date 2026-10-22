@@ -3,7 +3,7 @@
 
 def open_menu(page):
     toggle = page.locator('#sidebar-toggle')
-    if toggle.count() and toggle.get_attribute('aria-expanded') == 'false':
+    if toggle.count() and toggle.is_visible() and toggle.get_attribute('aria-expanded') == 'false':
         toggle.click()
 
 
