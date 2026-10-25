@@ -40,6 +40,10 @@ def local_environment(path, mode, inherited=None):
     for key in ('GEOATTEND_FRONTEND_ORIGIN','GEOATTEND_MAP_TILE_URL','GEOATTEND_MAP_ATTRIBUTION','GEOATTEND_MAP_BACKGROUND','GEOATTEND_MAP_STYLE_URL'):
         if key in values:
             env[key]=values[key]
+    if mode=='pdf-summary':
+        for key in ('GEOATTEND_GEMINI_API_KEY','GEOATTEND_SUMMARY_MODEL'):
+            if key in values:
+                env[key]=values[key]
     if mode=='migrate':
         # Only migration receives both credentials to grant runtime access.
         env['GEOATTEND_DATABASE_URL'] = local_environment(path,'serve',{})['GEOATTEND_DATABASE_URL']
@@ -49,7 +53,7 @@ def local_environment(path, mode, inherited=None):
 def main():
     configure_console()
     parser = argparse.ArgumentParser(description='Chạy GeoAttend từ .env local')
-    parser.add_argument('mode',choices=('serve','bootstrap-admin','maintenance','migrate'))
+    parser.add_argument('mode',choices=('serve','bootstrap-admin','maintenance','migrate','pdf-summary'))
     parser.add_argument('--once',action='store_true',help='Maintenance một lần')
     args = parser.parse_args()
     try:
@@ -59,9 +63,9 @@ def main():
     if args.mode == 'serve':
         command = ['-m','uvicorn','app.main:app','--host','127.0.0.1','--port','8000']
     else:
-        module = {'bootstrap-admin':'bootstrap_admin','maintenance':'maintenance','migrate':'migrate'}[args.mode]
+        module = {'bootstrap-admin':'bootstrap_admin','maintenance':'maintenance','migrate':'migrate','pdf-summary':'pdf_summary_worker'}[args.mode]
         command = ['-m','scripts.'+module]
-        if args.mode=='maintenance' and args.once:
+        if args.mode in ('maintenance','pdf-summary') and args.once:
             command.append('--once')
     try:
         raise SystemExit(subprocess.call([sys.executable,*command],cwd=ROOT,env=env))

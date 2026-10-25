@@ -25,7 +25,7 @@ class PagesArtifactTests(unittest.TestCase):
                 Links().feed(path.read_text(encoding='utf-8'))
             for path in output.rglob('*.js'):
                 for ref in re.findall(r"(?:from\s*|import\s*)['\"](\.[^'\"]+)['\"]",path.read_text(encoding='utf-8')):
-                    self.assertTrue((path.parent/ref).is_file(),f'{path.name}: {ref}')
+                    self.assertTrue((path.parent/unquote(urlsplit(ref).path)).is_file(),f'{path.name}: {ref}')
             # Product CSS image dependencies; library defaults are maintained upstream.
             for path in (output/'static/css').glob('*.css'):
                 for ref in re.findall(r'url\([\"\']?([^\)\"\']+)',path.read_text(encoding='utf-8')):

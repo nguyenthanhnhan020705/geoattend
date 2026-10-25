@@ -20,6 +20,7 @@ from app.admin.routes import router as admin_router
 from app.auth.dependencies import get_auth_context
 from app.telemetry import ApiTiming
 from app.reports.routes import router as reports_router, admin_router as admin_reports_router
+from app.reports.summary_routes import router as summaries_router, admin_router as admin_summaries_router
 
 STATIC = Path(__file__).parent / 'static'
 
@@ -62,6 +63,8 @@ def create_app(settings=None, pool=None):
     app.include_router(admin_router)
     app.include_router(reports_router)
     app.include_router(admin_reports_router)
+    app.include_router(summaries_router)
+    app.include_router(admin_summaries_router)
 
     @app.middleware('http')
     async def auth_cache(request, call_next):

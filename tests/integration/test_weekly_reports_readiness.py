@@ -23,6 +23,7 @@ def test_unmigrated_runtime_returns_actionable_error_without_reading_pdf(reports
     migrated_db.execute(sql.SQL('CREATE ROLE {} LOGIN').format(sql.Identifier(role)))
     grant_runtime(migrated_db,role)
     migrated_db.execute(sql.SQL('REVOKE SELECT(name,applied_at) ON geoattend.schema_migrations FROM {}').format(sql.Identifier(role)))
+    migrated_db.execute('DROP TABLE geoattend.pdf_summaries')
     migrated_db.execute('DROP TABLE geoattend.weekly_reports')
     migrated_db.execute("DELETE FROM geoattend.schema_migrations WHERE name='005_weekly_reports.sql'")
     migrated_db.commit()
@@ -79,6 +80,7 @@ def test_unready_reports_disable_file_selection_and_show_real_cause(live_site,re
     from pathlib import Path
     from playwright.sync_api import sync_playwright,expect
     from tests.integration.test_browser import login
+    migrated_db.execute('DROP TABLE geoattend.pdf_summaries')
     migrated_db.execute('DROP TABLE geoattend.weekly_reports')
     migrated_db.execute("DELETE FROM geoattend.schema_migrations WHERE name='005_weekly_reports.sql'")
     migrated_db.commit()

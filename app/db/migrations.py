@@ -38,6 +38,8 @@ def grant_runtime(conn, role):
     tables = ('profiles','auth_sessions','auth_attempts','office','attendance_days','work_sessions','attendance_events','office_locations','attendance_requests','weekly_reports','user_avatars')
     for table in tables:
         conn.execute(sql.SQL('GRANT SELECT, INSERT, UPDATE ON geoattend.{} TO {}').format(sql.Identifier(table), identifier))
+    if conn.execute("SELECT to_regclass('geoattend.pdf_summaries') AS oid").fetchone()['oid']:
+        conn.execute(sql.SQL('GRANT SELECT, INSERT, UPDATE ON geoattend.pdf_summaries TO {}').format(identifier))
     conn.execute(sql.SQL('GRANT DELETE ON geoattend.auth_sessions, geoattend.auth_attempts TO {}').format(identifier))
     conn.execute(sql.SQL('GRANT DELETE ON geoattend.work_sessions, geoattend.attendance_events, geoattend.office_locations TO {}').format(identifier))
     ext = conn.execute("SELECT n.nspname FROM pg_extension e JOIN pg_namespace n ON e.extnamespace=n.oid WHERE e.extname='postgis'").fetchone()

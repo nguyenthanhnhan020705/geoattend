@@ -45,7 +45,9 @@ def build_pages(output: Path, *, base_path: str, api_origin: str, version: str,
         for asset in (SOURCE / folder).rglob('*'):
             if asset.is_symlink():
                 raise ValueError('Symlink assets are not permitted.')
-            if asset.is_file() and (asset.suffix.lower() in extensions or asset.name.startswith('LICENSE')):
+            pdf_asset = ('vendor/pdfjs' in asset.relative_to(SOURCE).as_posix()
+                         and asset.suffix.lower() in {'.mjs','.bcmap','.pfb','.ttf'})
+            if asset.is_file() and (asset.suffix.lower() in extensions or asset.name.startswith('LICENSE') or pdf_asset):
                 target = output / 'static' / asset.relative_to(SOURCE)
                 target.parent.mkdir(parents=True, exist_ok=True)
                 shutil.copyfile(asset, target)

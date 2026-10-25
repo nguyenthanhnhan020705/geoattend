@@ -135,12 +135,14 @@ def list_admin(conn, context, week_start, user_id, page, page_size):
         return dict(week_start=week, week_end=week+timedelta(days=6), items=items, total=total, page=page, page_size=page_size)
 
 
-def read_file(conn, context, report_id, admin=False):
+def read_file(conn, context, report_id, admin=False, expected_revision=None):
     with conn.transaction():
         authorize(conn, context, admin=admin)
-        row = conn.execute("SELECT r.filename,r.pdf FROM geoattend.weekly_reports r JOIN geoattend.profiles p ON p.id=r.user_id WHERE r.id=%s AND p.role='USER'"+
+        row = conn.execute("SELECT r.filename,r.pdf,r.revision FROM geoattend.weekly_reports r JOIN geoattend.profiles p ON p.id=r.user_id WHERE r.id=%s AND p.role='USER'"+
                            ('' if admin else ' AND r.user_id=%s'),
                            (report_id,) if admin else (report_id, context.account.id)).fetchone()
         if not row:
             raise ApiError(404, 'REPORT_NOT_FOUND', 'Không tìm thấy báo cáo.')
+        if expected_revision is not None and row['revision'] != expected_revision:
+            raise ApiError(409,'STALE_REVISION','PDF đã được thay thế. Vui lòng tải lại danh sách báo cáo.')
         return row

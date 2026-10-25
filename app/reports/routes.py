@@ -65,8 +65,8 @@ def pdf_response(row, download):
 
 
 @router.get('/{report_id}/file')
-def own_file(report_id: UUID, request: Request, download: bool=False):
-    return pdf_response(call_service(request,service.read_file,report_id),download)
+def own_file(report_id: UUID, request: Request, download: bool=False, expected_revision: int | None=Query(None,ge=1)):
+    return pdf_response(call_service(request,service.read_file,report_id,False,expected_revision),download)
 
 
 @admin_router.get('')
@@ -76,5 +76,5 @@ def admin_list(request: Request, week_start: date | None=None, user_id: UUID | N
 
 
 @admin_router.get('/{report_id}/file')
-def admin_file(report_id: UUID, request: Request, download: bool=False):
-    return pdf_response(call_service(request,service.read_file,report_id,True),download)
+def admin_file(report_id: UUID, request: Request, download: bool=False, expected_revision: int | None=Query(None,ge=1)):
+    return pdf_response(call_service(request,service.read_file,report_id,True,expected_revision),download)

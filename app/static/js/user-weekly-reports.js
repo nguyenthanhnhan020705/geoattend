@@ -1,7 +1,7 @@
 import {apiFetch,loadAccount,bindLogout,message} from './api.js';
 import {requirePageAccount} from './page-session.js';
 await requirePageAccount('USER');
-import {uploadReport,reportWeek,reportLine,reportDetails} from './reports-api.js';
+import {uploadReport,reportWeek,reportLine,reportDetails} from './reports-api.js?v=inline-preview-20261024';
 import {refreshReportNotices,startReportNotices} from './report-notices.js';
 
 const el=id=>document.getElementById(id);
