@@ -1,0 +1,27 @@
+name: Keep GeoAttend Render awake
+
+on:
+  schedule:
+    # Every ten minutes, offset from the busiest minute at the top of the hour.
+    - cron: '3-59/10 * * * *'
+  workflow_dispatch:
+
+# This job only calls the public health endpoint; no checkout or tokens needed.
+permissions: {}
+
+concurrency:
+  group: render-keepalive
+  cancel-in-progress: false
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Ping public Render health endpoint
+        run: >-
+          curl --fail --silent --show-error
+          --retry 2 --retry-delay 10 --retry-max-time 180
+          --connect-timeout 15 --max-time 90
+          --output /dev/null --write-out 'Render health HTTP %{http_code}\n'
+          https://geoattend-api-a7xf.onrender.com/api/health
